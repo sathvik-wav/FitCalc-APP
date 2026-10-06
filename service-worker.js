@@ -1,6 +1,6 @@
 // Generated from package.json by scripts/sync-service-worker-cache.js before each build.
 // Update this value by bumping the package version and running `npm run build`.
-const CACHE_NAME = "fitcalc-app-shell-v1.1.13";
+const CACHE_NAME = "fitcalc-app-shell-v1.1.15";
 const APP_SHELL = [
     "./index.html", "./main.css", "./script.js", "./theme-init.js", "./calculators.js", "./constants.js", "./store.js",
     "./calculator-directory.js", "./bmi-unit-toggle.js", "./settings.js",

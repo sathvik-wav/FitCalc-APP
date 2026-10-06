@@ -34,9 +34,9 @@
   --radius-small: 10px;
   --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  --text-xs: 11px;
-  --text-sm: 13px;
-  --text-body: 15px;
+  --text-xs: 14px;
+  --text-sm: 14px;
+  --text-body: 16px;
   --text-title: clamp(30px, 3.2vw, 38px);
   --text-display: clamp(38px, 5vw, 54px);
   --space-1: 4px;
@@ -47,7 +47,7 @@
   --space-6: 24px;
   --space-8: 32px;
   --space-10: 40px;
-  --content-width: 1200px;
+  --content-width: 840px;
   --page-gutter: clamp(16px, 3vw, 32px);
   --splash-bg: #141214;
   --splash-sky: #21191e;
@@ -224,7 +224,7 @@ h1,h2,h3,h4,p {
 h1,h2,h3,h4 {
   color: var(--ink);
   line-height: 1.2;
-  letter-spacing: -.028em;
+  letter-spacing: 0px;
 }
 h1 {
   margin-bottom: var(--space-2);
@@ -281,8 +281,8 @@ p {
   display: block;
   margin-bottom: 7px;
   font-size: var(--text-xs);
-  font-weight: 750;
-  letter-spacing: .08em;
+  font-weight: 700;
+  letter-spacing: 0px;
   text-transform: uppercase;
 }
 .page-kicker { color: var(--ink-soft); }
@@ -322,8 +322,8 @@ p {
   align-items: center;
   gap: 9px;
   color: var(--ink);
-  font-weight: 760;
-  letter-spacing: -.035em;
+  font-weight: 700;
+  letter-spacing: 0px;
   font-size: 19px;
 }
 .brand-mark {
@@ -357,7 +357,7 @@ p {
   padding: 0 13px;
   border-radius: 999px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 560;
   transition: color .16s, background .16s;
 }
@@ -422,13 +422,13 @@ p {
   position: fixed;
   z-index: 60;
   display: grid;
-  gap: 16px;
+  gap: 12px;
   top: 78px;
   right: 16px;
-  width: min(380px, calc(100vw - 32px));
-  max-height: min(72vh, 620px);
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(72vh, 520px);
   overflow-y: auto;
-  padding: 16px;
+  padding: 14px;
   border: 1px solid var(--line);
   border-radius: 18px;
   background: var(--surface);
@@ -445,26 +445,22 @@ p {
 }
 .mobile-menu-group {
   display: grid;
-  gap: 8px;
+  gap: 4px;
 }
 .mobile-menu > section > div {
   display: grid;
-  gap: 3px;
+  gap: 2px;
 }
 .mobile-menu a {
   min-width: 0;
+  min-height: 44px;
   display: flex;
   align-items: center;
+  padding: 0 10px;
   border-radius: 11px;
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 560;
-}
-.mobile-menu .mobile-primary-link {
-  min-height: 44px;
-  padding-inline: 11px;
-  font-size: 13px;
-  font-weight: 640;
 }
 .mobile-menu a:hover {
   color: var(--ink);
@@ -477,44 +473,35 @@ p {
 }
 .mobile-menu-heading {
   margin: 0;
-  padding: 0 4px 2px;
+  padding: 0 4px 1px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: .08em;
+  letter-spacing: 0px;
   text-transform: uppercase;
 }
-.mobile-tool-list {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px 8px;
-}
-.mobile-menu .mobile-tool-link,
-.mobile-menu .mobile-secondary-link,
+.mobile-menu .mobile-track-link,
+.mobile-menu .mobile-calculators-link,
 .mobile-menu .mobile-app-link {
-  min-height: 42px;
-  padding: 7px 10px;
+  min-height: 44px;
+  padding: 0 10px;
   background: transparent;
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 14px;
 }
-.mobile-menu .mobile-tool-link {
-  min-height: 38px;
-  padding-inline: 8px;
-  font-size: 11px;
-}
-.mobile-menu .mobile-secondary-link,
+.mobile-menu .mobile-track-link,
+.mobile-menu .mobile-calculators-link,
 .mobile-menu .mobile-app-link {
   background: transparent;
 }
-.mobile-menu .mobile-tool-link:hover,
-.mobile-menu .mobile-secondary-link:hover,
+.mobile-menu .mobile-track-link:hover,
+.mobile-menu .mobile-calculators-link:hover,
 .mobile-menu .mobile-app-link:hover {
   color: var(--ink);
   background: var(--surface-soft);
 }
-.mobile-menu .mobile-tool-link.active,
-.mobile-menu .mobile-secondary-link.active,
+.mobile-menu .mobile-track-link.active,
+.mobile-menu .mobile-calculators-link.active,
 .mobile-menu .mobile-app-link.active {
   color: var(--accent-strong);
   background: color-mix(in srgb,var(--accent) 10%,var(--surface));
@@ -605,7 +592,7 @@ p {
 
 .field label,.add-exercise-form label {
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 620;
 }
 
@@ -704,7 +691,7 @@ select option {
 
 .calc-note p {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 textarea {
@@ -814,7 +801,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .result-empty p {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .result-empty .result-error {
@@ -851,7 +838,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   padding: 5px 10px;
   border: 1px solid currentColor;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .result-tag.ok {
@@ -915,7 +902,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 .result-note {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .timer-page-tile {
@@ -1010,7 +997,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .dashboard-heading .today-date {
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 14px;
 }
 .dashboard-heading h1 {
   margin: 0;
@@ -1053,7 +1040,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   border-bottom: 1px solid var(--terminal-line);
   color: var(--terminal-muted);
   background: var(--terminal-surface);
-  font-size: 11px;
+  font-size: 14px;
 }
 .terminal-prompt {
   display: flex;
@@ -1079,9 +1066,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .terminal-source {
   flex: none;
   color: var(--terminal-accent);
-  font-size: 9px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: .1em;
+  letter-spacing: 0px;
 }
 .terminal-content {
   display: grid;
@@ -1104,13 +1091,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   font-family: var(--font-mono);
   font-size: 16px;
   font-weight: 600;
-  letter-spacing: -.025em;
+  letter-spacing: 0px;
 }
 .terminal-label {
   color: var(--terminal-muted);
-  font-size: 9px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: .12em;
+  letter-spacing: 0px;
 }
 .terminal-score {
   display: flex;
@@ -1126,7 +1113,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .terminal-score span {
   color: var(--terminal-muted);
-  font-size: 10px;
+  font-size: 14px;
 }
 .today-terminal .daily-progress-track,.today-terminal .terminal-progress {
   background: color-mix(in srgb,var(--terminal-line) 62%,var(--terminal-bg));
@@ -1142,7 +1129,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .terminal-note {
   margin: 0;
   color: var(--terminal-muted);
-  font-size: 10px;
+  font-size: 14px;
 }
 .daily-progress-track,.progress-bar,.terminal-progress,.nutrition-progress-bar {
   height: 9px;
@@ -1181,7 +1168,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   gap: 8px;
   margin-bottom: 10px;
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 14px;
 }
 .dashboard-metric-head strong {
   color: var(--ink);
@@ -1209,12 +1196,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   margin-bottom: 8px;
   color: var(--terminal-muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 14px;
 }
 .today-terminal .dashboard-metric-head strong {
   color: var(--terminal-ink);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
 .today-terminal .dashboard-metric .terminal-progress {
@@ -1229,7 +1216,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .terminal-activity-heading a {
   color: var(--terminal-accent);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 14px;
 }
 .terminal-activity-heading a:hover {
   color: var(--terminal-accent-secondary);
@@ -1257,17 +1244,17 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .today-terminal .activity-copy strong {
   color: var(--terminal-ink);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 14px;
 }
 .today-terminal .activity-copy small {
   color: var(--terminal-muted);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 14px;
 }
 .today-terminal .activity-value {
   color: var(--terminal-accent);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
 .today-terminal .terminal-activity-item>.terminal-progress {
@@ -1286,7 +1273,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   gap: 10px;
   color: var(--terminal-ink);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 .today-terminal .adaptive-toggle::before {
@@ -1305,7 +1292,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   border-color: var(--terminal-line);
   color: var(--terminal-ink);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 14px;
   line-height: 1.6;
 }
 .today-terminal .adaptive-panel p::before {
@@ -1330,7 +1317,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .dashboard-card-title a {
   color: var(--accent-strong);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 650;
 }
 .activity-row {
@@ -1348,17 +1335,17 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   display: block;
   overflow: hidden;
   color: var(--ink);
-  font-size: 13px;
+  font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .activity-copy small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
 }
 .activity-value {
   color: var(--ink);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 650;
   text-align: right;
 }
@@ -1394,7 +1381,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   padding: 12px 0;
   border-top: 1px solid var(--line);
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 14px;
 }
 .adaptive-panel p::before {
   content: "•";
@@ -1416,7 +1403,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   border-radius: 12px;
   color: var(--ink-soft);
   background: var(--surface-raised);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   transition: border-color .16s,color .16s,background .16s,transform .16s;
 }
@@ -1471,7 +1458,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .tool-content p {
   margin: 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.45;
 }
 
@@ -1479,7 +1466,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   max-width: 45ch;
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .today-terminal .dashboard-metric:hover,.terminal-activity-item:hover {
@@ -1533,9 +1520,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .nutrition-total-card span {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: .025em;
+  letter-spacing: 0px;
 }
 .nutrition-total-card strong {
   color: var(--ink);
@@ -1557,11 +1544,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   justify-content: space-between;
   gap: 10px;
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 14px;
 }
 .nutrition-progress-header strong {
   color: var(--ink);
-  font-size: 12px;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
 .nutrition-progress-row:nth-child(1) .nutrition-progress-fill,.nutrition-progress-row:nth-child(2) .nutrition-progress-fill,.nutrition-progress-row:nth-child(3) .nutrition-progress-fill,.nutrition-progress-row:nth-child(4) .nutrition-progress-fill,.nutrition-progress-row:nth-child(5) .nutrition-progress-fill {
@@ -1585,7 +1572,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   padding: 12px 0;
   border-top: 1px solid var(--line);
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 14px;
 }
 .nutrition-remaining strong {
   color: var(--ink);
@@ -1634,23 +1621,23 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .selected-day span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .food-meal-heading {
   margin: 19px 0 4px;
   padding: 9px 0 7px;
   border-bottom: 1px solid var(--line);
   color: var(--accent-strong);
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: .09em;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0px;
   text-transform: uppercase;
 }
 .nutrition-food-entry {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
   align-items: center;
-  gap: 14px;
+  gap: 12px 18px;
   padding: 14px 0;
   border-bottom: 1px solid var(--line);
   transition: background .15s;
@@ -1661,25 +1648,73 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .nutrition-food-info {
   min-width: 0;
 }
+.nutrition-food-info .food-preparation {
+  margin: 0 0 5px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.food-entry-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 10px;
+}
+.food-entry-meta span {
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+.food-entry-meta .food-entry-meal {
+  color: var(--muted);
+}
+.nutrition-food-info .food-entry-macros {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.nutrition-food-preview {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+.food-data-warning {
+  color: var(--orange);
+}
 .nutrition-food-info h3 {
   margin: 0 0 4px;
-  font-size: 14px;
+  font-size: 16px;
   overflow-wrap: anywhere;
 }
 .nutrition-food-info p {
   margin: 2px 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
 }
 .nutrition-food-actions {
   display: flex;
+  align-items: center;
+  justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 6px;
 }
 .nutrition-food-actions button {
-  min-height: 42px;
-  padding: 7px 10px;
-  font-size: 12px;
+  min-height: 44px;
+  padding: 5px 9px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.nutrition-food-actions .remove-food {
+  color: var(--red);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+.nutrition-food-actions .remove-food:hover {
+  border-color: color-mix(in srgb,var(--red) 25%,var(--line));
+  background: color-mix(in srgb,var(--red) 7%,var(--surface));
 }
 .food-api-tools {
   display: grid;
@@ -1692,6 +1727,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   color: var(--muted);
   line-height: 1.5;
 }
+.barcode-camera-hint {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+}
 .food-shortcuts,.food-shortcut-group,.food-shortcut-list {
   display: grid;
   gap: 8px;
@@ -1701,7 +1741,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .food-shortcut-group>strong {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
 }
 .food-shortcut-list {
   display: flex;
@@ -1712,19 +1752,42 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .custom-food-details {
   display: grid;
-  gap: 12px;
-  margin-top: 18px;
-  padding-top: 14px;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid var(--line);
 }
 .custom-food-details summary,.history-record-details summary {
-  min-height: 42px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   color: var(--ink);
-  font-weight: 650;
+  font-weight: 600;
   cursor: pointer;
 }
+.custom-food-details summary {
+  position: relative;
+  list-style: none;
+  padding-left: 26px;
+}
+.custom-food-details summary::-webkit-details-marker { display: none; }
+.custom-food-details summary::before {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  color: var(--ink-soft);
+  content: "+";
+  font-size: 15px;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+.custom-food-details[open] summary::before { content: "−"; }
 .custom-food-details .form-grid {
   margin-top: 4px;
 }
@@ -1733,7 +1796,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .muted-copy {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.5;
 }
 .inline-input-action {
@@ -1749,7 +1812,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   min-height: 1.4em;
   margin: 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .integration-status[data-state=error] {
   color: var(--red);
@@ -1763,7 +1826,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .integration-error-copy {
   margin: 0;
   color: var(--red);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.5;
 }
 .calculator-use-value-row {
@@ -1790,11 +1853,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   min-width: 0;
 }
 .integration-result strong {
-  font-size: 13px;
+  font-size: 14px;
 }
 .integration-result small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
 }
 .barcode-camera {
   width: min(100%,480px);
@@ -1899,9 +1962,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .planner-stat span {
   display: block;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 650;
-  letter-spacing: .025em;
+  letter-spacing: 0px;
 }
 .planner-stat strong {
   display: flex;
@@ -1916,7 +1979,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .planner-stat strong small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 550;
 }
 .planner-layout {
@@ -1953,14 +2016,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .planner-card-value small {
   margin-left: 3px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 550;
 }
 .planner-section-count {
   flex: 0 0 auto;
   margin: 0 !important;
   color: var(--muted) !important;
-  font-size: 11px !important;
+  font-size: 14px !important;
 }
 .planner-section-count strong {
   margin-left: 3px;
@@ -1987,7 +2050,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   color: var(--ink-soft);
   background: transparent;
   font: inherit;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 650;
   cursor: pointer;
 }
@@ -2008,30 +2071,18 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .planner-card > p {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.55;
 }
-.planner-workouts-card,.planner-task-card {
-  grid-column: span 2;
+.planner-workouts-card,.planner-task-card,.planner-templates-card {
+  grid-column: 1 / -1;
 }
 .planner-workouts-card {
-  padding: 24px;
+  padding: 16px;
   border-color: var(--line-strong);
   background: var(--surface);
 }
-.planner-template-subsection {
-  margin-top: 20px;
-  padding-top: 17px;
-  border-top: 1px solid var(--line);
-}
-.planner-template-subsection h3 {
-  color: var(--ink);
-  font-size: 15px;
-}
-.planner-template-subsection > p {
-  color: var(--muted);
-  font-size: 12px;
-}
+.planner-template-save-row { margin: 16px 0 20px; }
 .planner-task-card {
   background: var(--surface-raised);
 }
@@ -2046,6 +2097,19 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .planner-input-row .primary-btn {
   flex: 0 0 auto;
+}
+.planner-create-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+}
+.planner-create-row .primary-btn {
+  min-height: 44px;
+  padding-inline: 16px;
+}
+.planner-create-row input {
+  min-height: 44px;
 }
 .planner-card .progress-bar {
   height: 8px;
@@ -2100,7 +2164,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   color: var(--red);
   background: transparent;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
 }
 .delete-workout:hover {
   background: color-mix(in srgb,var(--red) 10%,var(--surface));
@@ -2133,7 +2197,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .exercise-item p {
   margin: 0 0 8px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .sets-inline {
   display: flex;
@@ -2151,7 +2215,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   border-radius: 9px;
   color: var(--ink-soft);
   background: var(--surface-raised);
-  font-size: 11px;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
 .set-chip button {
@@ -2164,21 +2228,41 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   cursor: pointer;
 }
 .exercise-item .primary-btn {
-  min-height: 38px;
+  min-height: 44px;
   margin: 5px 6px 0 0;
-  padding: 7px 11px;
-  font-size: 12px;
+  padding: 6px 11px;
+  font-size: 14px;
 }
 .add-exercise-form {
   display: grid;
-  gap: 11px;
-  margin-top: 14px;
-  padding-top: 15px;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid var(--line);
+}
+.exercise-name-row {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+}
+.exercise-name-row .field {
+  flex: 1;
+  min-width: 0;
+}
+.exercise-name-row .add-exercise {
+  min-height: 44px;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0 14px;
+}
+.add-exercise-form .complete-workout {
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
 }
 .exercise-library-tools {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 .exercise-library-tools .inline-input-action {
   width: 100%;
@@ -2213,7 +2297,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .task-item .primary-btn,.template-item button {
   min-height: 36px;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .empty-state {
   display: grid;
@@ -2233,11 +2317,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .empty-state p {
   margin: 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .planner-page small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
 }
 .planner-page #workout-list>p,.planner-page #template-list>p,.planner-page #task-list>p {
   display: grid;
@@ -2247,11 +2331,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   border: 1px dashed var(--line-strong);
   border-radius: 14px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .planner-page #workout-list>p strong,.planner-page #template-list>p strong,.planner-page #task-list>p strong {
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 14px;
 }
 .workout-template-item {
   display: grid;
@@ -2268,7 +2352,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .workout-template-item>span {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
 }
 .workout-template-actions {
   grid-column: 1 / -1;
@@ -2280,7 +2364,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .workout-template-item button {
   min-height: 36px;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .workout-template-item .delete-template {
   color: var(--red);
@@ -2356,6 +2440,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   width: 29px;
   height: 29px;
 }
+.profile-avatar [hidden] { display: none !important; }
 .profile-summary-copy {
   min-width: 0;
 }
@@ -2363,12 +2448,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   margin: 0 0 3px;
   color: var(--ink);
   font-size: 21px;
-  letter-spacing: -.035em;
+  letter-spacing: 0px;
 }
 .profile-summary-copy p {
   margin: 0 0 8px;
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.45;
 }
 .profile-summary-copy p:empty {
@@ -2382,42 +2467,33 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   border-radius: 999px;
   color: var(--accent);
   background: color-mix(in srgb,var(--accent) 12%,var(--surface-raised));
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 650;
 }
 .profile-activity-tag[hidden] {
   display: none;
 }
-.profile-goal-card {
-  width: min(100%,720px);
+.profile-summary-tags {
   display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.profile-goal-tag {
+  min-height: 24px;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 0 auto 20px;
-  padding: 18px 20px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: var(--surface);
+  padding: 3px 9px;
+  border-radius: 999px;
+  color: var(--accent-strong);
+  background: color-mix(in srgb,var(--accent) 12%,var(--surface-raised));
+  font-size: 14px;
+  font-weight: 650;
 }
-.profile-goal-card h2 {
-  margin: 2px 0 4px;
-  color: var(--ink);
-  font-size: 17px;
-  letter-spacing: -.025em;
-}
-.profile-goal-card p {
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 13px;
-  font-weight: 600;
-}
-.profile-goal-card .section-kicker {
-  margin-bottom: 2px;
-}
-.profile-goal-card .secondary-btn {
-  min-width: 76px;
-  min-height: 40px;
+.profile-goal-tag[hidden] { display: none; }
+.profile-summary-edit {
+  flex: 0 0 auto;
+  margin-left: auto;
+  min-height: 44px;
 }
 .profile .calc-window {
   width: min(1080px,100%);
@@ -2444,16 +2520,17 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   background: var(--surface);
   box-shadow: none;
 }
+.profile-sections > .profile-section[hidden] { display: none !important; }
 .profile-section h2 {
   margin: 4px 0 7px;
   color: var(--ink);
   font-size: 19px;
-  letter-spacing: -.035em;
+  letter-spacing: 0px;
 }
 .profile-details-card > .calc-desc {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
 }
 .profile .tile {
@@ -2468,6 +2545,32 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   gap: 16px;
   margin-top: 22px;
 }
+.profile #profile-form {
+  grid-template-columns: minmax(0,1fr);
+  gap: 14px;
+}
+.profile-field-grid {
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
+  gap: 14px;
+}
+.profile-field-pair {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  align-items: start;
+  gap: 14px;
+}
+.profile-field-pair > .field { min-width: 0; }
+.profile-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.profile-form-actions .primary-btn { margin: 0; }
+.profile-form-actions .secondary-btn { min-height: 44px; }
+.profile #profile-form > .profile-form-actions,
+.profile #profile-form > .profile-status { grid-column: 1 / -1; }
 .profile form .primary-btn,.profile-status {
   grid-column: 1 / -1;
 }
@@ -2475,7 +2578,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   min-height: 1.4em;
   margin: 0;
   color: var(--green);
-  font-size: 13px;
+  font-size: 14px;
 }
 .profile-info {
   display: flex;
@@ -2487,7 +2590,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   border-radius: 14px;
   color: var(--muted);
   background: var(--surface-raised);
-  font-size: 12px;
+  font-size: 14px;
 }
 .profile-info strong {
   display: block;
@@ -2503,10 +2606,19 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .profile-target-card h2 {
   margin: 0;
 }
+.profile-target-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.profile-target-heading button {
+  flex: 0 0 auto;
+}
 .profile-target-empty {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 .profile-target-list {
   display: grid;
@@ -2520,7 +2632,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   padding: 11px 0;
   border-bottom: 1px solid var(--line);
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 .profile-target-list strong {
   color: var(--ink);
@@ -2529,36 +2641,44 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .target-editor {
   display: grid;
-  grid-template-columns: repeat(2,minmax(0,1fr));
-  gap: 12px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
+  grid-template-columns: 1fr;
+  gap: 0;
+  padding-top: 4px;
 }
 .profile .target-editor {
-  margin: 8px 0 0;
+  margin: 0;
 }
-.target-editor .section-kicker,.target-editor h3,.target-editor .profile-target-actions,.target-editor .profile-status {
+.target-editor .profile-target-actions {
   grid-column: 1 / -1;
 }
-.target-editor h3 {
-  margin: -7px 0 0;
-  font-size: 16px;
-}
 .target-editor .field {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 150px);
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+}
+.target-editor .field label {
+  margin: 0;
+}
+.target-editor .field input {
   min-width: 0;
 }
 .profile-target-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  padding-top: 14px;
 }
 .profile-target-actions button {
-  min-height: 42px;
+  min-height: 44px;
 }
 .water-target-note {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 .unit-input-pair {
   display: grid;
@@ -2585,12 +2705,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .nutrition-target-notice p {
   margin: 0;
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 14px;
 }
 .nutrition-target-notice a {
   flex: 0 0 auto;
   color: var(--accent-strong);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -2639,9 +2759,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .history-range>span {
   margin-right: 5px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: .08em;
+  letter-spacing: 0px;
   text-transform: uppercase;
 }
 .history-range-btn {
@@ -2684,9 +2804,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .history-summary-card span {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: .04em;
+  letter-spacing: 0px;
   text-transform: uppercase;
 }
 .history-summary-card strong {
@@ -2697,7 +2817,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .history-summary-card small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
 }
 .history-consistency {
   display: flex;
@@ -2714,7 +2834,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   gap: 5px;
 }
 .history-consistency .page-kicker {
-  font-size: 10px;
+  font-size: 14px;
 }
 .history-consistency > div:first-child strong {
   color: var(--ink);
@@ -2729,7 +2849,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   gap: 4px;
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 14px;
 }
 .history-streak-values strong {
   color: var(--ink);
@@ -2738,7 +2858,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .history-streak-values strong small {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 550;
 }
 .progress-charts {
@@ -2765,11 +2885,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .progress-chart-header strong {
   color: var(--ink);
-  font-size: 13px;
+  font-size: 14px;
 }
 .progress-chart-header small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
 }
 .progress-chart-wrap {
   height: 210px;
@@ -2784,7 +2904,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   position: relative;
   min-width: 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -2849,14 +2969,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   justify-content: space-between;
   margin-top: 5px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 14px;
 }
 .progress-chart-empty {
   min-height: 170px;
   display: grid;
   place-items: center;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   text-align: center;
 }
 .history-records {
@@ -2877,7 +2997,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .history-section-title small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
 }
 .history-record {
   padding: 18px;
@@ -2901,7 +3021,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--ink-soft);
-  font-size: 11px;
+  font-size: 14px;
 }
 .history-stats {
   display: grid;
@@ -2919,25 +3039,25 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   display: block;
   margin-bottom: 6px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: .04em;
+  letter-spacing: 0px;
 }
 .history-stat strong {
   color: var(--ink);
-  font-size: 13px;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
 .history-stat strong small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 14px;
 }
 .history-workout-detail {
   display: block;
   margin-top: 7px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -2946,7 +3066,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   border-top: 0;
 }
 .history-record-details summary {
-  font-size: 12px;
+  font-size: 14px;
 }
 .history-record-details > .history-record-summary {
   display: block;
@@ -2969,7 +3089,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   padding-top: 10px;
   border-top: 1px solid var(--line);
   color: var(--accent-strong);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 650;
 }
 .history-detail-grid {
@@ -2988,7 +3108,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .history-detail-grid h3 {
   margin: 0 0 8px;
   color: var(--ink);
-  font-size: 12px;
+  font-size: 14px;
 }
 .history-detail-grid ul,.history-detail-grid ol {
   display: grid;
@@ -2996,7 +3116,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   margin: 0;
   padding-left: 18px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -3035,7 +3155,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   max-width: 45ch;
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .card,.tile,.tool-card,.progress-chart,.history-record,.history-summary-card {
@@ -3084,7 +3204,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .footer-links a {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .footer-links a:hover {
   color: var(--accent-strong);
@@ -3093,7 +3213,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   width: 100%;
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
 }
 .storage-notice,.fitcalc-toast {
   position: fixed;
@@ -3107,7 +3227,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   color: var(--ink);
   background: var(--surface);
   box-shadow: var(--shadow);
-  font-size: 13px;
+  font-size: 14px;
 }
 .storage-notice {
   border-color: var(--red);
@@ -3128,8 +3248,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 .fitcalc-dialog-content {
   display: grid;
-  gap: 14px;
-  padding: clamp(20px,5vw,28px);
+  gap: 10px;
+  padding: 18px;
 }
 .fitcalc-dialog h2 {
   margin: 0;
@@ -3170,7 +3290,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   }
   .desktop-nav a {
     padding-inline: 9px;
-    font-size: 12px;
+    font-size: 14px;
   }
   .dashboard-layout {
     grid-template-columns: minmax(0,1.3fr) minmax(250px,.8fr);
@@ -3241,7 +3361,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     gap: 2px;
     border-radius: 999px;
     color: var(--muted);
-    font-size: 10px;
+    font-size: 14px;
     font-weight: 600;
   }
   .mobile-tab-icon {
@@ -3314,6 +3434,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     grid-template-columns: repeat(2,minmax(0,1fr));
   }
 }
+
 @media (max-width: 480px) {
   .shell,.page-shell,.calc-page,.history-page-shell,.profile {
     width: calc(100% - 28px);
@@ -3481,7 +3602,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     grid-column: auto;
   }
   .profile-info {
-    font-size: 11px;
+    font-size: 14px;
   }
   .result-headline strong {
     font-size: 35px;
@@ -3498,14 +3619,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     width: 100%;
   }
   .nutrition-food-entry {
-    align-items: flex-start;
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
   }
   .nutrition-food-actions {
     width: 100%;
+    justify-content: flex-start;
   }
   .nutrition-food-actions button {
-    flex: 1;
+    flex: 0 1 auto;
   }
   .footer {
     width: calc(100% - 28px);
@@ -3517,7 +3639,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   }
   body:not(.splash-active) {
     padding-bottom: calc(96px + env(safe-area-inset-bottom));
-    font-size: 14px;
+    font-size: 16px;
   }
   .page-heading p,.page-header p,.calc-desc {
     font-size: 14px;
@@ -3530,9 +3652,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   }
   .target-editor {
     grid-template-columns: 1fr;
-  }
-  .target-editor .section-kicker,.target-editor h3,.target-editor .profile-target-actions,.target-editor .profile-status {
-    grid-column: 1;
   }
   .profile-target-actions {
     display: grid;
@@ -3633,10 +3752,10 @@ body:not(.home-screen) .page-heading {
 body:not(.home-screen) .page-heading h1 {
   margin-bottom: 5px;
   font-size: 29px;
-  letter-spacing: -.04em;
+  letter-spacing: 0px;
 }
 body:not(.home-screen) .page-heading p {
-  font-size: 12px;
+  font-size: 14px;
 }
 body:not(.home-screen) .page-kicker,
 body:not(.home-screen) .section-kicker {
@@ -3699,11 +3818,11 @@ body:not(.home-screen)[data-calc] .tile-output {
 body:not(.home-screen)[data-calc] .tile-input h1 {
   margin: 0 0 5px;
   font-size: 26px;
-  letter-spacing: -.04em;
+  letter-spacing: 0px;
 }
 body:not(.home-screen)[data-calc] .tile-input .calc-desc {
   margin: 0;
-  font-size: 12px;
+  font-size: 14px;
 }
 body:not(.home-screen)[data-calc] .calc-form {
   gap: 15px;
@@ -3724,7 +3843,7 @@ body:not(.home-screen)[data-calc] .calc-note {
   margin-top: 15px;
 }
 body:not(.home-screen)[data-calc] .calc-note p {
-  font-size: 10px;
+  font-size: 14px;
 }
 body:not(.home-screen) .calc-screen-actions {
   display: flex;
@@ -3805,7 +3924,7 @@ body:not(.home-screen) .nutrition-page .inline-input-action > input {
 body:not(.home-screen) .nutrition-page #copy-previous-day {
   min-height: 40px;
   padding-inline: 12px;
-  font-size: 10px;
+  font-size: 14px;
 }
 
 /* Activity planner */
@@ -3826,7 +3945,7 @@ body:not(.home-screen) .planner-page .day-navigation #today-day {
   min-height: 38px;
   padding-inline: 12px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 650;
 }
 body:not(.home-screen) .planner-summary-grid {
@@ -3859,7 +3978,7 @@ body:not(.home-screen) .planner-task-card {
   grid-column: auto;
 }
 body:not(.home-screen) .planner-workouts-card {
-  padding: 20px;
+  padding: 16px;
 }
 body:not(.home-screen) .planner-task-card {
   padding: 16px;
@@ -3872,8 +3991,92 @@ body:not(.home-screen) .planner-input-row {
 body:not(.home-screen) .planner-input-row .primary-btn {
   width: 100%;
 }
+body:not(.home-screen) .planner-page .planner-create-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+}
+body:not(.home-screen) .planner-page .planner-create-row .primary-btn {
+  width: auto;
+  min-height: 44px;
+  padding-inline: 16px;
+}
+body:not(.home-screen) .planner-page .planner-create-row input {
+  min-height: 44px;
+}
+body:not(.home-screen) input#workout-name,
+body:not(.home-screen) .planner-page .exercise-name-row input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]) {
+  height: 44px;
+  min-height: 44px;
+  padding-block: 8px;
+}
+body:not(.home-screen) .planner-page .exercise-name-row .add-exercise {
+  min-height: 44px;
+  padding-inline: 14px;
+}
 body:not(.home-screen) .workout-section {
-  padding: 13px;
+  padding: 11px;
+}
+body:not(.home-screen) .add-exercise-form {
+  gap: 7px;
+  margin-top: 8px;
+  padding-top: 9px;
+}
+body:not(.home-screen) .exercise-item {
+  padding: 11px;
+}
+body:not(.home-screen) .exercise-library-tools .inline-input-action {
+  flex-direction: row;
+}
+body:not(.home-screen) .exercise-library-tools .inline-input-action > input {
+  width: auto;
+  flex: 1 1 auto;
+}
+body:not(.home-screen) .exercise-library-tools .inline-input-action > button {
+  width: auto;
+  flex: 0 0 auto;
+}
+body:not(.home-screen) .planner-page .planner-create-row input#workout-name,
+body:not(.home-screen) .planner-page .exercise-name-row input.exercise-name-input {
+  box-sizing: border-box;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px;
+  padding-block: 7px;
+}
+body:not(.home-screen) .planner-page .add-exercise-form,
+body:not(.home-screen) .planner-page .exercise-library-tools,
+body:not(.home-screen) .planner-page .exercise-library-tools .inline-input-action,
+body:not(.home-screen) .planner-page .exercise-library-results {
+  min-width: 0;
+  max-width: 100%;
+}
+body:not(.home-screen) .planner-page .add-exercise-form {
+  grid-template-columns: minmax(0, 1fr);
+}
+body:not(.home-screen) .planner-page .exercise-library-tools .inline-input-action > input {
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 0%;
+}
+@media (max-width: 850px) {
+  body:not(.home-screen) .planner-page .planner-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body:not(.home-screen) .planner-page .planner-steps-card,
+  body:not(.home-screen) .planner-page .planner-weight-card {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 480px) {
+  body:not(.home-screen) .planner-page .exercise-library-tools .inline-input-action {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  body:not(.home-screen) .planner-page .exercise-library-tools .inline-input-action > button {
+    width: 100%;
+  }
 }
 
 /* History and profile */
@@ -3922,10 +4125,13 @@ body:not(.home-screen) .profile .tile {
   background: var(--surface);
   box-shadow: none;
 }
-body:not(.home-screen) .profile form,
-body:not(.home-screen) .profile .target-editor {
+body:not(.home-screen) .profile form:not(.target-editor) {
   grid-template-columns: minmax(0,1fr);
   gap: 12px;
+}
+body:not(.home-screen) .profile .target-editor {
+  grid-template-columns: minmax(0,1fr);
+  gap: 0;
 }
 body:not(.home-screen) .profile form .primary-btn,
 body:not(.home-screen) .profile-status {
@@ -3935,12 +4141,12 @@ body:not(.home-screen) .profile-status {
 body:not(.home-screen) .page-shell > .page-heading h1,
 body:not(.home-screen) main.profile > .page-heading h1 {
   font-size: 29px;
-  letter-spacing: -.04em;
+  letter-spacing: 0px;
 }
 body:not(.home-screen) .section-heading h2,
 body:not(.home-screen) .planner-card h2,
 body:not(.home-screen) .profile h2 {
-  letter-spacing: -.035em;
+  letter-spacing: 0px;
 }
 body:not(.home-screen) .nutrition-page > .card,
 body:not(.home-screen) .planner-layout > .card,
@@ -4058,11 +4264,11 @@ body[data-calc="bmi"] .tile-output {
 body[data-calc="bmi"] .bmi-input-card h1 {
   margin: 0 0 5px;
   font-size: 27px;
-  letter-spacing: -.04em;
+  letter-spacing: 0px;
 }
 body[data-calc="bmi"] .bmi-input-card .calc-desc {
   margin: 0;
-  font-size: 12px;
+  font-size: 14px;
 }
 .bmi-unit-toggle {
   display: grid;
@@ -4081,7 +4287,7 @@ body[data-calc="bmi"] .bmi-input-card .calc-desc {
   color: var(--muted);
   background: transparent;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 620;
 }
 .bmi-unit-toggle button[aria-pressed="true"] {
@@ -4094,7 +4300,7 @@ body[data-calc="bmi"] .calc-form {
 }
 body[data-calc="bmi"] .calc-form .field label {
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 14px;
 }
 body[data-calc="bmi"] .calc-form input {
   min-height: 50px;
@@ -4158,12 +4364,12 @@ body[data-calc="bmi"] .result-content {
   font-size: 49px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -.055em;
+  letter-spacing: 0px;
   line-height: 1;
 }
 .bmi-result-value > span:nth-child(2) {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .bmi-result-value .result-tag {
   align-self: center;
@@ -4221,7 +4427,7 @@ body[data-calc="bmi"] .result-content {
   grid-template-columns: 46.25fr 16fr 12.5fr 25.25fr;
   gap: 0;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
 .bmi-range-labels span {
@@ -4242,7 +4448,7 @@ body[data-calc="bmi"] .result-content {
   border-radius: 13px;
   color: var(--ink-soft);
   background: var(--surface-raised);
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.55;
 }
 body[data-calc="bmi"] .result-rows {
@@ -4252,7 +4458,7 @@ body[data-calc="bmi"] .calc-note {
   margin-top: 15px;
 }
 body[data-calc="bmi"] .calc-note p {
-  font-size: 10px;
+  font-size: 14px;
 }
 body[data-calc="bmi"] .footer.shell {
   width: min(100% - 32px,448px);
@@ -4303,6 +4509,54 @@ body.splash-active {
   background: var(--mauve-wash), var(--page);
   isolation: isolate;
 }
+.first-run-active {
+  overflow: hidden;
+}
+.first-run-screen {
+  position: fixed;
+  z-index: 2100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding: max(18px,env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom));
+  background: var(--mauve-wash), var(--page);
+}
+.first-run-card {
+  width: min(100%,520px);
+  padding: clamp(22px,5vw,36px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-raised);
+}
+.first-run-heading h1 {
+  margin: 4px 0 8px;
+  font-size: clamp(25px,7vw,32px);
+}
+.first-run-heading > p:not(.first-run-progress) {
+  margin: 0;
+  color: var(--ink-soft);
+}
+.first-run-progress {
+  margin: 18px 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 650;
+}
+.first-run-step .field { margin-bottom: 16px; }
+.first-run-status {
+  min-height: 1.5em;
+  margin: 0 0 12px;
+  color: var(--red);
+}
+.first-run-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.first-run-actions .primary-btn { margin-left: auto; }
 .splash-content {
   width: min(100%,860px);
   display: grid;
@@ -4323,8 +4577,8 @@ body.splash-active {
   margin-bottom: 30px;
   color: var(--ink);
   font-size: 17px;
-  font-weight: 760;
-  letter-spacing: -.03em;
+  font-weight: 700;
+  letter-spacing: 0px;
 }
 .splash-brand-mark {
   width: 34px;
@@ -4342,15 +4596,15 @@ body.splash-active {
   margin: 0;
   color: var(--ink);
   font-size: clamp(32px,5vw,46px);
-  font-weight: 720;
-  letter-spacing: -.05em;
+  font-weight: 700;
+  letter-spacing: 0px;
 }
 .splash-tagline {
   margin: 14px 0 25px;
   color: var(--ink-soft);
   font-size: 15px;
   font-weight: 450;
-  letter-spacing: 0;
+  letter-spacing: 0px;
   line-height: 1.55;
 }
 .splash-start {
@@ -4381,7 +4635,7 @@ body.splash-active {
 .splash-footnote {
   margin: 15px 0 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 550;
 }
 .splash-features { display: grid; gap: 10px; }
@@ -4404,11 +4658,11 @@ body.splash-active {
   border-radius: 11px;
   color: var(--accent-strong);
   background: color-mix(in srgb,var(--accent) 12%,var(--surface));
-  font-size: 12px;
-  font-weight: 750;
+  font-size: 14px;
+  font-weight: 700;
 }
-.splash-feature strong { display: block; margin-bottom: 1px; color: var(--ink); font-size: 13px; }
-.splash-feature p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
+.splash-feature strong { display: block; margin-bottom: 1px; color: var(--ink); font-size: 14px; }
+.splash-feature p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.4; }
 
 /* Home screen */
 body.home-screen:not(.splash-active) {
@@ -4446,78 +4700,61 @@ body.home-screen .page-shell.dashboard-page {
 .home-greeting p {
   margin: 0 0 2px;
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 550;
+}
+.home-greeting {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.home-greeting:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 5px;
+  border-radius: var(--radius-small);
+}
+.home-greeting .home-greeting-motivation {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
 }
 .home-greeting h1 {
   margin: 0 0 4px;
-  font-size: clamp(25px,7vw,31px);
-  font-weight: 680;
-  letter-spacing: -.045em;
-}
-.home-greeting .today-date {
-  color: var(--ink-soft);
-  font-size: 11px;
-}
-.home-notifications {
-  position: relative;
-  width: 44px;
-  height: 44px;
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  color: var(--ink-soft);
-  background: var(--surface);
-  cursor: pointer;
-}
-.home-notifications svg {
-  width: 19px;
-  height: 19px;
-}
-.home-notification-badge {
-  position: absolute;
-  top: 9px;
-  right: 9px;
-  width: 7px;
-  height: 7px;
-  border: 1px solid var(--surface);
-  border-radius: 50%;
-  background: var(--accent);
-}
-.home-quote-card {
-  min-height: 88px;
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 16px 18px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--surface);
+  gap: 7px;
+  font-size: clamp(25px,7vw,31px);
+  font-weight: 680;
+  letter-spacing: 0px;
 }
-.home-quote-content {
-  max-width: 100%;
+.home-greeting-icon {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  letter-spacing: 0px;
+}
+.home-greeting-icon [data-greeting-icon] { display: none; }
+.home-greeting-icon[data-period="morning"] [data-greeting-icon="morning"],
+.home-greeting-icon[data-period="afternoon"] [data-greeting-icon="afternoon"],
+.home-greeting-icon[data-period="evening"] [data-greeting-icon="evening"],
+.home-greeting-icon[data-period="night"] [data-greeting-icon="night"] { display: inline; }
+.home-greeting .today-date {
+  color: var(--ink-soft);
+  font-size: 14px;
 }
 .home-overline {
   display: block;
   margin-bottom: 7px;
   color: var(--ink-soft);
-  font-size: 9px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: .13em;
+  letter-spacing: 0px;
   text-transform: uppercase;
-}
-.home-quote-content .home-overline {
-  color: var(--ink-soft);
-}
-.home-quote-content blockquote {
-  margin: 0;
-  color: var(--ink);
-  font-size: 15px;
-  font-weight: 620;
-  letter-spacing: -.015em;
-  line-height: 1.4;
 }
 .home-overview {
   margin-bottom: 24px;
@@ -4533,11 +4770,11 @@ body.home-screen .page-shell.dashboard-page {
   margin: 0;
   font-size: 19px;
   font-weight: 670;
-  letter-spacing: -.025em;
+  letter-spacing: 0px;
 }
 .home-section-heading a,.home-weight-copy > a,.home-profile-setup > a {
   color: var(--accent-strong);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 650;
   white-space: nowrap;
 }
@@ -4584,7 +4821,7 @@ body.home-screen .page-shell.dashboard-page {
   display: block;
   margin-bottom: 2px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 600;
 }
 .home-metric-copy strong {
@@ -4594,7 +4831,7 @@ body.home-screen .page-shell.dashboard-page {
   font-size: clamp(17px,5vw,21px);
   font-weight: 680;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -.03em;
+  letter-spacing: 0px;
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -4602,15 +4839,15 @@ body.home-screen .page-shell.dashboard-page {
 .home-metric-copy strong small {
   margin-left: 3px;
   color: var(--ink-soft);
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 550;
-  letter-spacing: 0;
+  letter-spacing: 0px;
 }
 .home-metric-copy p {
   overflow: hidden;
   margin: 4px 0 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -4639,7 +4876,7 @@ body.home-screen .page-shell.dashboard-page {
 .home-ring b {
   position: relative;
   color: var(--ink-soft);
-  font-size: 8px;
+  font-size: 14px;
   font-weight: 600;
 }
 .home-weight-card,.home-workouts-card {
@@ -4663,17 +4900,17 @@ body.home-screen .page-shell.dashboard-page {
 .home-weight-current {
   margin: 0 0 3px;
   color: var(--ink);
-  font-size: 12px;
+  font-size: 14px;
 }
 .home-weight-current strong {
   font-size: 25px;
   font-weight: 680;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -.04em;
+  letter-spacing: 0px;
 }
 .home-weight-current span,.home-weight-change {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 14px;
 }
 .home-weight-change {
   min-height: 15px;
@@ -4701,7 +4938,7 @@ body.home-screen .page-shell.dashboard-page {
 .home-workout-summary p {
   margin: 5px 0 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.5;
 }
 .home-workout-empty {
@@ -4717,11 +4954,11 @@ body.home-screen .page-shell.dashboard-page {
 .home-workout-empty p {
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
 }
 .home-workout-empty a {
   color: var(--accent-strong);
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 650;
   white-space: nowrap;
 }
@@ -4761,15 +4998,15 @@ body.home-screen .page-shell.dashboard-page {
   border-radius: 9px;
   color: var(--ink-soft);
   background: var(--home-icon-surface);
-  font-size: 8px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: -.02em;
+  letter-spacing: 0px;
 }
 .home-quick-tool > strong {
   overflow: hidden;
   max-width: 100%;
   color: var(--ink);
-  font-size: 9px;
+  font-size: 14px;
   font-weight: 620;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -4791,14 +5028,14 @@ body.home-screen .page-shell.dashboard-page {
 .home-plan-summary span,.home-plan-summary small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .home-plan-summary strong {
   overflow: hidden;
   color: var(--ink);
-  font-size: 11px;
+  font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -4811,7 +5048,7 @@ body.home-screen .page-shell.dashboard-page {
   display: flex;
   justify-content: space-between;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 14px;
 }
 .home-day-progress-copy strong {
   color: var(--ink-soft);
@@ -4835,7 +5072,7 @@ body.home-screen .page-shell.dashboard-page {
   overflow: hidden;
   margin-top: 9px;
   color: var(--ink-soft);
-  font-size: 10px;
+  font-size: 14px;
 }
 .home-adaptive p {
   margin: 0;
@@ -4854,18 +5091,18 @@ body.home-screen .page-shell.dashboard-page {
 }
 .home-profile-setup strong {
   color: var(--ink);
-  font-size: 11px;
+  font-size: 14px;
 }
 .home-profile-setup p {
   margin: 2px 0 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 14px;
 }
 body.home-screen .calculator-section {
   padding: 24px 0 36px;
 }
 body.home-screen .calculator-section .section-heading p {
-  font-size: 11px;
+  font-size: 14px;
 }
 body.home-screen .tools-grid {
   grid-template-columns: 1fr;
@@ -4898,12 +5135,12 @@ body.home-screen .calculator-screen-heading h2 {
   margin: 0 0 5px;
   font-size: 29px;
   font-weight: 700;
-  letter-spacing: -.04em;
+  letter-spacing: 0px;
 }
 body.home-screen .calculator-screen-heading p {
   margin: 0;
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 14px;
 }
 .calculators-page .calculator-section {
   padding: 0 0 24px;
@@ -4918,12 +5155,12 @@ body.home-screen .calculator-screen-heading p {
   margin: 0 0 5px;
   font-size: 29px;
   font-weight: 700;
-  letter-spacing: -.04em;
+  letter-spacing: 0px;
 }
 .calculators-page .calculator-screen-heading p {
   margin: 0;
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 14px;
 }
 .calculator-directory {
   display: grid;
@@ -4949,7 +5186,7 @@ body.home-screen .calculator-screen-heading p {
   border-radius: 15px;
   border-color: var(--line);
   background: var(--surface);
-  font-size: 13px;
+  font-size: 14px;
 }
 .calculator-search input::-webkit-search-cancel-button {
   cursor: pointer;
@@ -4973,7 +5210,7 @@ body.home-screen .calculator-screen-heading p {
   color: var(--ink-soft);
   background: var(--surface);
   cursor: pointer;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 600;
   transition: color .15s,border-color .15s,background .15s;
 }
@@ -5028,13 +5265,13 @@ body.home-screen .calculator-screen-heading p {
 }
 .calculator-row-copy strong {
   color: var(--ink);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 650;
 }
 .calculator-row-copy small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 14px;
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -5050,7 +5287,7 @@ body.home-screen .calculator-screen-heading p {
   border: 1px dashed var(--line-strong);
   border-radius: 15px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   text-align: center;
 }
 body.home-screen .mobile-menu.open {
@@ -5063,11 +5300,6 @@ body.home-screen .mobile-menu.open {
   }
   .home-heading {
     margin-bottom: 17px;
-  }
-  .home-quote-card {
-    min-height: 88px;
-    margin-bottom: 20px;
-    padding: 16px;
   }
   .home-metric-card {
     min-height: 116px;
@@ -5120,7 +5352,7 @@ body.home-screen .mobile-menu.open {
   box-shadow: none;
 }
 .settings-card h2 { margin-bottom: var(--space-2); font-size: 18px; }
-.settings-card > p,.settings-card .calc-desc { margin: 0 0 16px; color: var(--ink-soft); font-size: 13px; }
+.settings-card > p,.settings-card .calc-desc { margin: 0 0 16px; color: var(--ink-soft); font-size: 14px; }
 .settings-card .field { max-width: 440px; }
 .settings-card select,.settings-card input[type="file"] { width: 100%; }
 .settings-screen select {
@@ -5142,10 +5374,10 @@ body.home-screen .mobile-menu.open {
 }
 .settings-card .primary-btn,.settings-card .secondary-btn,.settings-card .ghost-btn { margin-top: 4px; }
 .settings-card .settings-data-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-.settings-card small { display: block; margin-top: 12px; color: var(--muted); font-size: 11px; }
-.settings-card .profile-status { min-height: 1.5em; margin: 10px 0 0; font-size: 12px; }
+.settings-card small { display: block; margin-top: 12px; color: var(--muted); font-size: 14px; }
+.settings-card .profile-status { min-height: 1.5em; margin: 10px 0 0; font-size: 14px; }
 .settings-card.settings-data-card { grid-column: auto; grid-row: auto; }
-.settings-version { color: var(--muted); font-size: 13px; }
+.settings-version { color: var(--muted); font-size: 14px; }
 body.settings-screen { scroll-behavior: smooth; }
 @media (min-width: 769px) {
   body.settings-screen:not(.home-screen) {
@@ -5203,6 +5435,8 @@ body.settings-screen { scroll-behavior: smooth; }
   body:not(.home-screen) main.page-shell,
   body:not(.home-screen) main.profile,
   body:not(.home-screen) .calc-page.shell,
+  body:not(.home-screen)[data-calc] .calc-page.shell,
+  body[data-calc="bmi"] .calc-page.shell,
   body:not(.home-screen) .history-page-shell {
     width: min(var(--content-width),calc(100% - 2 * var(--page-gutter)));
     margin-inline: auto;
@@ -5308,8 +5542,8 @@ body.settings-screen { scroll-behavior: smooth; }
   border-color: color-mix(in srgb,var(--calculator-icon-accent) 25%,var(--line));
   background: color-mix(in srgb,var(--calculator-icon-accent) 15%,var(--surface));
 }
-.mobile-menu .mobile-tool-link::before,
-.mobile-menu .mobile-secondary-link::before {
+.mobile-menu .mobile-track-link::before,
+.mobile-menu .mobile-calculators-link::before {
   width: 6px;
   height: 6px;
   flex: 0 0 6px;
@@ -5318,7 +5552,7 @@ body.settings-screen { scroll-behavior: smooth; }
   background: var(--feature-accent, var(--feature-calculators));
   content: "";
 }
-.mobile-menu .mobile-tool-link { --feature-accent: var(--feature-calculators); }
+.mobile-menu .mobile-calculators-link { --feature-accent: var(--feature-calculators); }
 .mobile-menu a[href$="/nutrition/index.html"] { --feature-accent: var(--feature-nutrition); }
 .mobile-menu a[href$="/planner/index.html"] { --feature-accent: var(--feature-planner); }
 .mobile-menu a[href$="/history/index.html"] { --feature-accent: var(--feature-history); }
@@ -5408,4 +5642,134 @@ body[data-calc="protein"] .result-rows .row b { color: var(--feature-protein); }
 
 :focus-visible {
   outline-color: var(--accent-strong);
+}
+
+@media (max-width: 768px) {
+  :root {
+    --text-body: 16px;
+    --text-sm: 14px;
+    --text-xs: 14px;
+    --mobile-nav-clearance: calc(86px + env(safe-area-inset-bottom));
+  }
+
+  html {
+    scroll-padding-top: calc(90px + env(safe-area-inset-top));
+    scroll-padding-bottom: var(--mobile-nav-clearance);
+  }
+
+  body:not(.splash-active) {
+    padding-bottom: var(--mobile-nav-clearance);
+  }
+
+  .page-shell,
+  .calc-page,
+  .history-page-shell,
+  .profile,
+  body:not(.home-screen) main.page-shell,
+  body:not(.home-screen) main.profile,
+  body:not(.home-screen) .calc-page.shell,
+  body:not(.home-screen) .history-page-shell,
+  body.home-screen:not(.splash-active) .page-shell.dashboard-page {
+    padding-bottom: var(--mobile-nav-clearance);
+  }
+
+  button,
+  [role="button"] {
+    min-height: 44px !important;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    min-height: 48px;
+    font-size: 16px !important;
+  }
+
+  .mobile-tab,
+  .mobile-menu a,
+  .desktop-nav a,
+  .brand,
+  .bmi-icon-button,
+  .home-quick-tool,
+  .calculator-directory-row,
+  .history-range button,
+  .history-range a,
+  .history-record-actions a {
+    min-height: 44px !important;
+  }
+
+  .mobile-menu .mobile-track-link,
+  .mobile-menu .mobile-calculators-link,
+  .mobile-menu .mobile-app-link,
+  .planner-focus button,
+  .workout-template-item button {
+    min-height: 44px !important;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    scroll-margin-bottom: var(--mobile-nav-clearance);
+  }
+}
+
+/* Accessible type scale and wider tablet layouts */
+body {
+  letter-spacing: 0px;
+}
+h1,h2,h3,h4,h5,h6 {
+  font-weight: 700;
+  letter-spacing: 0px;
+}
+label,.field label,.add-exercise-form label,.pill-group label,.page-kicker,.section-kicker {
+  font-weight: 600;
+  letter-spacing: 0px;
+}
+small {
+  font-size: 14px;
+}
+body input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+body select,
+body textarea {
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  body:not(.home-screen) {
+    width: 100%;
+    margin: 0;
+    border: 0;
+    padding-bottom: 0;
+  }
+  body:not(.home-screen) main.page-shell,
+  body:not(.home-screen) main.profile,
+  body:not(.home-screen) .calc-page.shell,
+  body:not(.home-screen) .history-page-shell {
+    width: min(840px,calc(100% - 32px));
+  }
+  body.home-screen:not(.splash-active) .page-shell.dashboard-page {
+    width: min(840px,calc(100% - 32px));
+  }
+  .dashboard-layout {
+    grid-template-columns: minmax(0,1.3fr) minmax(260px,.8fr);
+  }
+  .nutrition-secondary-grid,
+  .nutrition-log-grid,
+  .settings-grid,
+  body[data-calc] .calc-tiles:not(.single),
+  .profile .calc-tiles {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  body:not(.home-screen) .nutrition-secondary-grid,
+  body:not(.home-screen) .nutrition-log-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+@media (min-width: 768px) and (max-width: 900px) {
+  .dashboard-layout {
+    grid-template-columns: minmax(0,1fr);
+  }
+  .dashboard-aside {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
 }

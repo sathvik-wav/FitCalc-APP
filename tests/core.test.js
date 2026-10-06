@@ -94,7 +94,7 @@ function loadPlannerSandbox(options = {}) {
         setAttribute() {}, getAttribute() { return null; },
         closest() { return null; },
         querySelectorAll(selector) {
-          if (id === "workout-list") return this.children.flatMap((child) => child.querySelectorAll(selector));
+          if (id === "workout-list" || id === "template-list") return this.children.flatMap((child) => child.querySelectorAll(selector));
           return [];
         },
         querySelector() { return null; }, appendChild(child) { this.children.push(child); }, children: []
@@ -104,7 +104,7 @@ function loadPlannerSandbox(options = {}) {
         get() { return html; },
         set(value) {
           html = String(value);
-          if (id === "workout-list" && html === "") node.children = [];
+          if ((id === "workout-list" || id === "template-list") && html === "") node.children = [];
         }
       });
       elements.set(id, node);
@@ -327,7 +327,7 @@ function loadFoodApiRetrySandbox() {
     getElementById(id) { if (!nodes.has(id)) nodes.set(id, createApiNode()); return nodes.get(id); },
     createElement() { return createApiNode(); }
   };
-  const sandbox = { document, window: { addEventListener() {} }, navigator: {}, fetch: async function () { throw new Error("offline"); }, URLSearchParams };
+  const sandbox = { document, window: { addEventListener() {} }, navigator: {}, fetch: async function () { throw new Error("offline"); }, URLSearchParams, AbortController, setTimeout, clearTimeout };
   vm.createContext(sandbox);
   vm.runInContext(fs.readFileSync(__dirname + "/../food-api.js", "utf8"), sandbox);
   document.getElementById("food-database-search").value = "oats";
@@ -394,7 +394,7 @@ function loadGlobalScriptSandbox(href = "https://fitcalc.test/profile/", options
     documentElement: rootElement,
     body,
     querySelector(selector) { return selector === ".desktop-nav" ? desktopNav : null; },
-    querySelectorAll(selector) { return selector === ".theme-toggle" ? [theme] : []; },
+    querySelectorAll() { return []; },
     getElementById(id) {
       if (id === "mobile-menu") return mobileMenu;
       if (id === "hamburger-btn") return hamburger;
@@ -644,13 +644,21 @@ test("Open Food Facts calories use kcal, convert kJ, or warn when unavailable", 
   const missing = ctx.normalizeOpenFoodFactsProduct({ product_name: "No calorie product", nutriments: {
     proteins_100g: 4, carbohydrates_100g: 10
   } });
-  assert.strictEqual(missing.calories, 0);
+  assert.strictEqual(missing.calories, null);
   assert.strictEqual(missing.caloriesMissing, true);
+  assert.deepStrictEqual(Array.from(missing.missingNutrients), ["calories", "fat", "fiber"]);
+
+  const ambiguous = ctx.normalizeOpenFoodFactsProduct({ product_name: "Serving-only energy", serving_size: "1 bar (40 g)", nutriments: {
+    "energy-kcal": 180, proteins_100g: 10, carbohydrates_100g: 20, fat_100g: 5
+  } });
+  assert.strictEqual(ambiguous.calories, null);
+  assert.strictEqual(ambiguous.caloriesMissing, true);
+  assert.strictEqual(ambiguous.servingGrams, 40);
 
   const app = loadFoodApiRetrySandbox();
   app.document.getElementById("food-amount").focus = () => {};
   app.sandbox.chooseFoodFromApi(missing);
-  assert.match(app.nodes.get("food-api-status").textContent, /calories are unavailable.*check the label/i);
+  assert.match(app.nodes.get("food-api-status").textContent, /calories.*unavailable.*check the package label/i);
   assert.strictEqual(app.nodes.get("food-api-status").dataset.state, "warning");
 });
 
@@ -1071,12 +1079,28 @@ test("Saving an existing workout template asks before overwriting", async () => 
   } });
   let confirmed = 0;
   planner.sandbox.window.fitcalcDialog.confirm = async () => { confirmed++; return false; };
-  const saveButton = planner.getElement("workout-list").querySelectorAll(".save-template")[0];
-  await saveButton.click();
+  planner.getElement("template-workout-select").value = "w1";
+  await planner.getElement("save-workout-template").click();
   assert.strictEqual(confirmed, 1);
   assert.deepStrictEqual(JSON.parse(planner.storage.get("fitcalc_workout_templates")), [
     { name: " upper   body ", exercises: [{ name: "Old" }] }
   ]);
+});
+
+test("Templates tab loads a saved template into the selected day and deletes it", async () => {
+  const planner = loadPlannerSandbox();
+  planner.sandbox.saveWorkoutTemplates([{ name: "Push day", exercises: [{ name: "Press" }, { name: "Row" }] }]);
+  planner.sandbox.renderWorkoutTemplates();
+  const templateList = planner.getElement("template-list");
+  const loadButton = templateList.querySelectorAll(".load-template")[0];
+  await loadButton.click();
+  const loaded = planner.sandbox.getPlanner().workouts[0];
+  assert.strictEqual(loaded.name, "Push day");
+  assert.deepStrictEqual(Array.from(loaded.exercises, (exercise) => exercise.name), ["Press", "Row"]);
+
+  const deleteButton = templateList.querySelectorAll(".delete-template")[0];
+  await deleteButton.click();
+  assert.deepStrictEqual(JSON.parse(planner.storage.get("fitcalc_workout_templates")), []);
 });
 
 test("R5-6 Settings reset and import refresh shared units without changing Profile measurements", async () => {
@@ -1305,6 +1329,47 @@ test("R5-10 food amount limit applies after serving conversion and matches the i
   assert.ok(app.toasts.some((toast) => toast.type === "error" && toast.message.includes("10,000 g")));
   const html = fs.readFileSync(__dirname + "/../nutrition/index.html", "utf8");
   assert.match(html, /id="food-amount"[^>]*max="10000"/);
+});
+
+test("nutrition serving units scale live food values and preserve unknown nutrients", () => {
+  const app = loadNutritionSandbox();
+  const food = app.sandbox.findFood("oats");
+  const cup = app.sandbox.calculateLoggedFood(food, 1, "Breakfast", "cup");
+  assert.strictEqual(cup.amount, 81);
+  assert.ok(Math.abs(cup.calories - 315.09) < 1e-9);
+  app.getElement("food-name").value = "oats";
+  app.getElement("food-amount").value = "1";
+  app.getElement("food-amount-unit").value = "cup";
+  app.sandbox.updateNutritionFoodPreview();
+  assert.match(app.getElement("food-nutrition-preview").textContent, /1 cup · 81 g used · 315\.1 kcal.*13\.7 g protein.*53\.5 g carbs/);
+  const serving = app.sandbox.calculateLoggedFood(Object.assign({}, food, { servingGrams: 45 }), 2, "Breakfast", "serving");
+  assert.strictEqual(serving.amount, 90);
+  assert.ok(Math.abs(serving.calories - 350.1) < 1e-9);
+  const egg = app.sandbox.findFood("egg");
+  const oneEgg = app.sandbox.calculateLoggedFood(egg, 1, "Breakfast", "piece");
+  assert.strictEqual(oneEgg.amount, 50);
+  app.getElement("food-name").value = "egg";
+  app.getElement("food-amount").value = "1";
+  app.getElement("food-amount-unit").value = "piece";
+  app.sandbox.updateNutritionFoodPreview();
+  assert.match(app.getElement("food-nutrition-preview").textContent, /1 piece · 50 g used/);
+  assert.ok(!app.sandbox.supportedFoodUnits(app.sandbox.findFood("white rice")).includes("piece"));
+  assert.ok(!app.sandbox.supportedFoodUnits(app.sandbox.findFood("milk")).includes("piece"));
+  vm.runInContext("foodDatabase", app.sandbox).forEach(function (item) {
+    assert.ok(item.servingGrams > 0, item.name + " needs an explicit serving weight");
+    item.units.forEach(function (unit) {
+      if (unit === "g" || unit === "serving") return;
+      assert.ok(item.unitGrams[unit] > 0, item.name + " needs an explicit " + unit + " conversion");
+    });
+  });
+  const incomplete = app.sandbox.calculateLoggedFood({ name: "Partial", calories: null, protein: 1, carbs: null, fat: 0, fiber: null }, 100, "Snack", "g");
+  assert.strictEqual(incomplete.calories, null);
+  assert.strictEqual(incomplete.carbs, null);
+  assert.strictEqual(incomplete.fat, 0);
+  const day = { foods: [incomplete] };
+  app.sandbox.recalculateNutritionTotals(day);
+  assert.strictEqual(day.calories, null);
+  assert.strictEqual(day.fat, 0);
 });
 
 test("R5-11 weight chart summary, header, and tooltips use one decimal in pounds", () => {
@@ -2371,7 +2436,9 @@ test("A3/A4 Settings units convert Profile fields while profile targets remain e
   get("profile-goal").value = "lose";
   get("profile-form").handlers.submit({ preventDefault() {} });
   assert.strictEqual(app.sandbox.getProfile().weight, 80);
-  assert.strictEqual(get("target-form").hidden, false);
+  const calculatedTargetCalories = app.sandbox.getTargets().calories;
+  assert.strictEqual(get("target-form").hidden, true);
+  assert.strictEqual(get("profile-target-edit").hidden, false);
 
   get("unit-weight").value = "lb";
   get("unit-height").value = "ft-in";
@@ -2389,15 +2456,36 @@ test("A3/A4 Settings units convert Profile fields while profile targets remain e
   assert.strictEqual(app.sandbox.getFitCalcPreferences().units.height, "ft-in");
 
   const editedTargets = { calories: 2450, protein: 170, carbs: 300, fat: 75, fiber: 35 };
+  get("profile-target-edit").click();
+  assert.strictEqual(get("target-form").hidden, false);
+  assert.strictEqual(get("profile-target-list").hidden, true);
+  assert.strictEqual(get("profile-target-edit").hidden, true);
+  Object.entries(editedTargets).forEach(([key, value]) => { get("target-" + key).value = String(value); });
+  get("target-cancel").click();
+  assert.strictEqual(get("target-form").hidden, true);
+  assert.strictEqual(get("profile-target-list").hidden, false);
+  assert.strictEqual(app.sandbox.getTargets().calories, calculatedTargetCalories);
+
+  get("profile-target-edit").click();
   Object.entries(editedTargets).forEach(([key, value]) => { get("target-" + key).value = String(value); });
   get("target-form").handlers.submit({ preventDefault() {} });
   assert.strictEqual(app.sandbox.getTargets().calories, 2450);
   assert.strictEqual(app.sandbox.getTargets().protein, 170);
+  assert.strictEqual(get("target-form").hidden, true);
+  assert.strictEqual(get("profile-target-list").hidden, false);
+
+  get("profile-target-edit").click();
+  get("reset-targets").click();
+  assert.strictEqual(get("target-form").hidden, true);
+  assert.strictEqual(app.sandbox.getTargets().calories, app.sandbox.computeTargets(app.sandbox.getProfile()).calories);
+  assert.match(get("target-status").textContent, /reset to the calculated estimates/i);
 });
 
 test("Profile saves an optional trimmed name in the existing record and renders it as text", () => {
   const app = loadProfileSandbox();
   const get = app.getElement;
+  assert.strictEqual(get("profile-details-card").hidden, false);
+  assert.strictEqual(get("profile-edit").hidden, true);
   app.sandbox.updateProfile({ migrationMarker: "preserved" });
   get("profile-name").value = "  <b>Rin</b>  ";
   get("profile-age").value = "25";
@@ -2421,10 +2509,13 @@ test("Profile saves an optional trimmed name in the existing record and renders 
   assert.strictEqual(get("profile-card-goal").textContent, "Lose weight");
   assert.strictEqual(get("profile-avatar-initial").textContent, "<");
   assert.strictEqual(get("profile-avatar-person").hidden, true);
-
-  get("profile-goal-edit").click();
-  assert.strictEqual(get("profile-goal").scrolledIntoView, true);
-  assert.strictEqual(get("profile-goal").focused, true);
+  assert.strictEqual(get("profile-details-card").hidden, true);
+  assert.strictEqual(get("profile-edit").hidden, false);
+  get("profile-edit").click();
+  assert.strictEqual(get("profile-details-card").hidden, false);
+  assert.strictEqual(get("profile-edit").hidden, true);
+  get("profile-cancel").click();
+  assert.strictEqual(get("profile-details-card").hidden, true);
 
   const previousProfileJson = values.get("fitcalc_profile");
   const originalGetElementById = ctx.document.getElementById;
@@ -2441,33 +2532,85 @@ test("Profile saves an optional trimmed name in the existing record and renders 
     else values.set("fitcalc_profile", previousProfileJson);
   }
 
+  get("profile-edit").click();
   get("profile-name").value = "   ";
   get("profile-form").handlers.submit({ preventDefault() {} });
   assert.strictEqual(app.sandbox.getProfile().name, "");
   assert.strictEqual(get("profile-card-name").textContent, "Your name");
   assert.strictEqual(get("profile-avatar-initial").hidden, true);
   assert.strictEqual(get("profile-avatar-person").hidden, false);
+  assert.strictEqual(get("profile-card-goal").hidden, false);
   assert.strictEqual(get("profile-card-goal").textContent, "Lose weight");
   assert.doesNotMatch(get("profile-status").textContent, /error/i);
+});
+
+test("Home greeting follows local time boundaries and uses the saved profile name", () => {
+  const originalGetElementById = ctx.document.getElementById;
+  const greeting = { textContent: "" };
+  const name = { textContent: "" };
+  const icon = { dataset: {} };
+  const periods = new Map([[4, "night"], [5, "morning"], [11, "morning"], [12, "afternoon"], [16, "afternoon"], [17, "evening"], [20, "evening"], [21, "night"]]);
+  const previous = values.get("fitcalc_profile");
+  ctx.document.getElementById = (id) => id === "home-greeting-label" ? greeting : (id === "home-user-name" ? name : (id === "home-greeting-icon" ? icon : null));
+  try {
+    ctx.saveProfile({ name: "Nia" });
+    [
+      [4, "Good night,"], [5, "Good morning,"], [11, "Good morning,"],
+      [12, "Good afternoon,"], [16, "Good afternoon,"], [17, "Good evening,"],
+      [20, "Good evening,"], [21, "Good night,"]
+    ].forEach(([hour, expected]) => {
+      ctx.updateHomeGreeting(new Date(2026, 0, 15, hour));
+      assert.strictEqual(greeting.textContent, expected);
+      assert.strictEqual(name.textContent, "Nia");
+      assert.strictEqual(icon.dataset.period, periods.get(hour));
+    });
+  } finally {
+    ctx.document.getElementById = originalGetElementById;
+    if (previous === undefined) values.delete("fitcalc_profile");
+    else values.set("fitcalc_profile", previous);
+  }
+});
+
+test("first-run profile uses the existing activity and goal values and keeps Skip available", () => {
+  const home = fs.readFileSync(__dirname + "/../index.html", "utf8");
+  const profile = fs.readFileSync(__dirname + "/../profile/index.html", "utf8");
+  ["sedentary", "light", "moderate", "active", "very_active"].forEach((value) => {
+    assert.match(home, new RegExp('id="first-run-activity"[\\s\\S]*?value="' + value + '"'));
+    assert.match(profile, new RegExp('id="profile-activity"[\\s\\S]*?value="' + value + '"'));
+  });
+  ["lose", "maintain", "gain"].forEach((value) => {
+    assert.match(home, new RegExp('id="first-run-goal"[\\s\\S]*?value="' + value + '"'));
+    assert.match(profile, new RegExp('id="profile-goal"[\\s\\S]*?value="' + value + '"'));
+  });
+  assert.match(home, /id="first-run-skip"/);
+  assert.match(fs.readFileSync(__dirname + "/../script.js", "utf8"), /profileSetupDismissed/);
 });
 
 test("Profile page contains personal and fitness information without Settings-only sections", () => {
   const html = fs.readFileSync(__dirname + "/../profile/index.html", "utf8");
   const summaryCard = html.indexOf('class="card profile-summary-card"');
-  const goalCard = html.indexOf('class="card profile-goal-card"');
   const profileDetails = html.indexOf('id="profile-title"');
-  assert.ok(summaryCard >= 0 && summaryCard < goalCard && goalCard < profileDetails);
+  assert.ok(summaryCard >= 0 && summaryCard < profileDetails);
+  assert.doesNotMatch(html, /profile-goal-card|profile-goal-edit|>My Goal</);
+  assert.match(html, /id="profile-card-goal"/);
+  assert.match(html, /id="profile-edit"[^>]*>Edit<\/button>/);
+  assert.match(html, /id="profile-cancel"/);
   const sections = ["profile-title", "profile-target-title"].map((id) => html.indexOf(`id="${id}"`));
   assert.ok(sections.every((position) => position >= 0));
   assert.deepStrictEqual(sections, sections.slice().sort((a, b) => a - b));
   assert.strictEqual((html.match(/class="card tile profile-section/g) || []).length, 2);
-  const profileFormMarkup = html.slice(html.indexOf('<form id="profile-form">'), html.indexOf('</form>', html.indexOf('<form id="profile-form">')));
-  const nameField = profileFormMarkup.slice(profileFormMarkup.indexOf('<div class="field">'), profileFormMarkup.indexOf('</div>') + 6);
-  assert.match(nameField, /<label for="profile-name">Name<\/label>/);
-  assert.match(nameField, /<input type="text" id="profile-name" maxlength="30" autocomplete="given-name">/);
-  assert.doesNotMatch(nameField, /\brequired\b/);
+  const formStart = html.indexOf('<form id="profile-form"');
+  const profileFormMarkup = html.slice(formStart, html.indexOf('</form>', formStart));
+  assert.match(profileFormMarkup, /<label for="profile-name">Name<\/label>/);
+  const nameInput = profileFormMarkup.match(/<input type="text" id="profile-name"[^>]*>/)[0];
+  assert.match(nameInput, /maxlength="30" autocomplete="given-name"/);
+  assert.doesNotMatch(nameInput, /\brequired\b/);
   assert.ok(profileFormMarkup.indexOf('id="profile-name"') < profileFormMarkup.indexOf('id="profile-age"'));
-  assert.match(html, /id="profile-goal-edit"[^>]*>Edit<\/button>/);
+  assert.ok(profileFormMarkup.indexOf('id="profile-age"') < profileFormMarkup.indexOf('id="profile-sex"'));
+  assert.ok(profileFormMarkup.indexOf('id="profile-height"') < profileFormMarkup.indexOf('id="profile-weight"'));
+  assert.ok(profileFormMarkup.indexOf('id="profile-activity"') < profileFormMarkup.indexOf('id="profile-goal"'));
+  assert.match(profileFormMarkup, /profile-field-pair[\s\S]*id="profile-age"[\s\S]*id="profile-sex"/);
+  assert.match(profileFormMarkup, /profile-field-pair[\s\S]*id="profile-height"[\s\S]*id="profile-weight"/);
   assert.doesNotMatch(html, /Health Integrations/i);
 
   const preservedIds = [
@@ -2484,8 +2627,11 @@ test("Profile page contains personal and fitness information without Settings-on
     .forEach((label) => assert.ok(!html.includes(label), `${label} should live in Settings`));
 
   const topbar = html.match(/<header class="topbar">[\s\S]*?<\/header>/)[0];
-  assert.match(topbar, /theme-toggle/);
-  assert.match(html, /id="reset-targets">Reset to estimate/);
+  assert.doesNotMatch(topbar, /theme-toggle/);
+  assert.match(html, /id="profile-target-edit"[^>]*>Edit<\/button>/);
+  assert.match(html, /id="target-cancel">Cancel<\/button>/);
+  assert.match(html, /id="reset-targets">Reset to calculated<\/button>/);
+  assert.doesNotMatch(html, />Personalize<|>Edit daily targets</);
   assert.doesNotMatch(html, /href="[^"]*calculators?\//i);
   assert.doesNotMatch(html, /<script src="\.\.\/settings\.js"><\/script>/);
 });
@@ -2504,23 +2650,55 @@ test("A9 calculator target values arrive in the Profile target editor for explic
   assert.strictEqual(app.sandbox.getTargets().protein, 155);
 });
 
-test("A10 food database errors show retry and retry can complete successfully", async () => {
+test("B food search retries once and falls back to matching built-in foods after HTTP 503", async () => {
   const app = loadFoodApiRetrySandbox();
   const status = app.document.getElementById("food-api-status");
   const results = app.document.getElementById("food-api-results");
-  await app.sandbox.searchFoodDatabase();
-  assert.strictEqual(status.dataset.state, "error");
-  assert.strictEqual(results.children[1].textContent, "Retry search");
-
-  let requests = 0;
-  app.sandbox.fetch = async function () {
-    requests += 1;
-    return { ok: true, json: async function () { return { products: [] }; } };
+  const requests = [];
+  app.sandbox.searchBuiltInFoodList = function (query) {
+    assert.strictEqual(query, "bread");
+    return [{ name: "whole wheat bread", calories: 252, protein: 12.3, carbs: 43, fat: 3.5, fiber: 6 }];
   };
-  await results.children[1].click();
-  assert.strictEqual(requests, 1);
-  assert.match(results.textContent, /No matching products/);
-  assert.strictEqual(status.dataset.state, "success");
+  app.document.getElementById("food-database-search").value = "bread";
+  app.sandbox.fetch = async function (url) {
+    requests.push(url);
+    return { ok: false, status: 503 };
+  };
+  await app.sandbox.searchFoodDatabase();
+  assert.strictEqual(requests.length, 2);
+  assert.ok(requests.every((url) => url.includes("/cgi/search.pl")));
+  assert.strictEqual(status.dataset.state, "warning");
+  assert.match(status.textContent, /temporarily unavailable/i);
+  assert.strictEqual(results.children.length, 1);
+  assert.strictEqual(results.children[0].children[0].children[0].textContent, "whole wheat bread");
+});
+
+test("B barcode lookup handles the real Nutella barcode, HTTP 404, and network failures separately", async () => {
+  const app = loadFoodApiRetrySandbox();
+  const code = "3017620422003";
+  let requestedUrl = "";
+  app.sandbox.fetch = async function (url) {
+    requestedUrl = url;
+    return {
+      ok: true,
+      json: async function () {
+        return { status: "success", product: { code: code, product_name: "Nutella", serving_size: "15 g", nutriments: {
+          "energy-kcal_100g": 539, proteins_100g: 6.3, carbohydrates_100g: 57.5, fat_100g: 30.9, fiber_100g: 0
+        } } };
+      }
+    };
+  };
+  const product = await app.sandbox.lookupOpenFoodFactsBarcode(code);
+  assert.ok(requestedUrl.includes("/api/v3/product/" + code));
+  assert.strictEqual(product.name, "Nutella");
+  assert.strictEqual(product.servingGrams, 15);
+  assert.strictEqual(product.calories, 539);
+
+  app.sandbox.fetch = async function () { return { ok: false, status: 404 }; };
+  await assert.rejects(app.sandbox.lookupOpenFoodFactsBarcode(code), /Barcode not found\. Add it as a custom food instead\./);
+
+  app.sandbox.fetch = async function () { throw new Error("Failed to fetch"); };
+  await assert.rejects(app.sandbox.lookupOpenFoodFactsBarcode(code), function (error) { return error.kind === "network"; });
 });
 
 test("A10 exercise library errors include a working retry control", async () => {
@@ -2762,11 +2940,25 @@ test("A8 adaptive insights use actual weight, protein, step, and activity histor
   assert.ok(insights.some((item) => item.includes("consecutive days")));
 });
 
-test("Phase 5 CSS uses the shared 1199/768/480 viewport set", () => {
+test("Phase 5 CSS uses the shared 1199/850/768/480 viewport set", () => {
   const css = fs.readFileSync(__dirname + "/../main.css", "utf8");
   const viewportBreakpoints = [...new Set(Array.from(css.matchAll(/@media\s*\(max-width:\s*(\d+)px\)/g), (match) => Number(match[1])))];
-  assert.deepStrictEqual(viewportBreakpoints, [1199, 768, 480]);
+  assert.deepStrictEqual(viewportBreakpoints.slice().sort((a, b) => b - a), [1199, 850, 768, 480]);
   assert.doesNotMatch(css, /\.workspace\b/);
+});
+
+test("G1 shared typography keeps readable minimums, neutral tracking, and a wider canvas", () => {
+  const css = fs.readFileSync(__dirname + "/../main.css", "utf8");
+  const fontSizes = Array.from(css.matchAll(/font-size\s*:\s*([^;]+);/g), (match) => match[1].trim());
+  for (const value of fontSizes) {
+    const directPixels = value.match(/^(\d+(?:\.\d+)?)px/);
+    if (directPixels) assert.ok(Number(directPixels[1]) >= 14, "font size below 14px: " + value);
+  }
+  assert.match(css, /--text-body:\s*16px/);
+  assert.match(css, /--content-width:\s*840px/);
+  assert.match(css, /h1,h2,h3,h4,h5,h6\s*\{[^}]*font-weight:\s*700/);
+  assert.match(css, /label,\.field label,\.add-exercise-form label,\.pill-group label,\.page-kicker,\.section-kicker\s*\{[^}]*font-weight:\s*600[^}]*letter-spacing:\s*0/);
+  assert.doesNotMatch(css, /letter-spacing:\s*-/);
 });
 
 test("R6-2 History range controls are sticky pills and day summaries are tappable", () => {
@@ -2791,31 +2983,42 @@ test("Phase 5 Planner markup uses the shared page and card classes", () => {
   const tasksIndex = planner.indexOf("id=\"tasks-heading\"");
   assert.ok(navIndex < stepsIndex && stepsIndex < weightIndex && weightIndex < workoutsIndex && workoutsIndex < tasksIndex);
   assert.match(planner, /id="today-day"/);
-  assert.match(planner, /id="planner-view-all" aria-pressed="true"/);
+  assert.match(planner, /id="planner-view-templates" aria-pressed="false">Templates/);
+  assert.doesNotMatch(planner, /id="planner-view-all"/);
   assert.match(planner, /id="planner-workouts-card"/);
   assert.match(planner, /id="planner-task-card"/);
-  assert.ok(planner.indexOf("id=\"templates-heading\"") > workoutsIndex && planner.indexOf("id=\"templates-heading\"") < tasksIndex);
+  const templatesIndex = planner.indexOf('id="planner-templates-card"');
+  assert.ok(templatesIndex > planner.indexOf('id="planner-task-card"'));
+  assert.match(planner, /id="template-workout-select"/);
+  assert.match(planner, /id="save-workout-template"/);
+  const templateCard = planner.slice(templatesIndex, planner.indexOf("</section>", templatesIndex));
+  assert.doesNotMatch(templateCard, /id="(?:workout-list|task-list)"/);
   ["planner-steps", "planner-steps-goal", "planner-weight-value", "planner-weight-unit", "completed-workouts", "completed-tasks"].forEach((id) => {
     assert.match(planner, new RegExp(`id="${id}"`));
   });
 });
 
-test("Planner focus control shows Workouts, Tasks, or both without leaving the page", () => {
+test("Planner focus tabs show Workouts, Tasks, or Templates without repeating the other lists", () => {
   const app = loadPlannerSandbox();
   const workouts = app.getElement("planner-workouts-card");
   const tasks = app.getElement("planner-task-card");
+  const templates = app.getElement("planner-templates-card");
   assert.strictEqual(workouts.hidden, false);
-  assert.strictEqual(tasks.hidden, false);
+  assert.strictEqual(tasks.hidden, true);
+  assert.strictEqual(templates.hidden, true);
 
   app.getElement("planner-view-workouts").click();
   assert.strictEqual(workouts.hidden, false);
   assert.strictEqual(tasks.hidden, true);
+  assert.strictEqual(templates.hidden, true);
   app.getElement("planner-view-tasks").click();
   assert.strictEqual(workouts.hidden, true);
   assert.strictEqual(tasks.hidden, false);
-  app.getElement("planner-view-all").click();
-  assert.strictEqual(workouts.hidden, false);
-  assert.strictEqual(tasks.hidden, false);
+  assert.strictEqual(templates.hidden, true);
+  app.getElement("planner-view-templates").click();
+  assert.strictEqual(workouts.hidden, true);
+  assert.strictEqual(tasks.hidden, true);
+  assert.strictEqual(templates.hidden, false);
 });
 
 test("Phase 6 planner date navigation refreshes the selected day's activity", () => {
@@ -2860,16 +3063,16 @@ test("Phase 6 global script builds consistent navigation and keyboard mobile con
   const app = loadGlobalScriptSandbox();
   const expected = ["Home", "Calculators", "Activity", "Progress", "Profile"];
   const desktopLabels = Array.from(app.desktopNav.innerHTML.matchAll(/>(Home|Calculators|Activity|Progress|Profile)<\/a>/g), (match) => match[1]);
-  const mobileLabels = Array.from(app.mobileMenu.innerHTML.matchAll(/class="mobile-primary-link[^"]*"[^>]*>(Home|Calculators|Activity|Progress|Profile)<\/a>/g), (match) => match[1]);
+  const mobileLabels = Array.from(app.mobileMenu.innerHTML.matchAll(/<a class="[^"]*"[^>]*>([^<]+)<\/a>/g), (match) => match[1]);
   const bottomNav = app.appended.find((element) => element.className === "bottom-nav");
   const bottomLabels = Array.from(bottomNav.innerHTML.matchAll(/<span>(Home|Calculators|Activity|Progress|Profile)<\/span>/g), (match) => match[1]);
   assert.deepStrictEqual(desktopLabels, expected);
-  assert.deepStrictEqual(mobileLabels, expected);
+  assert.deepStrictEqual(mobileLabels, ["Nutrition", "Planner", "History", "All calculators", "Settings", "About", "Privacy"]);
   assert.deepStrictEqual(bottomLabels, ["Home", "Calculators", "Activity", "Progress", "Profile"]);
-  assert.strictEqual((app.mobileMenu.innerHTML.match(/class="mobile-tool-link/g) || []).length, 13);
-  ["Nutrition", "Planner", "History", "Settings", "About", "Privacy"].forEach((label) => assert.ok(app.mobileMenu.innerHTML.includes(">" + label + "</a>")));
+  assert.doesNotMatch(app.mobileMenu.innerHTML, /Primary navigation|mobile-primary-link|mobile-tool-link/);
+  assert.deepStrictEqual(Array.from(app.mobileMenu.innerHTML.matchAll(/mobile-menu-heading">([^<]+)</g), (match) => match[1]), ["Track", "Calculators", "App"]);
   const generatedLinks = Array.from(app.mobileMenu.innerHTML.matchAll(/href="([^"]+)"/g), (match) => match[1]);
-  assert.ok(generatedLinks.length >= 24);
+  assert.strictEqual(generatedLinks.length, 7);
   generatedLinks.forEach((href) => {
     const destination = new URL(href, "https://fitcalc.test/");
     assert.match(destination.pathname, /\/index\.html$/, `${href} should target an explicit page file`);
@@ -2879,20 +3082,20 @@ test("Phase 6 global script builds consistent navigation and keyboard mobile con
   const calculatorsPage = loadGlobalScriptSandbox("https://fitcalc.test/calculators/");
   const calculatorsBottomNav = calculatorsPage.appended.find((element) => element.className === "bottom-nav");
   assert.match(calculatorsBottomNav.innerHTML, /class="mobile-tab active" href="https:\/\/fitcalc\.test\/calculators\/index\.html"/);
-  assert.match(calculatorsPage.mobileMenu.innerHTML, /class="mobile-primary-link active"[^>]*href="https:\/\/fitcalc\.test\/calculators\/index\.html" aria-current="page"/);
+  assert.match(calculatorsPage.mobileMenu.innerHTML, /class="mobile-calculators-link active"[^>]*href="https:\/\/fitcalc\.test\/calculators\/index\.html" aria-current="page">All calculators<\/a>/);
   assert.strictEqual(app.rootElement.dataset.theme, "dark");
 
   const calculatorPage = loadGlobalScriptSandbox("https://fitcalc.test/bmi/index.html");
   const calculatorState = calculatorPage.sandbox.window.fitcalcNavigation.getState();
   assert.strictEqual(calculatorState.primary, "Calculators");
   assert.strictEqual(calculatorState.tool, "BMI");
-  assert.match(calculatorPage.mobileMenu.innerHTML, /class="mobile-tool-link active"[^>]*>BMI<\/a>/);
+  assert.match(calculatorPage.mobileMenu.innerHTML, /class="mobile-calculators-link active"[^>]*>All calculators<\/a>/);
 
   const nutritionPage = loadGlobalScriptSandbox("https://fitcalc.test/nutrition/index.html");
   assert.strictEqual(nutritionPage.sandbox.window.fitcalcNavigation.getState().primary, null);
   assert.strictEqual(nutritionPage.sandbox.window.fitcalcNavigation.getState().tracking, "Nutrition");
   assert.doesNotMatch(nutritionPage.appended.find((element) => element.className === "bottom-nav").innerHTML, /mobile-tab active/);
-  assert.match(nutritionPage.mobileMenu.innerHTML, /mobile-secondary-link active[^>]*>Nutrition<\/a>/);
+  assert.match(nutritionPage.mobileMenu.innerHTML, /mobile-track-link active[^>]*>Nutrition<\/a>/);
 
   const settingsPage = loadGlobalScriptSandbox("https://fitcalc.test/settings/index.html");
   const settingsState = settingsPage.sandbox.window.fitcalcNavigation.getState();
@@ -2925,11 +3128,37 @@ test("Phase 6 global script builds consistent navigation and keyboard mobile con
   app.hamburger.click();
   assert.strictEqual(app.hamburger.getAttribute("aria-expanded"), "true");
   assert.strictEqual(app.mobileMenu.hidden, false);
+  app.documentListeners.click({ target: {} });
+  assert.strictEqual(app.hamburger.getAttribute("aria-expanded"), "false");
+  assert.strictEqual(app.mobileMenu.hidden, true);
+  app.hamburger.click();
   app.documentListeners.keydown({ key: "Escape" });
   assert.strictEqual(app.hamburger.getAttribute("aria-expanded"), "false");
   assert.strictEqual(app.mobileMenu.hidden, true);
-  app.theme.click();
+  app.hamburger.click();
+  app.mobileMenu.handlers.click({ target: { closest() { return {}; } } });
+  assert.strictEqual(app.hamburger.getAttribute("aria-expanded"), "false");
+  assert.strictEqual(app.mobileMenu.hidden, true);
+  app.sandbox.window.fitcalcApplyThemePreference("light");
   assert.strictEqual(app.rootElement.dataset.theme, "light");
+});
+
+test("Header theme buttons are removed from app pages while Settings keeps its theme control", () => {
+  const htmlFiles = [];
+  function collect(directory) {
+    fs.readdirSync(directory, { withFileTypes: true }).forEach((entry) => {
+      if (["tests", "android", "ios", "node_modules", ".git"].includes(entry.name)) return;
+      const fullPath = path.join(directory, entry.name);
+      if (entry.isDirectory()) collect(fullPath);
+      else if (entry.isFile() && entry.name.endsWith(".html")) htmlFiles.push(fullPath);
+    });
+  }
+  collect(path.join(__dirname, ".."));
+  htmlFiles.forEach((file) => assert.doesNotMatch(fs.readFileSync(file, "utf8"), /class="theme-toggle"/, file));
+  const settings = fs.readFileSync(__dirname + "/../settings/index.html", "utf8");
+  assert.match(settings, /id="settings-theme"/);
+  assert.match(settings, /<script src="\.\.\/settings\.js"><\/script>/);
+  assert.match(fs.readFileSync(__dirname + "/../theme-init.js", "utf8"), /fitcalcApplyThemePreference|dataset\.theme/);
 });
 
 test("Onboarding completion persists through refresh and legacy FitCalc data is migrated", () => {

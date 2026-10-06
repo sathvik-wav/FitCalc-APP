@@ -51,7 +51,7 @@
           const win = item.frame.contentWindow;
           const name = item.route[0];
           check(name + " uses the 900px tablet viewport", win.innerWidth === 900);
-          check(name + " has shared navigation and theme control", !!doc.querySelector(".theme-toggle") && doc.querySelectorAll(".desktop-nav a").length === 5 && doc.querySelectorAll(".bottom-nav a").length === 5);
+          check(name + " has shared navigation without a header theme button", !doc.querySelector(".theme-toggle") && doc.querySelectorAll(".desktop-nav a").length === 5 && doc.querySelectorAll(".bottom-nav a").length === 5);
           check(name + " fits without horizontal overflow", Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth) <= 902);
           check(name + " screen content is present", !!doc.querySelector(item.route[2]));
         });

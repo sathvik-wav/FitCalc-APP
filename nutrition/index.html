@@ -11,9 +11,9 @@
 </head>
 <body>
 <header class="topbar">
-  <a class="brand" href="../index.html" aria-label="FitCalc home"><span class="brand-mark" aria-hidden="true">+</span><span>FitCalc</span></a>
+  <a class="brand" href="../index.html" aria-label="FitCalc home"><span class="brand-mark" aria-hidden="true">+</span><span>FitCalc™</span></a>
   <nav class="desktop-nav" aria-label="Main navigation"></nav>
-  <div class="topbar-right"><button class="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch theme"></button><button class="menu-toggle" id="hamburger-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button></div>
+  <div class="topbar-right"><button class="menu-toggle" id="hamburger-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button></div>
 </header>
 <nav class="mobile-menu" id="mobile-menu" aria-label="More navigation" hidden></nav>
 
@@ -74,13 +74,14 @@
   <div class="nutrition-log-grid">
     <section class="card" aria-labelledby="food-entry-heading">
       <div class="section-heading"><div><span class="section-kicker">Add an entry</span><h2 id="food-entry-heading">Food</h2></div><button type="button" class="secondary-btn" id="copy-previous-day">Copy previous day</button></div>
-      <div id="food-shortcuts" class="food-shortcuts" aria-label="Favorite and recent foods"></div>
+      <div id="food-shortcuts" class="food-shortcuts" aria-label="Saved custom and favorite foods"></div>
       <div class="form-grid">
         <div class="field"><label for="food-name">Food name</label><input type="text" id="food-name" autocomplete="off" placeholder="e.g. Oats"></div>
-        <div class="field"><label for="food-amount" id="food-amount-label">Amount in grams</label><input type="number" id="food-amount" inputmode="decimal" placeholder="100" min="0.01" max="10000" step="1"></div>
-        <div class="field"><label for="food-amount-unit">Amount unit</label><select id="food-amount-unit"><option value="grams">Grams</option><option value="servings">Servings</option></select></div>
+        <div class="field"><label for="food-amount" id="food-amount-label">Amount (g)</label><input type="number" id="food-amount" inputmode="decimal" placeholder="100" min="0.01" max="10000" step="1"></div>
+        <div class="field"><label for="food-amount-unit">Amount unit</label><select id="food-amount-unit"><option value="g">g</option></select></div>
         <div class="field"><label for="food-meal">Meal</label><select id="food-meal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select></div>
       </div>
+      <p id="food-nutrition-preview" class="nutrition-food-preview" role="status" aria-live="polite">Choose a food from the list or food database to preview its nutrition.</p>
       <div class="button-row"><button type="button" class="primary-btn" id="add-food">Add to log</button><button type="button" class="secondary-btn" id="cancel-food-edit" hidden>Cancel edit</button></div>
 
       <details class="custom-food-details">
@@ -101,7 +102,7 @@
       <div class="food-api-tools">
         <div><span class="section-kicker">Packaged food</span><h3>Search food database</h3></div>
         <div class="field"><label for="food-database-search">Search Open Food Facts</label><div class="inline-input-action"><input type="search" id="food-database-search" placeholder="Search packaged foods" autocomplete="off"><button type="button" class="secondary-btn" id="search-food-database">Search</button></div></div>
-        <div class="field"><label for="food-barcode">Barcode lookup</label><div class="inline-input-action"><input type="text" id="food-barcode" inputmode="numeric" pattern="[0-9]*" placeholder="Enter barcode"><button type="button" class="secondary-btn" id="lookup-food-barcode">Look up</button><button type="button" class="secondary-btn" id="start-barcode-camera">Camera</button></div></div>
+        <div class="field"><label for="food-barcode">Barcode lookup</label><div class="inline-input-action"><input type="text" id="food-barcode" inputmode="numeric" pattern="[0-9]*" placeholder="Enter barcode"><button type="button" class="secondary-btn" id="lookup-food-barcode">Look up</button><button type="button" class="secondary-btn" id="start-barcode-camera">Camera</button></div><small id="barcode-camera-hint" class="barcode-camera-hint" hidden>Type the barcode number.</small></div>
         <video id="barcode-camera" class="barcode-camera" playsinline hidden aria-label="Barcode camera preview"></video>
         <button type="button" class="secondary-btn" id="stop-barcode-camera" hidden>Stop camera</button>
         <p id="food-api-status" class="integration-status" role="status" aria-live="polite"></p>

@@ -18,12 +18,12 @@
 </head>
 <body>
   <h1>FitCalc responsive UI audit</h1>
-  <p>All 20 routes at 1440, 1024, 768, 430, 390, 375, and 320 CSS pixels.</p>
+  <p>All routes at 1440, 1280, 1024, 768, 430, 390, 375, and 320 CSS pixels; typography and layout are checked at 390, 768, and 1280 in light and dark themes.</p>
   <pre id="results" role="status" aria-live="polite">Loading responsive route matrix…</pre>
   <script>
     (function () {
       "use strict";
-      var widths = [1440, 1024, 768, 430, 390, 375, 320];
+      var widths = [1440, 1280, 1024, 768, 430, 390, 375, 320];
       var routes = [
         ["Home", "../index.html", ".dashboard-page"],
         ["Calculators", "../calculators/index.html", ".calculator-directory-row"],
@@ -73,10 +73,23 @@
             if (splashStart) splashStart.click();
             check(label + " onboarding CTA opens Today", !doc.body.classList.contains("splash-active") && !!doc.querySelector(".dashboard-page"));
           }
+          if (route[1] === "../index.html" && doc.getElementById("first-run-profile") && !doc.getElementById("first-run-profile").hidden) {
+            doc.getElementById("first-run-skip").click();
+            check(label + " first-run Skip returns to Home", doc.getElementById("first-run-profile").hidden);
+          }
           check(label + " viewport width", Math.abs(win.innerWidth - width) <= 1);
           check(label + " screen rendered", !!doc.querySelector(route[2]));
-          check(label + " shared navigation order", Array.prototype.map.call(doc.querySelectorAll(".desktop-nav a"), function (link) { return link.textContent.trim(); }).join("|") === expectedNav);
-          check(label + " no horizontal overflow", Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth) <= width + 2);
+          var contentShell = doc.querySelector(".page-shell, main.profile, .calc-page.shell, .history-page-shell");
+          if (width === 768) check(label + " tablet content uses a wide canvas", !!contentShell && contentShell.getBoundingClientRect().width >= 700 && contentShell.getBoundingClientRect().width <= 840);
+          if (width === 1280) check(label + " desktop content uses a 760–880px canvas", !!contentShell && contentShell.getBoundingClientRect().width >= 760 && contentShell.getBoundingClientRect().width <= 880);
+          check(label + " shared navigation order and no header theme button", Array.prototype.map.call(doc.querySelectorAll(".desktop-nav a"), function (link) { return link.textContent.trim(); }).join("|") === expectedNav && !doc.querySelector(".theme-toggle"));
+          var overflowWidth = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth);
+          var overflowItems = overflowWidth > width + 2 ? Array.prototype.map.call(doc.querySelectorAll("body *"), function (element) {
+            var bounds = element.getBoundingClientRect();
+            var style = win.getComputedStyle(element);
+            return bounds.right > width + 2 ? (element.id || element.className || element.tagName) + "[" + Math.round(bounds.left) + "+" + Math.round(bounds.width) + ",min=" + style.minWidth + ",scroll=" + element.scrollWidth + "]@" + Math.round(bounds.right) : "";
+          }).filter(Boolean).slice(-5).join(", ") : "";
+          check(label + " no horizontal overflow" + (overflowItems ? " (" + overflowItems + ")" : ""), overflowWidth <= width + 2);
           var navigationState = win.fitcalcNavigation.getState();
           var expectedPrimary = {
             "Home": "Home", "Calculators": "Calculators", "Nutrition": null,
@@ -85,25 +98,26 @@
           if (route[0] === "Home" || route[0] === "Calculators" || route[0] === "Planner" || route[0] === "History" || route[0] === "Profile" || route[0] === "Settings" || route[0] === "Nutrition") {
             check(label + " route state selects the expected primary destination", navigationState.primary === expectedPrimary);
           }
-          var currentPrimary = doc.querySelector(".mobile-menu .mobile-primary-link[aria-current=\"page\"]");
-          check(label + " menu primary active item matches shared route state", navigationState.primary
-            ? !!currentPrimary && currentPrimary.textContent.trim() === navigationState.primary
-            : !currentPrimary);
           var currentBottom = doc.querySelector(".bottom-nav .mobile-tab[aria-current=\"page\"]");
           check(label + " bottom active item matches shared route state", navigationState.primary
             ? !!currentBottom && currentBottom.textContent.indexOf(navigationState.primary) !== -1
             : !currentBottom);
-          var currentTracking = doc.querySelector(".mobile-menu .mobile-secondary-link[aria-current=\"page\"]");
+          var currentTracking = doc.querySelector(".mobile-menu .mobile-track-link[aria-current=\"page\"]");
           check(label + " tracking active item matches shared route state", navigationState.tracking
             ? !!currentTracking && currentTracking.textContent.trim() === navigationState.tracking
             : !currentTracking);
-          var currentTool = doc.querySelector(".mobile-menu .mobile-tool-link[aria-current=\"page\"]");
-          check(label + " tool active item matches shared route state", navigationState.tool
-            ? !!currentTool && currentTool.textContent.trim() === navigationState.tool
-            : !currentTool);
+          var currentCalculators = doc.querySelector(".mobile-menu .mobile-calculators-link[aria-current=\"page\"]");
+          check(label + " calculator destinations use the single All calculators link", navigationState.primary === "Calculators"
+            ? !!currentCalculators && currentCalculators.textContent.trim() === "All calculators"
+            : !currentCalculators);
+          var currentApp = doc.querySelector(".mobile-menu .mobile-app-link[aria-current=\"page\"]");
+          check(label + " App destination marks the current Settings page", navigationState.app
+            ? !!currentApp && currentApp.textContent.trim() === navigationState.app
+            : !currentApp);
+          check(label + " hamburger menu uses Track, Calculators, and App groups", Array.prototype.map.call(doc.querySelectorAll(".mobile-menu-heading"), function (heading) { return heading.textContent.trim(); }).join("|") === "Track|Calculators|App" && !doc.querySelector(".mobile-menu-primary"));
           if (route[0] === "Nutrition") {
-            var trackingHeading = Array.prototype.find.call(doc.querySelectorAll(".mobile-menu-heading"), function (heading) { return heading.textContent.trim() === "Tracking"; });
-            check(label + " Nutrition is visible inside Tracking without a primary highlight", !!trackingHeading && !!currentTracking && !currentPrimary && !currentBottom);
+            var trackingHeading = Array.prototype.find.call(doc.querySelectorAll(".mobile-menu-heading"), function (heading) { return heading.textContent.trim() === "Track"; });
+            check(label + " Nutrition is visible inside Track without a bottom-nav highlight", !!trackingHeading && !!currentTracking && !currentBottom);
           }
           if (route[0] === "Home") {
             var overviewEdit = doc.getElementById("home-overview-edit");
@@ -114,6 +128,20 @@
           if (route[0] === "Planner") {
             check(label + " planner uses the shared page shell", !!doc.querySelector("main.page-shell.planner-page") && !doc.querySelector("main.workspace"));
             check(label + " planner sections use shared cards", Array.prototype.every.call(doc.querySelectorAll(".planner-layout > section"), function (section) { return section.classList.contains("card") && !section.classList.contains("tile"); }));
+            if (width <= 850) {
+              var plannerLayout = doc.querySelector(".planner-layout").getBoundingClientRect();
+              var movementCard = doc.querySelector(".planner-steps-card").getBoundingClientRect();
+              var checkInCard = doc.querySelector(".planner-weight-card").getBoundingClientRect();
+              check(label + " Movement and Check-in stack at full planner width", Math.abs(movementCard.width - plannerLayout.width) < 2 && Math.abs(checkInCard.width - plannerLayout.width) < 2 && checkInCard.top >= movementCard.bottom);
+            }
+          }
+          if ((width === 768 || width === 1280) && route[0] === "Nutrition") {
+            var nutritionGrid = win.getComputedStyle(doc.querySelector(".nutrition-log-grid")).gridTemplateColumns;
+            check(label + " Nutrition cards use two columns", nutritionGrid.trim().split(/\s+/).length === 2);
+          }
+          if ((width === 768 || width === 1280) && route[0] === "Settings") {
+            var settingsGrid = win.getComputedStyle(doc.querySelector(".settings-grid")).gridTemplateColumns;
+            check(label + " Settings cards use two columns", settingsGrid.trim().split(/\s+/).length === 2);
           }
           if (width <= 768) {
             check(label + " mobile navigation layout", win.getComputedStyle(desktopNav).display === "none" && win.getComputedStyle(bottomNav).display === "grid");
@@ -123,7 +151,7 @@
             check(label + " mobile touch targets", doc.querySelector(".menu-toggle").getBoundingClientRect().height >= 40 && navBounds.height >= 60);
             check(label + " floating pill stays inset", navBounds.left >= 13 && navBounds.right <= width - 13 && navBounds.bottom <= win.innerHeight - 9 && navBounds.width <= 421);
             check(label + " floating pill shape", navStyle.position === "fixed" && parseFloat(navStyle.borderTopLeftRadius) >= 32 && navStyle.borderTopWidth === "1px" && navStyle.borderBottomWidth === "1px");
-            check(label + " page shell clears floating navigation", !!pageShell && parseFloat(win.getComputedStyle(pageShell).paddingBottom) >= 96);
+            check(label + " page shell clears floating navigation", !!pageShell && parseFloat(win.getComputedStyle(pageShell).paddingBottom) >= 86);
             check(label + " mobile navigation order", Array.prototype.map.call(bottomNav.querySelectorAll(".mobile-tab > span:last-child"), function (item) { return item.textContent.trim(); }).join("|") === expectedMobileNav);
             if (route[0] === "Settings") {
               var settingsMenu = doc.getElementById("mobile-menu");
@@ -133,9 +161,8 @@
                 menuButton.click();
                 var appMenuLink = settingsMenu.querySelector('.mobile-app-link[aria-current="page"]');
                 var menuBounds = settingsMenu.getBoundingClientRect();
-                settingsMenu.scrollTop = settingsMenu.scrollHeight;
                 var appLinkBounds = appMenuLink.getBoundingClientRect();
-                check(label + " hamburger menu scrolls to App destinations", settingsMenu.scrollHeight > settingsMenu.clientHeight && appLinkBounds.top >= menuBounds.top && appLinkBounds.bottom <= menuBounds.bottom && settingsMenu.querySelector(".mobile-primary-link").getBoundingClientRect().height >= 44);
+                check(label + " compact menu keeps App destinations in view", appLinkBounds.top >= menuBounds.top && appLinkBounds.bottom <= menuBounds.bottom && settingsMenu.querySelector(".mobile-calculators-link").getBoundingClientRect().height >= 44);
                 menuButton.click();
               }
               var themeSelect = doc.getElementById("settings-theme");
@@ -157,17 +184,61 @@
             check(label + " desktop keeps the mobile pill hidden", win.getComputedStyle(bottomNav).display === "none" && win.getComputedStyle(doc.querySelector(".menu-toggle")).display !== "none");
             check(label + " desktop pages use the wide app canvas", doc.body.getBoundingClientRect().width > width * .75);
           }
-          if (route[1] === "../index.html" && width === 390) {
-            var theme = doc.querySelector(".theme-toggle");
+          if (width === 390 || width === 768 || width === 1280) {
             var originalTheme = doc.documentElement.dataset.theme;
-            theme.click();
-            check("Home mobile theme switch updates the visual theme", doc.documentElement.dataset.theme !== originalTheme);
-            theme.click();
+            ["light", "dark"].forEach(function (themeName) {
+              doc.documentElement.dataset.theme = themeName;
+              check(label + " " + themeName + " theme applies", doc.documentElement.dataset.theme === themeName);
+              check(label + " " + themeName + " body text is at least 16px", parseFloat(win.getComputedStyle(doc.body).fontSize) >= 16);
+              var secondaryText = doc.querySelectorAll("p,small,label,.page-kicker,.section-kicker");
+              Array.prototype.forEach.call(secondaryText, function (element) {
+                var style = win.getComputedStyle(element);
+                if (style.display === "none" || element.closest("[hidden]") || !element.textContent.trim()) return;
+                check(label + " " + themeName + " secondary text is at least 14px (" + (element.id || element.className || element.tagName) + ": " + style.fontSize + ")", parseFloat(style.fontSize) >= 14);
+              });
+              Array.prototype.forEach.call(doc.querySelectorAll("h1,h2,h3,h4,h5,h6"), function (heading) {
+                var style = win.getComputedStyle(heading);
+                if (style.display === "none" || heading.closest("[hidden]")) return;
+                check(label + " " + themeName + " heading weight is at most 700", parseFloat(style.fontWeight) <= 700);
+                var headingTracking = parseFloat(style.letterSpacing);
+                check(label + " " + themeName + " heading tracking is not tighter than -.01em", style.letterSpacing === "normal" || headingTracking >= -parseFloat(style.fontSize) * .01);
+              });
+              Array.prototype.forEach.call(doc.querySelectorAll("label,.page-kicker,.section-kicker"), function (labelElement) {
+                var style = win.getComputedStyle(labelElement);
+                check(label + " " + themeName + " label weight and tracking are readable", parseFloat(style.fontWeight) <= 600 && (style.letterSpacing === "0px" || style.letterSpacing === "normal"));
+              });
+              var visibleControls = doc.querySelectorAll("button:not([hidden]),[role=button]:not([hidden]),input:not([type=hidden]):not([type=checkbox]):not([type=radio]),select,textarea,.mobile-tab,.mobile-menu a,.brand,.bmi-icon-button,.home-quick-tool,.calculator-directory-row,.history-range a,.history-record-actions a");
+              Array.prototype.forEach.call(visibleControls, function (control) {
+                var bounds = control.getBoundingClientRect();
+                var style = win.getComputedStyle(control);
+                if (style.display === "none" || style.visibility === "hidden" || bounds.height <= 0) return;
+                if (width <= 768) check(label + " " + themeName + " target >= 44px (" + (control.id || control.className || control.tagName) + ")", bounds.height >= 44);
+                if (/^(INPUT|SELECT|TEXTAREA)$/.test(control.tagName)) {
+                  check(label + " " + themeName + " form text >= 16px (" + (control.id || control.tagName) + ")", parseFloat(style.fontSize) >= 16);
+                }
+              });
+              if (width <= 768) {
+                var rootScrollPadding = parseFloat(win.getComputedStyle(doc.documentElement).scrollPaddingBottom);
+                check(label + " " + themeName + " scroll padding clears mobile nav", rootScrollPadding >= 86);
+                check(label + " " + themeName + " page bottom padding clears mobile nav", !!contentShell && parseFloat(win.getComputedStyle(contentShell).paddingBottom) >= 86);
+              }
+            });
+            if (originalTheme) doc.documentElement.dataset.theme = originalTheme;
+            else doc.documentElement.removeAttribute("data-theme");
+          }
+          if (route[1] === "../index.html" && width === 390) {
             var menuButton = doc.querySelector(".menu-toggle");
+            var menu = doc.getElementById("mobile-menu");
             menuButton.click();
-            check("Home mobile menu opens accessibly", menuButton.getAttribute("aria-expanded") === "true" && !doc.getElementById("mobile-menu").hidden);
+            check("Home mobile menu opens accessibly", menuButton.getAttribute("aria-expanded") === "true" && !menu.hidden);
+            doc.body.dispatchEvent(new win.MouseEvent("click", { bubbles: true }));
+            check("Home mobile menu closes on outside tap", menuButton.getAttribute("aria-expanded") === "false" && menu.hidden);
+            menuButton.click();
             doc.dispatchEvent(new win.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
             check("Home mobile menu closes with Escape", menuButton.getAttribute("aria-expanded") === "false" && doc.activeElement === menuButton);
+            menuButton.click();
+            menu.querySelector("a").click();
+            check("Home mobile menu closes on link tap", menuButton.getAttribute("aria-expanded") === "false" && menu.hidden);
           }
         } catch (error) {
           check(label + " audit completed (" + error.message + ")", false);

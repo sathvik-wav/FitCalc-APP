@@ -7,10 +7,13 @@ const path = require("path");
 const { pathToFileURL } = require("url");
 
 const root = path.resolve(__dirname, "..");
+const browserAssetToken = Date.now() + "-" + process.pid;
 const pages = [
   "tests/browser.html",
   "tests/ui-dashboard-live.html",
   "tests/ui-planner-render.html",
+  "tests/ui-planner-templates.html",
+  "tests/ui-nutrition-flow.html",
   "tests/ui-tablet.html",
   "tests/ui-responsive-audit.html",
   "tests/ui-smoke.html"
@@ -40,8 +43,12 @@ app.whenReady().then(async function () {
     const filePath = path.resolve(root, relative);
     if (!filePath.startsWith(root + path.sep)) return new Response("Forbidden", { status: 403 });
     try {
-      const body = await fs.promises.readFile(filePath);
-      const headers = { "Content-Type": mimeTypes[path.extname(filePath)] || "application/octet-stream" };
+      let body = await fs.promises.readFile(filePath);
+      if (path.extname(filePath).toLowerCase() === ".html" && !relative.startsWith("tests/")) {
+        const freshHtml = body.toString("utf8").replace(/(href=["'][^"']*main\.css)(\?[^"']*)?(["'])/g, "$1?browser-test=" + browserAssetToken + "$3");
+        body = Buffer.from(freshHtml);
+      }
+      const headers = { "Content-Type": mimeTypes[path.extname(filePath)] || "application/octet-stream", "Cache-Control": "no-store" };
       if (path.extname(filePath).toLowerCase() === ".html" && !relative.startsWith("tests/")) {
         headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.openfoodfacts.org; font-src 'self'; connect-src 'self' https://world.openfoodfacts.org https://wger.de https://api.wger.de; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self'";
       }
@@ -57,6 +64,7 @@ app.whenReady().then(async function () {
     height: 1000,
     webPreferences: { contextIsolation: true, nodeIntegration: false }
   });
+  await win.webContents.session.clearCache();
   let failures = 0;
   win.webContents.on("console-message", function (event) {
     const level = event.level;

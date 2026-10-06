@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FitCalc Nutrition entry flow</title>
+  <style>
+    body { margin: 0; padding: 24px; color: #f2f5ff; background: #101624; font: 14px/1.5 system-ui,sans-serif; }
+    h1 { margin: 0 0 12px; font-size: 24px; }
+    #results { padding: 16px; white-space: pre-wrap; border: 1px solid #34415e; border-radius: 12px; background: #182238; }
+    iframe { position: fixed; top: 0; left: -2000px; width: 390px; height: 844px; border: 0; }
+  </style>
+  <script>window.FITCALC_TEST_MODE = true;</script>
+</head>
+<body>
+  <h1>FitCalc Nutrition entry flow</h1>
+  <pre id="results" role="status">Loading Nutrition…</pre>
+  <script>
+    (function () {
+      "use strict";
+      var output = document.getElementById("results");
+      var frame = document.createElement("iframe");
+      var checks = [];
+      var loads = 0;
+      function check(label, passed) { checks.push((passed ? "PASS " : "FAIL ") + label); }
+      function done() {
+        var failures = checks.filter(function (line) { return line.indexOf("FAIL ") === 0; }).length;
+        output.textContent = checks.join("\n") + "\n\n" + (failures ? failures + " checks failed" : "All Nutrition entry checks passed");
+        document.body.dataset.result = failures ? "fail" : "pass";
+        document.title = failures ? "FAIL Nutrition entry" : "PASS Nutrition entry";
+      }
+      frame.addEventListener("load", function () {
+        var win = frame.contentWindow;
+        var doc = frame.contentDocument;
+        loads += 1;
+        if (loads === 1) win.addEventListener("error", function (event) {
+          checks.push("FAIL iframe exception: " + event.message + "\n" + (event.error && event.error.stack || ""));
+        });
+        try {
+          if (loads === 1) {
+            check("Recent shortcuts are removed", !Array.from(doc.querySelectorAll(".food-shortcut-group strong")).some(function (item) { return item.textContent === "Recent"; }));
+            win.toggleFoodFavorite(win.findFood("banana"));
+            win.renderFoodShortcuts();
+            check("Favorites remain available", Array.from(doc.querySelectorAll(".food-shortcut-group strong")).some(function (item) { return item.textContent === "Favorites"; }));
+
+            var foodName = doc.getElementById("food-name");
+            var amount = doc.getElementById("food-amount");
+            var unit = doc.getElementById("food-amount-unit");
+            foodName.value = "egg";
+            foodName.dispatchEvent(new win.Event("input", { bubbles: true }));
+            amount.value = "1";
+            unit.value = "piece";
+            amount.dispatchEvent(new win.Event("input", { bubbles: true }));
+            check("One egg previews the actual 50 g weight", doc.getElementById("food-nutrition-preview").textContent.includes("1 piece · 50 g used"));
+
+            foodName.value = "milk";
+            foodName.dispatchEvent(new win.Event("input", { bubbles: true }));
+            check("Milk has no piece unit", !Array.from(unit.options).some(function (option) { return option.value === "piece"; }));
+            foodName.value = "egg";
+            foodName.dispatchEvent(new win.Event("input", { bubbles: true }));
+            amount.value = "1";
+            unit.value = "piece";
+            doc.getElementById("food-meal").value = "Breakfast";
+            doc.getElementById("add-food").click();
+
+            var row = doc.querySelector("#food-list .nutrition-food-entry");
+            check("Food row shows amount, meal, macros, and separated actions", !!row && row.querySelector(".food-entry-meta").textContent.includes("1 piece · 50 g") && row.querySelector(".food-entry-meal").textContent === "Breakfast" && !!row.querySelector(".food-entry-macros") && !!row.querySelector(".favorite-food") && !!row.querySelector(".edit-food") && row.querySelector(".remove-food").classList.contains("ghost-btn"));
+
+            Object.defineProperty(win, "BarcodeDetector", { configurable: true, value: undefined });
+            win.updateBarcodeCameraAvailability();
+            check("Unsupported camera scanner is hidden with manual-entry hint", doc.getElementById("start-barcode-camera").hidden && !doc.getElementById("barcode-camera-hint").hidden && /Type the barcode number/.test(doc.getElementById("barcode-camera-hint").textContent));
+            check("Custom food disclosure has a visible plus indicator", win.getComputedStyle(doc.querySelector(".custom-food-details summary"), "::before").content.replace(/[\"']/g, "") === "+");
+
+            frame.contentWindow.location.reload();
+            return;
+          }
+          var saved = JSON.parse(win.localStorage.getItem("test_fitcalc_nutrition") || "{}");
+          var today = win.getDateKey(new win.Date());
+          var foods = saved[today] && saved[today].foods || [];
+          var reloadedRow = doc.querySelector("#food-list .nutrition-food-entry");
+          check("Food entry and favorite persist after reload", foods.length === 1 && foods[0].amount === 50 && win.isFoodFavorite(win.findFood("banana")));
+          check("Reloaded row keeps the exact amount", !!reloadedRow && reloadedRow.querySelector(".food-entry-meta").textContent.includes("1 piece · 50 g"));
+          reloadedRow.querySelector(".remove-food").click();
+          check("Subtle Remove deletes the row", doc.querySelectorAll("#food-list .nutrition-food-entry").length === 0);
+          done();
+        } catch (error) {
+          check("Nutrition flow completes without error: " + error.message, false);
+          done();
+        }
+      });
+      frame.src = "../nutrition/index.html";
+      document.body.appendChild(frame);
+    }());
+  </script>
+</body>
+</html>

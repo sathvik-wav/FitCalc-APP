@@ -110,6 +110,7 @@ function createWorkoutTemplate(
 
 
 function renderWorkoutTemplates() {
+    renderWorkoutTemplateSource();
     const templateList =
         document.getElementById(
             "template-list"
@@ -294,4 +295,60 @@ function renderWorkoutTemplates() {
 }
 
 
-renderWorkoutTemplates();
+function renderWorkoutTemplateSource() {
+    const selector = document.getElementById("template-workout-select");
+    const saveButton = document.getElementById("save-workout-template");
+    if (!selector || typeof getPlanner !== "function") return;
+
+    const planner = getPlanner();
+    const workouts = Array.isArray(planner.workouts) ? planner.workouts.filter(function (workout) {
+        return workout && typeof workout === "object";
+    }) : [];
+    const selectedId = String(selector.value || "");
+    if (!workouts.length) {
+        selector.innerHTML = '<option value="">No workouts on this day</option>';
+        selector.disabled = true;
+        if (saveButton) saveButton.disabled = true;
+        return;
+    }
+
+    selector.innerHTML = '<option value="">Choose a workout</option>' + workouts.map(function (workout, index) {
+        const id = String(workout.id || index);
+        return '<option value="' + escapeHTML(id) + '">' + escapeHTML(workout.name || "Workout") + '</option>';
+    }).join("");
+    selector.disabled = false;
+    const stillSelected = workouts.some(function (workout, index) { return String(workout.id || index) === selectedId; });
+    selector.value = stillSelected ? selectedId : String(workouts[0].id || 0);
+    if (saveButton) saveButton.disabled = !selector.value;
+}
+
+const saveWorkoutTemplateButton = document.getElementById("save-workout-template");
+if (saveWorkoutTemplateButton) {
+    saveWorkoutTemplateButton.addEventListener("click", async function () {
+        const selector = document.getElementById("template-workout-select");
+        if (!selector || !selector.value || typeof getPlanner !== "function") return;
+        const planner = getPlanner();
+        const selectedId = String(selector.value);
+        const workout = (Array.isArray(planner.workouts) ? planner.workouts : []).find(function (item, index) {
+            return item && String(item.id || index) === selectedId;
+        });
+        if (!workout) return;
+
+        const name = String(workout.name || "Workout").trim() || "Workout";
+        const normalizeName = function (value) { return String(value || "").trim().replace(/\s+/g, " ").toLowerCase(); };
+        const templatesValue = getWorkoutTemplates();
+        const templates = Array.isArray(templatesValue) ? templatesValue : [];
+        const existing = templates.find(function (template) {
+            return template && normalizeName(template.name) === normalizeName(name);
+        });
+        if (existing && !await window.fitcalcDialog.confirm(
+            "A workout template with this name already exists. Overwrite it?",
+            "Overwrite template",
+            "Overwrite"
+        )) return;
+
+        if (!createWorkoutTemplate(name, workout.exercises)) return;
+        renderWorkoutTemplates();
+        window.fitcalcToast("Workout saved as a reusable template.");
+    });
+}

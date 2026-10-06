@@ -35,6 +35,13 @@
         const text = function (id) { return doc.getElementById(id).textContent.trim(); };
 
         check("saved profile name appears in the Home greeting", text("home-user-name") === "Mina");
+        const hour = new win.Date().getHours();
+        const period = hour >= 5 && hour < 12 ? "morning" : hour < 17 && hour >= 12 ? "afternoon" : hour < 21 && hour >= 17 ? "evening" : "night";
+        check("inline greeting icon follows local time", doc.getElementById("home-greeting-icon").dataset.period === period);
+        const firstMotivation = text("home-motivation");
+        doc.getElementById("home-greeting").click();
+        check("tapping the greeting rotates its tagline", text("home-motivation") !== firstMotivation);
+        check("daily thought card and inert notification control are removed", !doc.querySelector(".home-quote-card,.home-notifications,.home-notification-badge") && !doc.body.textContent.includes("A thought for today"));
         check("initial calories and protein render", text("terminal-calories") === "800" && text("terminal-protein") === "40");
         check("initial water, steps, and workout status render", text("terminal-water") === "0.50" && text("terminal-steps") === "4,000" && text("terminal-workout") === "0 / 1 complete");
 

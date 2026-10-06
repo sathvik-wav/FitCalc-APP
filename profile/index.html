@@ -11,9 +11,9 @@
 </head>
 <body>
 <header class="topbar">
-  <a class="brand" href="../index.html" aria-label="FitCalc home"><span class="brand-mark" aria-hidden="true">+</span><span>FitCalc</span></a>
+  <a class="brand" href="../index.html" aria-label="FitCalc home"><span class="brand-mark" aria-hidden="true">+</span><span>FitCalc™</span></a>
   <nav class="desktop-nav" aria-label="Main navigation"></nav>
-  <div class="topbar-right"><button class="theme-toggle" type="button" aria-label="Switch theme" title="Switch theme"></button><button class="menu-toggle" id="hamburger-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button></div>
+  <div class="topbar-right"><button class="menu-toggle" id="hamburger-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button></div>
 </header>
 <nav class="mobile-menu" id="mobile-menu" aria-label="More navigation" hidden></nav>
 <main class="profile">
@@ -25,40 +25,44 @@
     <div class="profile-summary-copy">
       <h2 id="profile-card-name">Your name</h2>
       <p id="profile-card-details"></p>
-      <span class="profile-activity-tag" id="profile-card-activity" hidden></span>
+      <div class="profile-summary-tags"><span class="profile-activity-tag" id="profile-card-activity" hidden></span><span class="profile-goal-tag" id="profile-card-goal" hidden></span></div>
     </div>
-  </section>
-  <section class="card profile-goal-card" aria-labelledby="profile-card-goal-title">
-    <div><span class="section-kicker">Personal focus</span><h2 id="profile-card-goal-title">My Goal</h2><p id="profile-card-goal">Choose a goal</p></div>
-    <button type="button" class="secondary-btn" id="profile-goal-edit">Edit</button>
+    <button type="button" class="secondary-btn profile-summary-edit" id="profile-edit" hidden>Edit</button>
   </section>
   <div class="profile-sections">
-    <section class="card tile profile-section profile-details-card" aria-labelledby="profile-title">
+    <section class="card tile profile-section profile-details-card" id="profile-details-card" aria-labelledby="profile-title">
       <span class="section-kicker">Your information</span><h2 id="profile-title">Profile details</h2>
       <p class="calc-desc">Your details stay on this device and can be updated any time. Target estimates are for adults aged 18 and over.</p>
-      <form id="profile-form">
-        <div class="field"><label for="profile-name">Name</label><input type="text" id="profile-name" maxlength="30" autocomplete="given-name"></div>
-        <div class="field"><label for="profile-age">Age</label><input type="number" id="profile-age" min="18" max="100" inputmode="numeric" required autocomplete="off"></div>
-        <div class="field"><label for="profile-sex">Sex</label><select id="profile-sex" required><option value="">Select</option><option value="male">Male</option><option value="female">Female</option></select></div>
-        <div class="field">
-          <label for="profile-height" id="profile-height-label">Height (cm)</label>
-          <input type="number" id="profile-height" min="100" max="250" step="0.1" inputmode="decimal" required autocomplete="off">
-          <div class="unit-input-pair" id="profile-height-imperial" hidden>
-            <div class="field"><label for="profile-height-feet">Feet</label><input type="number" id="profile-height-feet" min="3" max="8" step="1" inputmode="numeric" autocomplete="off" disabled required></div>
-            <div class="field"><label for="profile-height-inches">Inches</label><input type="number" id="profile-height-inches" min="0" max="11.9" step="0.1" inputmode="decimal" autocomplete="off" disabled required></div>
+      <form id="profile-form" novalidate>
+        <div class="profile-field-grid">
+          <div class="field"><label for="profile-name">Name</label><input type="text" id="profile-name" maxlength="30" autocomplete="given-name"></div>
+          <div class="profile-field-pair">
+            <div class="field"><label for="profile-age">Age</label><input type="number" id="profile-age" min="18" max="100" inputmode="numeric" required autocomplete="off"></div>
+            <div class="field"><label for="profile-sex">Sex</label><select id="profile-sex" required><option value="">Select</option><option value="male">Male</option><option value="female">Female</option></select></div>
           </div>
+          <div class="profile-field-pair">
+            <div class="field profile-height-field">
+              <label for="profile-height" id="profile-height-label">Height (cm)</label>
+              <input type="number" id="profile-height" min="100" max="250" step="0.1" inputmode="decimal" required autocomplete="off">
+              <div class="unit-input-pair" id="profile-height-imperial" hidden>
+                <div class="field"><label for="profile-height-feet">Feet</label><input type="number" id="profile-height-feet" min="3" max="8" step="1" inputmode="numeric" autocomplete="off" disabled required></div>
+                <div class="field"><label for="profile-height-inches">Inches</label><input type="number" id="profile-height-inches" min="0" max="11.9" step="0.1" inputmode="decimal" autocomplete="off" disabled required></div>
+              </div>
+            </div>
+            <div class="field"><label for="profile-weight" id="profile-weight-label">Weight (kg)</label><input type="number" id="profile-weight" min="30" max="300" step="0.1" inputmode="decimal" required autocomplete="off"></div>
+          </div>
+          <div class="field"><label for="profile-activity">Activity level</label><select id="profile-activity" required><option value="">Select your usual activity</option><option value="sedentary">Mostly sitting</option><option value="light">Lightly active</option><option value="moderate">Moderately active</option><option value="active">Very active</option><option value="very_active">Extremely active</option></select></div>
+          <div class="field"><label for="profile-goal">Goal</label><select id="profile-goal" required><option value="">Choose a goal</option><option value="lose">Lose weight</option><option value="maintain">Maintain weight</option><option value="gain">Gain weight</option></select></div>
         </div>
-        <div class="field"><label for="profile-weight" id="profile-weight-label">Weight (kg)</label><input type="number" id="profile-weight" min="30" max="300" step="0.1" inputmode="decimal" required autocomplete="off"></div>
-        <div class="field"><label for="profile-activity">Activity level</label><select id="profile-activity" required><option value="">Select your usual activity</option><option value="sedentary">Mostly sitting</option><option value="light">Lightly active</option><option value="moderate">Moderately active</option><option value="active">Very active</option><option value="very_active">Extremely active</option></select></div>
-        <div class="field"><label for="profile-goal">Goal</label><select id="profile-goal" required><option value="">Choose a goal</option><option value="lose">Lose weight</option><option value="maintain">Maintain weight</option><option value="gain">Gain weight</option></select></div>
-        <button type="submit" class="primary-btn">Save profile</button>
+        <div class="profile-form-actions"><button type="submit" class="primary-btn">Save profile</button><button type="button" class="secondary-btn" id="profile-cancel">Cancel</button></div>
         <p class="profile-status" id="profile-status" role="status" aria-live="polite"></p>
       </form>
       <aside class="profile-info"><span aria-hidden="true">ⓘ</span><div><strong>About your targets</strong>Targets are estimates for adults, based on your profile and goal. You can edit nutrition targets here; estimates are not medical prescriptions.</div></aside>
     </section>
 
     <section class="card tile profile-section profile-target-card" id="profile-target-card" aria-live="polite" aria-labelledby="profile-target-title">
-      <span class="section-kicker">Personal nutrition</span><h2 id="profile-target-title">Editable targets</h2>
+      <span class="section-kicker">Personal nutrition</span>
+      <div class="profile-target-heading"><h2 id="profile-target-title">Editable targets</h2><button type="button" class="secondary-btn" id="profile-target-edit" hidden>Edit</button></div>
       <p class="profile-target-empty" id="profile-target-empty">Save your profile to calculate an estimated daily target.</p>
       <div class="profile-target-list" id="profile-target-list" hidden>
         <div><span>Calories</span><strong id="profile-target-calories">—</strong></div>
@@ -69,16 +73,14 @@
       </div>
       <p class="profile-status" id="calculator-handoff-status" role="status" aria-live="polite"></p>
       <form class="target-editor" id="target-form" hidden>
-        <span class="section-kicker">Personalize</span>
-        <h3>Edit daily targets</h3>
         <div class="field"><label for="target-calories">Calories (kcal)</label><input type="number" id="target-calories" min="500" max="10000" step="1" required></div>
         <div class="field"><label for="target-protein">Protein (g)</label><input type="number" id="target-protein" min="0" max="1000" step="1" required></div>
         <div class="field"><label for="target-carbs">Carbohydrates (g)</label><input type="number" id="target-carbs" min="0" max="1500" step="1" required></div>
         <div class="field"><label for="target-fat">Fat (g)</label><input type="number" id="target-fat" min="0" max="1000" step="1" required></div>
         <div class="field"><label for="target-fiber">Fiber (g)</label><input type="number" id="target-fiber" min="0" max="150" step="1" required></div>
-        <div class="profile-target-actions"><button type="submit" class="primary-btn">Save targets</button><button type="button" class="secondary-btn" id="reset-targets">Reset to estimate</button></div>
-        <p class="profile-status" id="target-status" role="status" aria-live="polite"></p>
+        <div class="profile-target-actions"><button type="submit" class="primary-btn">Save</button><button type="button" class="secondary-btn" id="target-cancel">Cancel</button><button type="button" class="ghost-btn" id="reset-targets">Reset to calculated</button></div>
       </form>
+      <p class="profile-status" id="target-status" role="status" aria-live="polite"></p>
       <a class="secondary-btn" href="../nutrition/index.html">View nutrition <span aria-hidden="true">→</span></a>
     </section>
 

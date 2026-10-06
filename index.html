@@ -22,7 +22,7 @@
 <section class="splash-screen" id="fitcalc-splash" aria-labelledby="splash-title">
   <div class="splash-content">
     <div class="splash-intro">
-      <div class="splash-brand"><span class="splash-brand-mark" aria-hidden="true">+</span><span>FitCalc</span></div>
+      <div class="splash-brand"><span class="splash-brand-mark" aria-hidden="true">+</span><span>FitCalc™</span></div>
       <h1 id="splash-title">Track. Calculate.<br>Improve.</h1>
       <p class="splash-tagline">Your nutrition, workouts, goals and progress in one place.</p>
       <button class="splash-start" id="splash-start" type="button">Get Started <span aria-hidden="true">→</span></button>
@@ -35,14 +35,60 @@
     </div>
   </div>
 </section>
+<section class="first-run-screen" id="first-run-profile" hidden aria-labelledby="first-run-title" aria-modal="true" role="dialog">
+  <div class="first-run-card">
+    <div class="first-run-heading">
+      <span class="section-kicker">First setup</span>
+      <h1 id="first-run-title">Let’s set up your profile</h1>
+      <p id="first-run-description">A few details help FitCalc estimate your daily targets. You can change them later.</p>
+      <p class="first-run-progress" id="first-run-progress" aria-live="polite">Step 1 of 7</p>
+    </div>
+    <form id="first-run-form" novalidate>
+      <div class="first-run-step" data-first-run-step="0">
+        <div class="field"><label for="first-run-name">Name (optional)</label><input type="text" id="first-run-name" maxlength="30" autocomplete="given-name"></div>
+      </div>
+      <div class="first-run-step" data-first-run-step="1" hidden>
+        <div class="field"><label for="first-run-age">Age</label><input type="number" id="first-run-age" min="18" max="100" inputmode="numeric" required autocomplete="off"></div>
+      </div>
+      <div class="first-run-step" data-first-run-step="2" hidden>
+        <div class="field"><label for="first-run-sex">Sex</label><select id="first-run-sex" required><option value="">Select</option><option value="male">Male</option><option value="female">Female</option></select></div>
+      </div>
+      <div class="first-run-step" data-first-run-step="3" hidden>
+        <div class="field">
+          <label for="first-run-height">Height (cm)</label>
+          <input type="number" id="first-run-height" min="100" max="250" step="0.1" inputmode="decimal" required autocomplete="off">
+          <div class="unit-input-pair" id="first-run-height-imperial" hidden>
+            <div class="field"><label for="first-run-height-feet">Feet</label><input type="number" id="first-run-height-feet" min="3" max="8" step="1" inputmode="numeric" autocomplete="off" disabled required></div>
+            <div class="field"><label for="first-run-height-inches">Inches</label><input type="number" id="first-run-height-inches" min="0" max="11.9" step="0.1" inputmode="decimal" autocomplete="off" disabled required></div>
+          </div>
+        </div>
+      </div>
+      <div class="first-run-step" data-first-run-step="4" hidden>
+        <div class="field"><label for="first-run-weight">Weight (kg)</label><input type="number" id="first-run-weight" min="30" max="300" step="0.1" inputmode="decimal" required autocomplete="off"></div>
+      </div>
+      <div class="first-run-step" data-first-run-step="5" hidden>
+        <div class="field"><label for="first-run-activity">Activity level</label><select id="first-run-activity" required><option value="">Select your usual activity</option><option value="sedentary">Mostly sitting</option><option value="light">Lightly active</option><option value="moderate">Moderately active</option><option value="active">Very active</option><option value="very_active">Extremely active</option></select></div>
+      </div>
+      <div class="first-run-step" data-first-run-step="6" hidden>
+        <div class="field"><label for="first-run-goal">Goal</label><select id="first-run-goal" required><option value="">Choose a goal</option><option value="lose">Lose weight</option><option value="maintain">Maintain weight</option><option value="gain">Gain weight</option></select></div>
+      </div>
+      <p class="first-run-status" id="first-run-status" role="status" aria-live="polite"></p>
+      <div class="first-run-actions">
+        <button type="button" class="secondary-btn" id="first-run-back" hidden>Back</button>
+        <button type="button" class="ghost-btn" id="first-run-skip">Skip</button>
+        <button type="button" class="primary-btn" id="first-run-next">Continue</button>
+        <button type="button" class="primary-btn" id="first-run-save" hidden>Save and go to Home</button>
+      </div>
+    </form>
+  </div>
+</section>
 <header class="topbar">
   <a class="brand" href="index.html" aria-label="FitCalc home">
     <span class="brand-mark" aria-hidden="true">+</span>
-    <span>FitCalc</span>
+    <span>FitCalc™</span>
   </a>
   <nav class="desktop-nav" aria-label="Main navigation"></nav>
   <div class="topbar-right">
-    <button class="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch theme"></button>
     <button class="menu-toggle" id="hamburger-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
       <span></span><span></span><span></span>
     </button>
@@ -52,14 +98,16 @@
 <main>
   <section class="page-shell dashboard-page" id="home-top">
     <header class="home-heading">
-      <div class="home-greeting">
+      <button class="home-greeting" id="home-greeting" type="button" aria-label="Greeting. Tap to see another motivational line.">
         <p id="home-greeting-label">Good Morning,</p>
-        <h1><span id="home-user-name">there</span> <span aria-hidden="true">👋</span></h1>
+        <h1><span id="home-user-name">there</span> <svg class="home-greeting-icon" id="home-greeting-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-period="night">
+          <g data-greeting-icon="morning"><path d="M5 17a7 7 0 0 1 14 0M3 17h18M7 21h10M8 9l-1.5-1.5M12 7V4M16 9l1.5-1.5"/></g>
+          <g data-greeting-icon="afternoon"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></g>
+          <g data-greeting-icon="evening"><path d="M5 16a7 7 0 0 1 14 0M3 16h18M7 20h10M8 8l-1.5-1.5M12 6V3M16 8l1.5-1.5"/></g>
+          <g data-greeting-icon="night"><path d="M19.2 15.8A8 8 0 0 1 8.2 4.8 8 8 0 1 0 19.2 15.8Z"/></g>
+        </svg></h1>
         <time class="today-date" id="today-date"></time>
-      </div>
-      <button class="home-notifications" type="button" aria-label="Notifications">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
-        <span class="home-notification-badge" aria-hidden="true"></span>
+        <p class="home-greeting-motivation" id="home-motivation" aria-live="polite">Small steps still move you forward.</p>
       </button>
     </header>
 
@@ -117,13 +165,6 @@
       <div class="home-workout-empty" id="home-workout-empty">
         <p>No workouts planned for today.</p>
         <a href="planner/index.html">Plan a workout <span aria-hidden="true">→</span></a>
-      </div>
-    </section>
-
-    <section class="home-quote-card" aria-label="Daily motivation">
-      <div class="home-quote-content">
-        <span class="home-overline">A thought for today</span>
-        <blockquote>Progress is built one small choice at a time.</blockquote>
       </div>
     </section>
 

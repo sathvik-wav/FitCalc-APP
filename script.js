@@ -97,23 +97,17 @@
       return navAnchor(item, "", item.label === state.primary);
     }).join("");
     if (mobileMenu) {
-      var primaryLinks = PRIMARY_NAV.map(function (item) {
-        return routeLink(item, item.label === state.primary, "mobile-primary-link");
-      }).join("");
       var trackingLinks = TRACKING.map(function (item) {
-        return routeLink(item, item.label === state.tracking, "mobile-secondary-link");
+        return routeLink(item, item.label === state.tracking, "mobile-track-link");
       }).join("");
-      var toolLinks = TOOLS.map(function (item) {
-        return routeLink(item, item.label === state.tool, "mobile-tool-link");
-      }).join("");
+      var calculatorLink = routeLink({ path: "calculators/index.html", label: "All calculators" }, state.primary === "Calculators", "mobile-calculators-link");
       var appLinks = [
         { path: "settings/index.html", label: "Settings", state: "Settings" },
         { path: "settings/index.html#settings-about", label: "About", state: "About" },
         { path: "settings/index.html#settings-privacy", label: "Privacy", state: "Privacy" }
       ].map(function (item) { return routeLink(item, item.state === state.app, "mobile-app-link"); }).join("");
-      mobileMenu.innerHTML = menuGroup("Primary navigation", '<div class="mobile-primary-list">' + primaryLinks + '</div>') +
-        menuGroup("Tracking", '<div class="mobile-secondary-list">' + trackingLinks + '</div>') +
-        menuGroup("Tools", '<div class="mobile-tool-list">' + toolLinks + '</div>') +
+      mobileMenu.innerHTML = menuGroup("Track", '<div class="mobile-track-list">' + trackingLinks + '</div>') +
+        menuGroup("Calculators", '<div class="mobile-calculators-list">' + calculatorLink + '</div>') +
         menuGroup("App", '<div class="mobile-app-list">' + appLinks + '</div>');
     }
     mobileNav.innerHTML = PRIMARY_NAV.map(function (item) {
@@ -224,6 +218,10 @@
   var splashScreen = document.getElementById("fitcalc-splash");
   var splashStart = document.getElementById("splash-start");
   if (splashScreen && splashStart) {
+    var firstRunScreen = document.getElementById("first-run-profile");
+    var firstRunStep = 0;
+    var firstRunSteps = firstRunScreen ? Array.prototype.slice.call(firstRunScreen.querySelectorAll("[data-first-run-step]")) : [];
+
     function dismissSplash() {
       splashScreen.hidden = true;
       document.body.classList.remove("splash-active");
@@ -231,6 +229,156 @@
         if (child !== splashScreen) child.inert = false;
       });
     }
+
+    function hasSavedProfile() {
+      if (typeof getProfile !== "function") return true;
+      var profile = getProfile() || {};
+      return ["name", "age", "sex", "height", "weight", "activity", "goal"].some(function (key) {
+        var value = profile[key];
+        return typeof value === "string" ? value.trim().length > 0 : value !== null && value !== undefined && Number(value) > 0;
+      });
+    }
+
+    function shouldShowFirstRunProfile() {
+      if (!firstRunScreen || hasSavedProfile() || typeof getFitCalcPreferences !== "function") return false;
+      return getFitCalcPreferences().profileSetupDismissed !== true;
+    }
+
+    function renderFirstRunStep() {
+      firstRunSteps.forEach(function (step, index) { step.hidden = index !== firstRunStep; });
+      var progress = document.getElementById("first-run-progress");
+      var back = document.getElementById("first-run-back");
+      var next = document.getElementById("first-run-next");
+      var save = document.getElementById("first-run-save");
+      if (progress) progress.textContent = "Step " + (firstRunStep + 1) + " of " + firstRunSteps.length;
+      if (back) back.hidden = firstRunStep === 0;
+      if (next) next.hidden = firstRunStep === firstRunSteps.length - 1;
+      if (save) save.hidden = firstRunStep !== firstRunSteps.length - 1;
+    }
+
+    function showFirstRunProfile() {
+      if (!shouldShowFirstRunProfile()) return;
+      firstRunScreen.hidden = false;
+      document.body.classList.add("first-run-active");
+      Array.prototype.forEach.call(document.body.children, function (child) { child.inert = child !== firstRunScreen; });
+      var units = typeof getFitCalcUnits === "function" ? getFitCalcUnits() : { weight: "kg", height: "cm" };
+      var height = document.getElementById("first-run-height");
+      var imperial = document.getElementById("first-run-height-imperial");
+      var heightLabel = firstRunScreen.querySelector('label[for="first-run-height"]');
+      var weight = document.getElementById("first-run-weight");
+      if (height) {
+        height.hidden = units.height === "ft-in";
+        height.disabled = units.height === "ft-in";
+        height.required = units.height !== "ft-in";
+      }
+      if (imperial) imperial.hidden = units.height !== "ft-in";
+      [document.getElementById("first-run-height-feet"), document.getElementById("first-run-height-inches")].forEach(function (input) {
+        if (input) { input.disabled = units.height !== "ft-in"; input.required = units.height === "ft-in"; }
+      });
+      if (heightLabel) {
+        heightLabel.htmlFor = units.height === "ft-in" ? "first-run-height-feet" : "first-run-height";
+        heightLabel.textContent = units.height === "ft-in" ? "Height (ft/in)" : "Height (cm)";
+      }
+      if (weight) {
+        weight.min = units.weight === "lb" ? "66.1" : "30";
+        weight.max = units.weight === "lb" ? "661.4" : "300";
+        weight.previousElementSibling.textContent = "Weight (" + units.weight + ")";
+      }
+      firstRunStep = 0;
+      renderFirstRunStep();
+      var name = document.getElementById("first-run-name");
+      if (name) name.focus();
+    }
+
+    function hideFirstRunProfile() {
+      if (!firstRunScreen) return;
+      firstRunScreen.hidden = true;
+      document.body.classList.remove("first-run-active");
+      Array.prototype.forEach.call(document.body.children, function (child) { child.inert = false; });
+    }
+
+    function currentFirstRunStepIsValid() {
+      var step = firstRunSteps[firstRunStep];
+      if (!step) return true;
+      var fields = step.querySelectorAll("input, select");
+      for (var index = 0; index < fields.length; index += 1) {
+        var field = fields[index];
+        if (field.disabled || !field.required) continue;
+        if (!field.checkValidity()) {
+          field.reportValidity();
+          field.focus();
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function setFirstRunDismissed() {
+      try {
+        if (typeof saveFitCalcPreferences !== "function") throw new Error("Saved app state is unavailable.");
+        saveFitCalcPreferences({ profileSetupDismissed: true, onboardingComplete: true });
+      } catch (error) {
+        var status = document.getElementById("first-run-status");
+        if (status) status.textContent = "This choice could not be saved. Check device storage and try again.";
+        return false;
+      }
+      return true;
+    }
+
+    function saveFirstRunProfile() {
+      if (!currentFirstRunStepIsValid()) return;
+      var units = typeof getFitCalcUnits === "function" ? getFitCalcUnits() : { weight: "kg", height: "cm" };
+      var height = units.height === "ft-in"
+        ? feetInchesToCentimeters(document.getElementById("first-run-height-feet").value, document.getElementById("first-run-height-inches").value)
+        : Number(document.getElementById("first-run-height").value);
+      var values = {
+        name: String(document.getElementById("first-run-name").value || "").trim(),
+        age: Number(document.getElementById("first-run-age").value),
+        sex: document.getElementById("first-run-sex").value,
+        height: height,
+        weight: displayWeightToKilograms(document.getElementById("first-run-weight").value),
+        activity: document.getElementById("first-run-activity").value,
+        goal: document.getElementById("first-run-goal").value
+      };
+      try {
+        if (typeof updateProfile !== "function") throw new Error("Profile storage is unavailable.");
+        updateProfile(values);
+      } catch (error) {
+        var profileStatus = document.getElementById("first-run-status");
+        if (profileStatus) profileStatus.textContent = "Profile could not be saved. Check device storage and try again.";
+        return;
+      }
+      setFirstRunDismissed();
+      var targetsSaved = typeof refreshTargets !== "function" || refreshTargets();
+      hideFirstRunProfile();
+      if (typeof updateDashboard === "function") updateDashboard();
+      if (!targetsSaved && window.fitcalcToast) window.fitcalcToast("Profile saved, but estimated targets could not be updated.", "error");
+    }
+
+    var firstRunNext = document.getElementById("first-run-next");
+    var firstRunBack = document.getElementById("first-run-back");
+    var firstRunSkip = document.getElementById("first-run-skip");
+    var firstRunSave = document.getElementById("first-run-save");
+    if (firstRunNext) firstRunNext.addEventListener("click", function () {
+      if (!currentFirstRunStepIsValid()) return;
+      firstRunStep = Math.min(firstRunStep + 1, firstRunSteps.length - 1);
+      renderFirstRunStep();
+      var step = firstRunSteps[firstRunStep];
+      var field = step && step.querySelector("input:not([disabled]), select:not([disabled])");
+      if (field) field.focus();
+    });
+    if (firstRunBack) firstRunBack.addEventListener("click", function () {
+      firstRunStep = Math.max(0, firstRunStep - 1);
+      renderFirstRunStep();
+      var step = firstRunSteps[firstRunStep];
+      var field = step && step.querySelector("input:not([disabled]), select:not([disabled])");
+      if (field) field.focus();
+    });
+    if (firstRunSkip) firstRunSkip.addEventListener("click", function () {
+      if (setFirstRunDismissed()) hideFirstRunProfile();
+    });
+    if (firstRunSave) firstRunSave.addEventListener("click", saveFirstRunProfile);
+
     var onboardingComplete = false;
     if (typeof hasCompletedFitCalcOnboarding === "function") {
       try { onboardingComplete = hasCompletedFitCalcOnboarding(); }
@@ -252,9 +400,11 @@
         return;
       }
       dismissSplash();
+      showFirstRunProfile();
       var homeLink = document.querySelector(".brand");
       if (homeLink) homeLink.focus({ preventScroll: true });
     });
+    if (splashScreen.hidden) showFirstRunProfile();
   }
 
   function ensureToast() {

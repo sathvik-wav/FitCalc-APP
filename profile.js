@@ -1,5 +1,7 @@
 const profileForm = document.getElementById("profile-form");
 const targetForm = document.getElementById("target-form");
+let currentProfile = {};
+let targetEditMode = false;
 let calculatorTargetHandoff = (function () {
     const values = {};
     try {
@@ -70,19 +72,11 @@ function renderProfileSummary(profile) {
         activityNode.textContent = activityLabel;
         activityNode.hidden = !activityLabel;
     }
-    if (goalNode) goalNode.textContent = goalLabels[value.goal] || "Choose a goal";
-}
-
-const editGoalButton = document.getElementById("profile-goal-edit");
-if (editGoalButton) {
-    editGoalButton.addEventListener("click", function () {
-        const goalField = document.getElementById("profile-goal");
-        if (!goalField) return;
-        if (typeof goalField.scrollIntoView === "function") {
-            goalField.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-        goalField.focus();
-    });
+    const goalLabel = goalLabels[value.goal] || "";
+    if (goalNode) {
+        goalNode.textContent = goalLabel;
+        goalNode.hidden = !goalLabel;
+    }
 }
 
 function applyProfileUnitControls() {
@@ -145,13 +139,75 @@ function populateProfileForm(profile) {
     renderProfileSummary(value);
 }
 
+function hasSavedProfileRecord(profile) {
+    const value = profile || {};
+    return ["name", "sex", "activity", "goal"].some(function (key) {
+        return typeof value[key] === "string" && value[key].trim().length > 0;
+    }) || ["age", "height", "weight"].some(function (key) {
+        return Number.isFinite(Number(value[key])) && Number(value[key]) > 0;
+    });
+}
+
+function setProfileEditMode(editing, profile) {
+    if (profile) currentProfile = profile;
+    const detailsCard = document.getElementById("profile-details-card");
+    const editButton = document.getElementById("profile-edit");
+    const cancelButton = document.getElementById("profile-cancel");
+    if (detailsCard) detailsCard.hidden = !editing;
+    if (editButton) editButton.hidden = !!editing;
+    if (cancelButton) cancelButton.hidden = !editing;
+    if (editing) populateProfileForm(currentProfile);
+    else renderProfileSummary(currentProfile);
+}
+
+const profileEditButton = document.getElementById("profile-edit");
+if (profileEditButton) {
+    profileEditButton.addEventListener("click", function () {
+        setProfileEditMode(true, currentProfile);
+        const name = document.getElementById("profile-name");
+        if (name) name.focus();
+    });
+}
+
+const profileCancelButton = document.getElementById("profile-cancel");
+if (profileCancelButton) {
+    profileCancelButton.addEventListener("click", function () {
+        setProfileEditMode(false, currentProfile);
+    });
+}
+
 function renderTargetEditor(targets, available) {
     if (!targetForm) return;
-    targetForm.hidden = !available;
+    const list = document.getElementById("profile-target-list");
+    const editButton = document.getElementById("profile-target-edit");
+    targetForm.hidden = !available || !targetEditMode;
+    if (list) list.hidden = !available || targetEditMode;
+    if (editButton) editButton.hidden = !available || targetEditMode;
     if (!available) return;
     ["calories", "protein", "carbs", "fat", "fiber"].forEach(function (key) {
         const input = document.getElementById("target-" + key);
         if (input) input.value = Math.round(Number(targets[key]) || 0);
+    });
+}
+
+const profileTargetEditButton = document.getElementById("profile-target-edit");
+if (profileTargetEditButton) {
+    profileTargetEditButton.addEventListener("click", function () {
+        targetEditMode = true;
+        setProfileStatus("target-status", "");
+        renderProfileTargets();
+        const input = document.getElementById("target-calories");
+        if (input) input.focus();
+    });
+}
+
+const profileTargetCancelButton = document.getElementById("target-cancel");
+if (profileTargetCancelButton) {
+    profileTargetCancelButton.addEventListener("click", function () {
+        targetEditMode = false;
+        calculatorTargetHandoff = null;
+        renderProfileTargets();
+        setProfileStatus("target-status", "");
     });
 }
 
@@ -216,7 +272,8 @@ if (profileForm) {
         }
         try {
             updateProfile(values);
-            renderProfileSummary(values);
+            currentProfile = Object.assign({}, currentProfile, values);
+            renderProfileSummary(currentProfile);
         } catch (error) {
             if (status) status.textContent = "Profile could not be saved. Check device storage and try again.";
             window.fitcalcToast("Profile could not be saved.", "error");
@@ -224,6 +281,7 @@ if (profileForm) {
         }
         const targetsSaved = typeof refreshTargets !== "function" || refreshTargets();
         renderProfileTargets();
+        setProfileEditMode(false, currentProfile);
         if (!targetsSaved) {
             if (status) status.textContent = "Profile saved, but estimated targets could not be saved. Check device storage and try again.";
             window.fitcalcToast("Profile saved, but targets could not be updated.", "error");
@@ -236,7 +294,9 @@ if (profileForm) {
 }
 
 const savedProfile = getProfile();
-populateProfileForm(savedProfile);
+currentProfile = savedProfile || {};
+populateProfileForm(currentProfile);
+setProfileEditMode(!hasSavedProfileRecord(currentProfile), currentProfile);
 document.addEventListener("DOMContentLoaded", renderProfileTargets);
 
 if (targetForm) {
@@ -252,6 +312,7 @@ if (targetForm) {
             return;
         }
         calculatorTargetHandoff = null;
+        targetEditMode = false;
         const handoffStatus = document.getElementById("calculator-handoff-status");
         if (handoffStatus) handoffStatus.textContent = "";
         renderProfileTargets();
@@ -268,8 +329,10 @@ if (resetTargetsButton) {
             window.fitcalcToast("Estimated targets could not be restored.", "error");
             return;
         }
+        targetEditMode = false;
+        calculatorTargetHandoff = null;
         renderProfileTargets();
-        setProfileStatus("target-status", "Targets now use the estimates from your profile.");
+        setProfileStatus("target-status", "Targets reset to the calculated estimates from your profile.");
         window.fitcalcToast("Profile target estimates restored.");
     });
 }

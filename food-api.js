@@ -12,27 +12,103 @@ function normalizeOpenFoodFactsProduct(product) {
     const hasNutrition = ["energy-kcal_100g", "energy_100g", "proteins_100g", "carbohydrates_100g", "fat_100g", "fiber_100g"]
         .some(function (key) { return n[key] !== undefined && n[key] !== null && n[key] !== "" && Number.isFinite(Number(n[key])); });
     if (!hasNutrition) return null;
-    const kcalValue = n["energy-kcal_100g"] ?? n["energy-kcal"];
+    const kcalValue = n["energy-kcal_100g"];
     const hasKcal = kcalValue !== undefined && kcalValue !== null && kcalValue !== "" && Number.isFinite(Number(kcalValue));
     const kjValue = n.energy_100g;
     const hasKj = kjValue !== undefined && kjValue !== null && kjValue !== "" && Number.isFinite(Number(kjValue));
+    const nutrient = function (key) {
+        const value = n[key];
+        return value !== undefined && value !== null && value !== "" && Number.isFinite(Number(value))
+            ? Number(value)
+            : null;
+    };
+    const calories = hasKcal ? Number(kcalValue) : (hasKj ? Number(kjValue) / 4.184 : null);
+    const macros = {
+        calories: calories,
+        protein: nutrient("proteins_100g"),
+        carbs: nutrient("carbohydrates_100g"),
+        fat: nutrient("fat_100g"),
+        fiber: nutrient("fiber_100g")
+    };
+    const missingNutrients = Object.keys(macros).filter(function (key) { return macros[key] === null; });
+    const servingGrams = parseOpenFoodFactsServingGrams(product.serving_size);
+    const unitGrams = {};
+    const units = ["g"];
+    if (servingGrams) units.push("serving");
     return {
         name: name,
-        calories: hasKcal ? Number(kcalValue) : (hasKj ? Number(kjValue) / 4.184 : 0),
+        calories: calories,
         caloriesMissing: !hasKcal && !hasKj,
-        protein: Number(n.proteins_100g ?? 0) || 0,
-        carbs: Number(n.carbohydrates_100g ?? 0) || 0,
-        fat: Number(n.fat_100g ?? 0) || 0,
-        fiber: Number(n.fiber_100g ?? 0) || 0,
+        protein: macros.protein,
+        carbs: macros.carbs,
+        fat: macros.fat,
+        fiber: macros.fiber,
+        missingNutrients: missingNutrients,
+        servingGrams: servingGrams,
+        unitGrams: unitGrams,
+        units: units,
+        defaultUnit: servingGrams ? "serving" : "g",
+        preparation: "",
         source: "Open Food Facts",
         barcode: String(product.code || "")
     };
 }
 
-async function requestOpenFoodFacts(url) {
-    const response = await fetch(url, { headers: { Accept: "application/json" }, credentials: "omit" });
-    if (!response.ok) throw new Error("Food database returned HTTP " + response.status + ".");
-    return response.json();
+function parseOpenFoodFactsServingGrams(value) {
+    const text = String(value || "").trim();
+    if (!text) return null;
+    const match = text.match(/(?:^|[,(\s])(?:about\s*)?(\d+(?:[.,]\d+)?)\s*(g|grams?|ml|millilit(?:er|re)s?)\b/i);
+    if (!match) return null;
+    const amount = Number(match[1].replace(",", "."));
+    return Number.isFinite(amount) && amount > 0 && amount <= 5000 ? amount : null;
+}
+
+function createFoodApiError(message, kind, status) {
+    const error = new Error(message);
+    error.kind = kind || "http";
+    if (status !== undefined) error.status = status;
+    return error;
+}
+
+async function requestOpenFoodFacts(url, options) {
+    const settings = Object.assign({ timeoutMs: 0, retries: 0, retryDelayMs: 250 }, options || {});
+    for (let attempt = 0; ; attempt += 1) {
+        const controller = typeof AbortController === "function" ? new AbortController() : null;
+        let timeoutId = null;
+        try {
+            const request = fetch(url, {
+                headers: { Accept: "application/json" }, credentials: "omit",
+                ...(controller ? { signal: controller.signal } : {})
+            });
+            let response;
+            if (settings.timeoutMs > 0) {
+                response = await Promise.race([
+                    request,
+                    new Promise(function (_resolve, reject) {
+                        timeoutId = setTimeout(function () {
+                            if (controller) controller.abort();
+                            reject(createFoodApiError("Food database request timed out.", "timeout"));
+                        }, settings.timeoutMs);
+                    })
+                ]);
+            } else {
+                response = await request;
+            }
+            if (!response.ok) {
+                const status = Number(response.status) || 0;
+                const kind = status === 429 || status >= 500 ? "service" : (status === 404 ? "notFound" : "http");
+                throw createFoodApiError("Food database returned HTTP " + status + ".", kind, status);
+            }
+            return await response.json();
+        } catch (error) {
+            const failure = error && error.kind ? error : createFoodApiError(error && error.message || "Food database request failed.", "network");
+            const retryable = failure.kind === "network" || failure.kind === "timeout" || failure.kind === "service";
+            if (attempt >= settings.retries || !retryable) throw failure;
+            await new Promise(function (resolve) { setTimeout(resolve, settings.retryDelayMs); });
+        } finally {
+            if (timeoutId !== null) clearTimeout(timeoutId);
+        }
+    }
 }
 
 async function searchOpenFoodFacts(query) {
@@ -44,18 +120,30 @@ async function searchOpenFoodFacts(query) {
         action: "process",
         json: "1",
         page_size: "12",
-        fields: "product_name,product_name_en,brands,code,nutriments"
+        fields: "product_name,product_name_en,brands,code,nutriments,serving_size"
     });
-    const data = await requestOpenFoodFacts(OPEN_FOOD_FACTS_API + "/cgi/search.pl?" + params.toString());
+    const data = await requestOpenFoodFacts(OPEN_FOOD_FACTS_API + "/cgi/search.pl?" + params.toString(), {
+        timeoutMs: 8000, retries: 1, retryDelayMs: 300
+    });
     return (Array.isArray(data.products) ? data.products : []).map(normalizeOpenFoodFactsProduct).filter(Boolean);
 }
 
 async function lookupOpenFoodFactsBarcode(barcode) {
     const code = String(barcode || "").replace(/\s/g, "");
     if (!/^\d{8,14}$/.test(code)) throw new Error("Enter a barcode with 8 to 14 digits.");
-    const params = new URLSearchParams({ fields: "code,product_name,product_name_en,nutriments" });
-    const data = await requestOpenFoodFacts(OPEN_FOOD_FACTS_API + "/api/v3/product/" + encodeURIComponent(code) + "?" + params.toString());
-    if (!data || !data.product || !String(data.status || "").startsWith("success")) throw new Error("That barcode is not in the food database.");
+    const params = new URLSearchParams({ fields: "code,product_name,product_name_en,nutriments,serving_size" });
+    let data;
+    try {
+        data = await requestOpenFoodFacts(OPEN_FOOD_FACTS_API + "/api/v3/product/" + encodeURIComponent(code) + "?" + params.toString());
+    } catch (error) {
+        if (error.status === 404 || error.kind === "notFound") {
+            throw createFoodApiError("Barcode not found. Add it as a custom food instead.", "notFound", 404);
+        }
+        throw error;
+    }
+    if (!data || !data.product || !String(data.status || "").startsWith("success")) {
+        throw createFoodApiError("Barcode not found. Add it as a custom food instead.", "notFound", 404);
+    }
     const product = normalizeOpenFoodFactsProduct(Object.assign({ code: code }, data.product));
     if (!product) throw new Error("The product has no usable nutrition values in the database.");
     return product;
@@ -72,11 +160,19 @@ function chooseFoodFromApi(food) {
     window.fitcalcPendingFood = food;
     const name = document.getElementById("food-name");
     if (name) name.value = food.name;
-    if (food.caloriesMissing) {
-        setFoodApiStatus(food.name + " selected. Calories are unavailable for this product; check the label.", "warning");
+    if (typeof window.updateNutritionFoodUnits === "function") window.updateNutritionFoodUnits(food);
+    const missing = Array.isArray(food.missingNutrients)
+        ? food.missingNutrients
+        : (food.caloriesMissing ? ["calories"] : []);
+    if (missing.length) {
+        const labels = { calories: "calories", protein: "protein", carbs: "carbohydrates", fat: "fat", fiber: "fiber" };
+        setFoodApiStatus(food.name + " selected. " + missing.map(function (key) { return labels[key] || key; }).join(", ") + " unavailable; missing values will stay marked as unknown. Check the package label.", "warning");
     } else {
         setFoodApiStatus(food.name + " selected. Set the amount and add it to your log.", "success");
     }
+    const amount = document.getElementById("food-amount");
+    if (amount && !amount.value) amount.value = document.getElementById("food-amount-unit")?.value === "g" ? "100" : "1";
+    if (typeof window.updateNutritionFoodPreview === "function") window.updateNutritionFoodPreview();
     document.getElementById("food-amount")?.focus();
 }
 
@@ -95,7 +191,10 @@ function renderFoodApiResults(foods) {
         const title = document.createElement("strong");
         title.textContent = food.name;
         const details = document.createElement("small");
-        details.textContent = Math.round(food.calories) + " kcal · " + Math.round(food.protein) + "g protein per 100g";
+        const calories = food.calories === null ? "—" : Math.round(food.calories);
+        const protein = food.protein === null ? "—" : Math.round(food.protein);
+        details.textContent = calories + " kcal · " + protein + "g protein per 100g" +
+            (Array.isArray(food.missingNutrients) && food.missingNutrients.length ? " · incomplete data" : "");
         info.append(title, details);
         const select = document.createElement("button");
         select.type = "button";
@@ -133,12 +232,17 @@ async function searchFoodDatabase() {
         renderFoodApiResults(products);
         setFoodApiStatus(products.length ? "Found " + products.length + " products." : "No matching products found.", "success");
     } catch (error) {
-        setFoodApiStatus((error.message || "The food database could not be reached.") + " The built-in food list remains available.", "error");
-        if (!/^Enter at least/.test(error.message || "")) {
-            renderFoodApiRetry("Search failed. Check your connection and try again.", "Retry search", searchFoodDatabase);
-        } else if (root) {
+        if (/^Enter at least/.test(error.message || "")) {
+            setFoodApiStatus(error.message, "error");
             root.textContent = "Enter at least two letters to search the food database.";
+            return;
         }
+        const matches = typeof searchBuiltInFoodList === "function" ? searchBuiltInFoodList(query) : [];
+        renderFoodApiResults(matches);
+        const failureText = error.kind === "network" || error.kind === "timeout"
+            ? "Open Food Facts could not be reached; matching built-in foods are shown below."
+            : "Open Food Facts search is temporarily unavailable; matching built-in foods are shown below.";
+        setFoodApiStatus(failureText, "warning");
     }
 }
 
@@ -150,11 +254,22 @@ async function lookupBarcodeInput() {
         chooseFoodFromApi(product);
         if (input) input.value = product.barcode;
     } catch (error) {
-        setFoodApiStatus(error.message, "error");
-        if (!/^Enter a barcode|^That barcode|^The product has no usable/.test(error.message || "")) {
-            renderFoodApiRetry("Lookup failed. Check your connection and try again.", "Retry lookup", lookupBarcodeInput);
+        setFoodApiStatus(error.message || "Food database lookup failed.", error.kind === "notFound" ? "warning" : "error");
+        if (error.kind === "network" || error.kind === "timeout") {
+            renderFoodApiRetry("Lookup failed because the food database could not be reached. Check your connection and try again.", "Retry lookup", lookupBarcodeInput);
+        } else if (error.kind === "service") {
+            renderFoodApiRetry("The food database is temporarily unavailable. Try again shortly.", "Retry lookup", lookupBarcodeInput);
         }
     }
+}
+
+function updateBarcodeCameraAvailability() {
+    const button = document.getElementById("start-barcode-camera");
+    const hint = document.getElementById("barcode-camera-hint");
+    const hasCameraApi = typeof navigator !== "undefined" && navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === "function";
+    const supported = typeof BarcodeDetector === "function" && !!hasCameraApi;
+    if (button) button.hidden = !supported;
+    if (hint) hint.hidden = supported;
 }
 
 function stopBarcodeCamera(message) {
@@ -222,3 +337,4 @@ document.getElementById("food-barcode")?.addEventListener("keydown", function (e
 document.getElementById("start-barcode-camera")?.addEventListener("click", startBarcodeCamera);
 document.getElementById("stop-barcode-camera")?.addEventListener("click", function () { stopBarcodeCamera("Camera stopped."); });
 window.addEventListener("pagehide", function () { stopBarcodeCamera(); });
+updateBarcodeCameraAvailability();

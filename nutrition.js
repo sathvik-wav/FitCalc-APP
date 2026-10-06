@@ -1,33 +1,34 @@
 const foodDatabase = [
-    // per 100 g, approximate (USDA-style values)
-    { name: "chicken breast", calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0 },
-    { name: "white rice", calories: 130, protein: 2.7, carbs: 28, fat: 0.3, fiber: 0.4 },
-    { name: "brown rice", calories: 112, protein: 2.3, carbs: 24, fat: 0.8, fiber: 1.8 },
-    { name: "banana", calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6 },
-    { name: "apple", calories: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4 },
-    { name: "orange", calories: 47, protein: 0.9, carbs: 12, fat: 0.1, fiber: 2.4 },
-    { name: "egg", calories: 143, protein: 12.6, carbs: 0.7, fat: 9.5, fiber: 0 },
-    { name: "oats", calories: 389, protein: 16.9, carbs: 66, fat: 6.9, fiber: 10.6 },
-    { name: "salmon", calories: 208, protein: 20, carbs: 0, fat: 13, fiber: 0 },
-    { name: "tuna", calories: 116, protein: 25.5, carbs: 0, fat: 0.8, fiber: 0 },
-    { name: "lean beef", calories: 250, protein: 26, carbs: 0, fat: 15, fiber: 0 },
-    { name: "tofu", calories: 76, protein: 8, carbs: 1.9, fat: 4.8, fiber: 0.3 },
-    { name: "milk", calories: 61, protein: 3.2, carbs: 4.8, fat: 3.3, fiber: 0 },
-    { name: "greek yogurt", calories: 59, protein: 10, carbs: 3.6, fat: 0.4, fiber: 0 },
-    { name: "cottage cheese", calories: 98, protein: 11, carbs: 3.4, fat: 4.3, fiber: 0 },
-    { name: "cheddar cheese", calories: 403, protein: 25, carbs: 1.3, fat: 33, fiber: 0 },
-    { name: "lentils", calories: 116, protein: 9, carbs: 20, fat: 0.4, fiber: 7.9 },
-    { name: "chickpeas", calories: 164, protein: 8.9, carbs: 27, fat: 2.6, fiber: 7.6 },
-    { name: "potato", calories: 87, protein: 1.9, carbs: 20, fat: 0.1, fiber: 1.8 },
-    { name: "sweet potato", calories: 90, protein: 2, carbs: 21, fat: 0.2, fiber: 3.3 },
-    { name: "broccoli", calories: 34, protein: 2.8, carbs: 7, fat: 0.4, fiber: 2.6 },
-    { name: "spinach", calories: 23, protein: 2.9, carbs: 3.6, fat: 0.4, fiber: 2.2 },
-    { name: "avocado", calories: 160, protein: 2, carbs: 8.5, fat: 14.7, fiber: 6.7 },
-    { name: "almonds", calories: 579, protein: 21, carbs: 22, fat: 50, fiber: 12.5 },
-    { name: "peanut butter", calories: 588, protein: 25, carbs: 20, fat: 50, fiber: 6 },
-    { name: "olive oil", calories: 884, protein: 0, carbs: 0, fat: 100, fiber: 0 },
-    { name: "whole wheat bread", calories: 252, protein: 12.3, carbs: 43, fat: 3.5, fiber: 6 },
-    { name: "pasta", calories: 158, protein: 5.8, carbs: 31, fat: 0.9, fiber: 1.8 }
+    // Existing nutrient values are retained per 100 g. Preparation notes
+    // narrow each generic food to the closest matching source record.
+    { name: "chicken breast", calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0, preparation: "cooked, roasted, skinless", servingGrams: 85, unitGrams: { piece: 174 }, units: ["g", "piece", "serving"], defaultUnit: "piece" },
+    { name: "white rice", calories: 130, protein: 2.7, carbs: 28, fat: 0.3, fiber: 0.4, preparation: "cooked, long-grain", servingGrams: 158, unitGrams: { cup: 158 }, units: ["g", "cup", "serving"], defaultUnit: "cup" },
+    { name: "brown rice", calories: 112, protein: 2.3, carbs: 24, fat: 0.8, fiber: 1.8, preparation: "cooked, medium-grain", servingGrams: 195, unitGrams: { cup: 195 }, units: ["g", "cup", "serving"], defaultUnit: "cup" },
+    { name: "banana", calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6, preparation: "raw, edible portion", servingGrams: 118, unitGrams: { piece: 118, cup: 150 }, units: ["g", "piece", "cup", "serving"], defaultUnit: "piece" },
+    { name: "apple", calories: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4, preparation: "raw, with skin", servingGrams: 182, unitGrams: { piece: 182, cup: 109 }, units: ["g", "piece", "cup", "serving"], defaultUnit: "piece" },
+    { name: "orange", calories: 47, protein: 0.9, carbs: 12, fat: 0.1, fiber: 2.4, preparation: "raw, edible portion", servingGrams: 131, unitGrams: { piece: 131, cup: 180 }, units: ["g", "piece", "cup", "serving"], defaultUnit: "piece" },
+    { name: "egg", calories: 143, protein: 12.6, carbs: 0.7, fat: 9.5, fiber: 0, preparation: "whole, raw, edible portion", servingGrams: 50, unitGrams: { piece: 50 }, units: ["g", "piece", "serving"], defaultUnit: "piece" },
+    { name: "oats", calories: 389, protein: 16.9, carbs: 66, fat: 6.9, fiber: 10.6, preparation: "rolled oats, dry", servingGrams: 40, unitGrams: { cup: 81, tbsp: 5, tsp: 1.7 }, units: ["g", "cup", "tbsp", "tsp", "serving"], defaultUnit: "serving" },
+    { name: "salmon", calories: 208, protein: 20, carbs: 0, fat: 13, fiber: 0, preparation: "raw, farmed Atlantic", servingGrams: 85, unitGrams: { piece: 198 }, units: ["g", "piece", "serving"], defaultUnit: "serving" },
+    { name: "tuna", calories: 116, protein: 25.5, carbs: 0, fat: 0.8, fiber: 0, preparation: "light tuna, canned in water, drained", servingGrams: 85, unitGrams: { cup: 154 }, units: ["g", "cup", "serving"], defaultUnit: "serving" },
+    { name: "lean beef", calories: 250, protein: 26, carbs: 0, fat: 15, fiber: 0, preparation: "ground, 85% lean, cooked, broiled", servingGrams: 85, units: ["g", "serving"], defaultUnit: "serving" },
+    { name: "tofu", calories: 76, protein: 8, carbs: 1.9, fat: 4.8, fiber: 0.3, preparation: "regular tofu, raw", servingGrams: 85, unitGrams: { cup: 126 }, units: ["g", "cup", "serving"], defaultUnit: "serving" },
+    { name: "milk", calories: 61, protein: 3.2, carbs: 4.8, fat: 3.3, fiber: 0, preparation: "whole milk, 3.25% milkfat", servingGrams: 244, unitGrams: { ml: 1.02, cup: 244 }, units: ["g", "ml", "cup", "serving"], defaultUnit: "cup" },
+    { name: "greek yogurt", calories: 59, protein: 10, carbs: 3.6, fat: 0.4, fiber: 0, preparation: "plain, nonfat", servingGrams: 170, unitGrams: { cup: 245 }, units: ["g", "cup", "serving"], defaultUnit: "serving" },
+    { name: "cottage cheese", calories: 98, protein: 11, carbs: 3.4, fat: 4.3, fiber: 0, preparation: "4% milkfat", servingGrams: 113, unitGrams: { cup: 226 }, units: ["g", "cup", "serving"], defaultUnit: "serving" },
+    { name: "cheddar cheese", calories: 403, protein: 25, carbs: 1.3, fat: 33, fiber: 0, preparation: "natural, full-fat", servingGrams: 28, unitGrams: { piece: 28, cup: 113, tbsp: 7, tsp: 2.3 }, units: ["g", "piece", "cup", "tbsp", "tsp", "serving"], defaultUnit: "piece" },
+    { name: "lentils", calories: 116, protein: 9, carbs: 20, fat: 0.4, fiber: 7.9, preparation: "cooked, boiled", servingGrams: 198, unitGrams: { cup: 198 }, units: ["g", "cup", "serving"], defaultUnit: "cup" },
+    { name: "chickpeas", calories: 164, protein: 8.9, carbs: 27, fat: 2.6, fiber: 7.6, preparation: "cooked, boiled", servingGrams: 164, unitGrams: { cup: 164 }, units: ["g", "cup", "serving"], defaultUnit: "cup" },
+    { name: "potato", calories: 87, protein: 1.9, carbs: 20, fat: 0.1, fiber: 1.8, preparation: "boiled, flesh and skin", servingGrams: 173, unitGrams: { piece: 173, cup: 150 }, units: ["g", "piece", "cup", "serving"], defaultUnit: "piece" },
+    { name: "sweet potato", calories: 90, protein: 2, carbs: 21, fat: 0.2, fiber: 3.3, preparation: "baked, flesh", servingGrams: 130, unitGrams: { piece: 130, cup: 255 }, units: ["g", "piece", "cup", "serving"], defaultUnit: "piece" },
+    { name: "broccoli", calories: 34, protein: 2.8, carbs: 7, fat: 0.4, fiber: 2.6, preparation: "raw, chopped", servingGrams: 91, unitGrams: { cup: 91 }, units: ["g", "cup", "serving"], defaultUnit: "cup" },
+    { name: "spinach", calories: 23, protein: 2.9, carbs: 3.6, fat: 0.4, fiber: 2.2, preparation: "raw leaves", servingGrams: 30, unitGrams: { cup: 30 }, units: ["g", "cup", "serving"], defaultUnit: "cup" },
+    { name: "avocado", calories: 160, protein: 2, carbs: 8.5, fat: 14.7, fiber: 6.7, preparation: "raw, edible portion", servingGrams: 50, unitGrams: { piece: 150, cup: 230 }, units: ["g", "piece", "cup", "serving"], defaultUnit: "serving" },
+    { name: "almonds", calories: 579, protein: 21, carbs: 22, fat: 50, fiber: 12.5, preparation: "raw", servingGrams: 28, unitGrams: { piece: 1.2, cup: 143, tbsp: 9, tsp: 3 }, units: ["g", "piece", "cup", "tbsp", "tsp", "serving"], defaultUnit: "serving" },
+    { name: "peanut butter", calories: 588, protein: 25, carbs: 20, fat: 50, fiber: 6, preparation: "smooth, regular", servingGrams: 32, unitGrams: { cup: 258, tbsp: 16, tsp: 5.3 }, units: ["g", "cup", "tbsp", "tsp", "serving"], defaultUnit: "serving" },
+    { name: "olive oil", calories: 884, protein: 0, carbs: 0, fat: 100, fiber: 0, preparation: "pure", servingGrams: 13.5, unitGrams: { ml: 0.91, cup: 216, tbsp: 13.5, tsp: 4.5 }, units: ["g", "ml", "cup", "tbsp", "tsp", "serving"], defaultUnit: "tbsp" },
+    { name: "whole wheat bread", calories: 252, protein: 12.3, carbs: 43, fat: 3.5, fiber: 6, preparation: "commercial, whole wheat", servingGrams: 28, unitGrams: { piece: 28 }, units: ["g", "piece", "serving"], defaultUnit: "piece" },
+    { name: "pasta", calories: 158, protein: 5.8, carbs: 31, fat: 0.9, fiber: 1.8, preparation: "enriched pasta, cooked", servingGrams: 140, unitGrams: { cup: 140 }, units: ["g", "cup", "serving"], defaultUnit: "cup" }
 ];
 
 
@@ -76,20 +77,9 @@ function getNutrition() {
     );
 
 
-    nutrition.calories =
-        Number(nutrition.calories) || 0;
-
-    nutrition.protein =
-        Number(nutrition.protein) || 0;
-
-    nutrition.carbs =
-        Number(nutrition.carbs) || 0;
-
-    nutrition.fat =
-        Number(nutrition.fat) || 0;
-
-    nutrition.fiber =
-        Number(nutrition.fiber) || 0;
+    ["calories", "protein", "carbs", "fat", "fiber"].forEach(function (key) {
+        nutrition[key] = nutrition[key] === null ? null : (Number(nutrition[key]) || 0);
+    });
 
     nutrition.water =
         Number(nutrition.water) || 0;
@@ -199,6 +189,18 @@ function findFood(name) {
     }) || null;
 }
 
+function searchBuiltInFoodList(query) {
+    const normalized = normalizeFoodName(query);
+    if (!normalized) return [];
+    const words = normalized.split(/\s+/).filter(Boolean);
+    return foodDatabase.filter(function (food) {
+        const name = normalizeFoodName(food.name);
+        return name.includes(normalized) || words.every(function (word) { return name.includes(word); });
+    }).slice(0, 12).map(function (food) {
+        return Object.assign({}, food, { source: "FitCalc built-in list" });
+    });
+}
+
 function normalizeFoodName(value) {
     return String(value || "").trim().replace(/\s+/g, " ").toLocaleLowerCase();
 }
@@ -206,14 +208,28 @@ function normalizeFoodName(value) {
 function foodDefinitionFromEntry(food) {
     const amount = Number(food && food.amount);
     const divisor = amount > 0 ? amount / 100 : 1;
+    const knownFood = foodDatabase.find(function (item) {
+        return normalizeFoodName(item.name) === normalizeFoodName(food && food.name);
+    });
+    const servingGrams = Number(food && food.servingGrams) > 0
+        ? Number(food.servingGrams)
+        : (knownFood && Number(knownFood.servingGrams) > 0 ? Number(knownFood.servingGrams) : null);
+    const per100 = function (key) {
+        if (!food || food[key] === null || food[key] === undefined || !Number.isFinite(Number(food[key]))) return null;
+        return Number(food[key]) / divisor;
+    };
     return {
         name: String(food && food.name || "").trim(),
-        calories: (Number(food && food.calories) || 0) / divisor,
-        protein: (Number(food && food.protein) || 0) / divisor,
-        carbs: (Number(food && food.carbs) || 0) / divisor,
-        fat: (Number(food && food.fat) || 0) / divisor,
-        fiber: (Number(food && food.fiber) || 0) / divisor,
-        servingGrams: Number(food && food.servingGrams) > 0 ? Number(food.servingGrams) : 100,
+        calories: per100("calories"),
+        protein: per100("protein"),
+        carbs: per100("carbs"),
+        fat: per100("fat"),
+        fiber: per100("fiber"),
+        servingGrams: servingGrams,
+        unitGrams: Object.assign({}, knownFood && knownFood.unitGrams || {}, food && food.unitGrams || {}),
+        units: Array.isArray(food && food.units) ? food.units.slice() : (knownFood && knownFood.units ? knownFood.units.slice() : ["g"].concat(servingGrams ? ["serving"] : [])),
+        defaultUnit: food && food.defaultUnit || (knownFood && knownFood.defaultUnit) || "g",
+        preparation: food && food.preparation || (knownFood && knownFood.preparation) || "",
         source: food && food.source || "FitCalc local list",
         barcode: food && food.barcode || ""
     };
@@ -230,14 +246,14 @@ function saveCustomFood(food) {
         const maximum = key === "calories" ? 1000 : 100;
         return !Number.isFinite(values[key]) || values[key] < 0 || values[key] > maximum;
     })) return false;
-    const servingGrams = Number(food.servingGrams || 100);
+    const servingGrams = Number(food.servingGrams);
     if (!Number.isFinite(servingGrams) || servingGrams <= 0 || servingGrams > 5000) return false;
 
     const library = getFoodLibrary();
     const builtIn = foodDatabase.some(function (item) { return normalizeFoodName(item.name) === normalizeFoodName(name); });
     if (builtIn) return false;
     const existing = library.customFoods.findIndex(function (item) { return normalizeFoodName(item.name) === normalizeFoodName(name); });
-    const definition = Object.assign({ name: name, servingGrams: servingGrams, source: "Custom food" }, values);
+    const definition = Object.assign({ name: name, servingGrams: servingGrams, units: ["g", "serving"], defaultUnit: "serving", source: "Custom food" }, values);
     if (existing >= 0) library.customFoods[existing] = definition;
     else library.customFoods.unshift(definition);
     ["favorites", "recents"].forEach(function (key) {
@@ -472,14 +488,14 @@ function updateNutritionDisplay() {
             if (total) {
 
                 total.textContent =
-                    `${Math.round(item.current)} / ${Math.round(target)}`;
+                    `${item.current === null ? "—" : Math.round(item.current)} / ${Math.round(target)}`;
 
             }
 
 
             updateNutritionProgressBar(
                 item.progress,
-                item.current,
+                item.current === null ? 0 : item.current,
                 target
             );
 
@@ -512,7 +528,7 @@ function updateNutritionRemaining(
 
         {
             id: "remaining-calories",
-            value: getRemaining(
+            value: nutrition.calories === null ? null : getRemaining(
                 targets.calories,
                 nutrition.calories
             ),
@@ -521,7 +537,7 @@ function updateNutritionRemaining(
 
         {
             id: "remaining-protein",
-            value: getRemaining(
+            value: nutrition.protein === null ? null : getRemaining(
                 targets.protein,
                 nutrition.protein
             ),
@@ -530,7 +546,7 @@ function updateNutritionRemaining(
 
         {
             id: "remaining-carbs",
-            value: getRemaining(
+            value: nutrition.carbs === null ? null : getRemaining(
                 targets.carbs,
                 nutrition.carbs
             ),
@@ -539,7 +555,7 @@ function updateNutritionRemaining(
 
         {
             id: "remaining-fat",
-            value: getRemaining(
+            value: nutrition.fat === null ? null : getRemaining(
                 targets.fat,
                 nutrition.fat
             ),
@@ -548,7 +564,7 @@ function updateNutritionRemaining(
 
         {
             id: "remaining-fiber",
-            value: getRemaining(
+            value: nutrition.fiber === null ? null : getRemaining(
                 targets.fiber,
                 nutrition.fiber
             ),
@@ -570,7 +586,7 @@ function updateNutritionRemaining(
             if (element) {
 
                 element.textContent =
-                    `${Math.round(item.value)} ${item.unit}`;
+                    `${item.value === null ? "—" : Math.round(item.value) + " " + item.unit}`;
 
             }
 
@@ -624,106 +640,57 @@ function updateFoodList() {
         return (Object.prototype.hasOwnProperty.call(order, mealA) ? order[mealA] : 4) -
             (Object.prototype.hasOwnProperty.call(order, mealB) ? order[mealB] : 4) || a.index - b.index;
     });
-    let lastMeal = "";
+    orderedFoods.forEach(function (item) {
+        const food = item.food;
+        const index = item.index;
+        const entry = document.createElement("div");
+        entry.className = "nutrition-food-entry";
+        entry.innerHTML = `
+            <div class="nutrition-food-info">
+                <h3>${escapeHTML(food.name)}</h3>
+                ${food.preparation ? '<p class="food-preparation">' + escapeHTML(food.preparation) + '</p>' : ""}
+                <div class="food-entry-meta"><span>${escapeHTML(formatLoggedFoodAmount(food))}</span><span class="food-entry-meal">${escapeHTML(food.meal || "Snack")}</span></div>
+                <p class="food-entry-macros">
+                    ${formatFoodNutrient(food.calories, "kcal")} ·
+                    ${formatFoodNutrient(food.protein, "g protein")} ·
+                    ${formatFoodNutrient(food.carbs, "g carbs")} ·
+                    ${formatFoodNutrient(food.fat, "g fat")}
+                </p>
+                ${Array.isArray(food.missingNutrients) && food.missingNutrients.length ? '<p class="food-data-warning">Some values are unavailable in the source data.</p>' : ""}
+            </div>
+            <div class="nutrition-food-actions">
+                <button type="button" class="secondary-btn favorite-food" data-index="${index}" aria-pressed="${isFoodFavorite(food)}" aria-label="${isFoodFavorite(food) ? "Remove from" : "Add to"} favorite foods">${isFoodFavorite(food) ? "★ Saved" : "☆ Favorite"}</button>
+                <button type="button" class="secondary-btn edit-food" data-index="${index}">Edit</button>
+                <button type="button" class="ghost-btn remove-food" data-index="${index}">Remove</button>
+            </div>`;
+        foodList.appendChild(entry);
+        entry.querySelector(".remove-food").addEventListener("click", function () { removeFood(index); });
+        entry.querySelector(".edit-food").addEventListener("click", function () { editFood(index); });
+        entry.querySelector(".favorite-food").addEventListener("click", function () {
+            const added = toggleFoodFavorite(food);
+            window.fitcalcToast(added ? "Food added to favorites." : "Food removed from favorites.");
+        });
+    });
+}
 
-    orderedFoods.forEach(
-        function (item) {
+function formatFoodNutrient(value, unit) {
+    return value === null || value === undefined || !Number.isFinite(Number(value))
+        ? "— " + unit
+        : formatFoodAmount(Number(value)) + " " + unit;
+}
 
-            const food = item.food;
-            const index = item.index;
-            const meal = food.meal || "Snack";
-            if (meal !== lastMeal) {
-                const heading = document.createElement("h3");
-                heading.className = "food-meal-heading";
-                heading.textContent = meal;
-                foodList.appendChild(heading);
-                lastMeal = meal;
-            }
-
-            const entry =
-                document.createElement("div");
-
-
-            entry.className =
-                "nutrition-food-entry";
-
-
-            entry.innerHTML = `
-
-                <div class="nutrition-food-info">
-
-                    <h3>
-                        ${escapeHTML(food.name)}
-                    </h3>
-
-                    <p>${escapeHTML(food.servingCount ? food.servingCount + " × " + (food.servingGrams || 100) + " g serving" : food.amount + " g")}</p>
-
-                    <p>${escapeHTML(food.meal || "Snack")}</p>
-
-                    <p>
-                        ${Math.round(food.calories)} kcal ·
-                        ${Math.round(food.protein)}g protein ·
-                        ${Math.round(food.carbs)}g carbs ·
-                        ${Math.round(food.fat)}g fat
-                    </p>
-
-                </div>
-
-                <div class="nutrition-food-actions">
-                <button
-                    type="button"
-                    class="secondary-btn favorite-food"
-                    data-index="${index}"
-                    aria-pressed="${isFoodFavorite(food)}"
-                    aria-label="${isFoodFavorite(food) ? "Remove from" : "Add to"} favorite foods"
-                >${isFoodFavorite(food) ? "★ Saved" : "☆ Favorite"}</button>
-                <button
-                    type="button"
-                    class="secondary-btn edit-food"
-                    data-index="${index}"
-                >
-                    Edit
-                </button>
-                <button
-                    type="button"
-                    class="primary-btn remove-food"
-                    data-index="${index}"
-                >
-                    Remove
-                </button>
-                </div>
-
-            `;
-
-
-            foodList.appendChild(entry);
-
-
-            const removeButton =
-                entry.querySelector(
-                    ".remove-food"
-                );
-
-
-            removeButton.addEventListener(
-                "click",
-                function () {
-
-                    removeFood(index);
-
-                }
-            );
-
-            entry.querySelector(".edit-food").addEventListener("click", function () {
-                editFood(index);
-            });
-            entry.querySelector(".favorite-food").addEventListener("click", function () {
-                const added = toggleFoodFavorite(food);
-                window.fitcalcToast(added ? "Food added to favorites." : "Food removed from favorites.");
-            });
-
-        }
-    );
+function formatLoggedFoodAmount(food) {
+    const unit = normalizeFoodAmountUnit(food && food.amountUnit);
+    const quantity = Number(food && food.enteredAmount);
+    if (food && Number.isFinite(quantity) && quantity > 0 && food.amountUnit) {
+        const plural = { g: "g", ml: "ml", piece: "pieces", cup: "cups", tbsp: "tbsp", tsp: "tsp", serving: "servings" };
+        const name = quantity === 1 ? unit : (plural[unit] || unit);
+        const weight = Number(food.amount);
+        return formatFoodAmount(quantity) + " " + name + (unit === "g" ? "" : " · " + formatFoodAmount(weight) + " g");
+    }
+    return food && Number(food.servingCount) > 0
+        ? food.servingCount + " × " + (food.servingGrams || "unknown") + " g serving"
+        : (food && food.amount || 0) + " g";
 }
 
 function renderFoodShortcuts() {
@@ -734,13 +701,12 @@ function renderFoodShortcuts() {
     const library = getFoodLibrary();
     const sections = [
         { title: "Saved custom foods", items: library.customFoods.slice(0, 6) },
-        { title: "Favorites", items: library.favorites.slice(0, 6) },
-        { title: "Recent", items: library.recents.slice(0, 6) }
+        { title: "Favorites", items: library.favorites.slice(0, 6) }
     ].filter(function (section) { return section.items.length > 0; });
     if (!sections.length) {
         const note = document.createElement("small");
         note.className = "muted-copy";
-        note.textContent = "Favorite foods and your recent entries will appear here for quick logging.";
+        note.textContent = "Favorite foods and saved custom foods will appear here for quick logging.";
         root.appendChild(note);
         return;
     }
@@ -753,12 +719,16 @@ function renderFoodShortcuts() {
         list.className = "food-shortcut-list";
         section.items.forEach(function (food) {
             const button = document.createElement("button");
+            const servingGrams = Number(food.servingGrams);
+            const canUseServing = Number.isFinite(servingGrams) && servingGrams > 0;
+            const shortcutUnit = canUseServing ? "serving" : "g";
+            const shortcutAmount = canUseServing ? 1 : 100;
             button.type = "button";
             button.className = "secondary-btn food-shortcut";
-            button.textContent = food.name + " · 1 serving";
+            button.textContent = food.name + (canUseServing ? " · 1 serving (" + servingGrams + " g)" : " · 100 g");
             button.addEventListener("click", function () {
                 const meal = document.getElementById("food-meal");
-                addFoodToSelectedDay(food, Number(food.servingGrams) > 0 ? Number(food.servingGrams) : 100, meal ? meal.value : "Snack", "grams");
+                addFoodToSelectedDay(food, shortcutAmount, meal ? meal.value : "Snack", shortcutUnit);
             });
             list.appendChild(button);
         });
@@ -819,32 +789,168 @@ function editFood(index) {
     editingFoodSnapshot = JSON.stringify(food);
     document.getElementById("food-name").value = food.name;
     const amountUnit = document.getElementById("food-amount-unit");
-    const usesServings = Number(food.servingCount) > 0;
-    if (amountUnit) amountUnit.value = usesServings ? "servings" : "grams";
-    document.getElementById("food-amount").value = usesServings ? food.servingCount : food.amount;
+    const savedUnit = food.amountUnit ? normalizeFoodAmountUnit(food.amountUnit) : (Number(food.servingCount) > 0 ? "serving" : "g");
+    const quantity = Number(food.enteredAmount) > 0 ? food.enteredAmount : (Number(food.servingCount) > 0 ? food.servingCount : food.amount);
+    if (amountUnit) amountUnit.value = savedUnit;
+    document.getElementById("food-amount").value = quantity;
     document.getElementById("food-meal").value = food.meal || "Snack";
-    const per100 = function (key) { return (Number(food[key]) || 0) * 100 / Number(food.amount); };
-    window.fitcalcPendingFood = { name: food.name, calories: per100("calories"), protein: per100("protein"), carbs: per100("carbs"), fat: per100("fat"), fiber: per100("fiber"), servingGrams: food.servingGrams, source: food.source, barcode: food.barcode };
+    const per100 = function (key) { return food[key] === null || food[key] === undefined ? null : Number(food[key]) * 100 / Number(food.amount); };
+    window.fitcalcPendingFood = {
+        name: food.name, calories: per100("calories"), protein: per100("protein"), carbs: per100("carbs"), fat: per100("fat"), fiber: per100("fiber"),
+        servingGrams: food.servingGrams, unitGrams: food.unitGrams || {}, units: food.units || ["g", "serving"],
+        defaultUnit: savedUnit, preparation: food.preparation || "", source: food.source, barcode: food.barcode, missingNutrients: food.missingNutrients || []
+    };
     const button = document.getElementById("add-food");
     if (button) button.textContent = "Save changes";
     const cancel = document.getElementById("cancel-food-edit");
     if (cancel) cancel.hidden = false;
+    if (food.gramsPerUnit > 0 && savedUnit !== "g" && savedUnit !== "serving") {
+        window.fitcalcPendingFood.unitGrams = Object.assign({}, window.fitcalcPendingFood.unitGrams || {});
+        window.fitcalcPendingFood.unitGrams[savedUnit] = Number(food.gramsPerUnit);
+        if (!window.fitcalcPendingFood.units.includes(savedUnit)) window.fitcalcPendingFood.units.push(savedUnit);
+    }
+    setNutritionFoodUnits(window.fitcalcPendingFood, { forceDefault: true });
+    updateFoodAmountLabel();
+    updateNutritionFoodPreview();
     document.getElementById("food-name").focus();
+}
+
+let lastFoodEntryName = "";
+const foodUnitLabels = { g: "g", ml: "ml", piece: "piece", cup: "cup", tbsp: "tbsp", tsp: "tsp", serving: "serving" };
+
+function currentFoodEntryData() {
+    const name = document.getElementById("food-name");
+    const foodName = name ? name.value.trim() : "";
+    const pending = window.fitcalcPendingFood;
+    return pending && normalizeFoodName(pending.name) === normalizeFoodName(foodName) ? pending : findFood(foodName);
+}
+
+function supportedFoodUnits(foodData) {
+    const result = ["g"];
+    if (!foodData) return result;
+    const candidates = Array.isArray(foodData.units)
+        ? foodData.units
+        : ["serving"].concat(Object.keys(foodData.unitGrams || {}));
+    candidates.forEach(function (unit) {
+        const normalized = normalizeFoodAmountUnit(unit);
+        if (normalized === "g") return;
+        if (normalized === "serving" && Number(foodData.servingGrams) > 0 && !result.includes(normalized)) result.push(normalized);
+        else if (normalized !== "serving" && Number(foodData.unitGrams && foodData.unitGrams[normalized]) > 0 && !result.includes(normalized)) result.push(normalized);
+    });
+    return result;
+}
+
+function setNutritionFoodUnits(foodData, options) {
+    const select = document.getElementById("food-amount-unit");
+    if (!select) return;
+    const settings = options || {};
+    const input = document.getElementById("food-amount");
+    const previousUnit = normalizeFoodAmountUnit(select.value);
+    const units = supportedFoodUnits(foodData);
+    const foodKey = normalizeFoodName(foodData && foodData.name);
+    const isNewFood = settings.forceDefault === true || (foodKey && foodKey !== lastFoodEntryName);
+    const desiredUnit = isNewFood && foodData && foodData.defaultUnit
+        ? normalizeFoodAmountUnit(foodData.defaultUnit)
+        : previousUnit;
+    const selectedUnit = units.includes(desiredUnit) ? desiredUnit : (units.includes("serving") && isNewFood ? "serving" : "g");
+    const amountWasEmpty = !input || !String(input.value || "").trim() || input.value === "100";
+
+    select.innerHTML = units.map(function (unit) {
+        return '<option value="' + unit + '">' + foodUnitLabels[unit] + '</option>';
+    }).join("");
+    select.value = selectedUnit;
+    lastFoodEntryName = foodKey;
+    if (isNewFood && selectedUnit !== "g" && amountWasEmpty && input) input.value = "1";
+    updateFoodAmountLabel();
 }
 
 function updateFoodAmountLabel() {
     const unit = document.getElementById("food-amount-unit");
     const label = document.getElementById("food-amount-label");
     const input = document.getElementById("food-amount");
-    const servings = unit && unit.value === "servings";
-    if (label) label.textContent = servings ? "Number of servings" : "Amount in grams";
+    const selected = unit ? normalizeFoodAmountUnit(unit.value) : "g";
+    const labels = { g: "Amount (g)", ml: "Amount (ml)", piece: "Number of pieces", cup: "Number of cups", tbsp: "Tablespoons", tsp: "Teaspoons", serving: "Number of servings" };
+    if (label) label.textContent = labels[selected] || labels.g;
     if (input) {
-        input.step = servings ? "0.25" : "1";
-        input.placeholder = servings ? "1" : "100";
+        input.step = selected === "g" || selected === "ml" ? "1" : "0.25";
+        input.placeholder = selected === "g" || selected === "ml" ? "100" : "1";
+        if (!input.value) input.value = input.placeholder;
     }
+    updateNutritionFoodPreview();
 }
 
 document.getElementById("food-amount-unit")?.addEventListener("change", updateFoodAmountLabel);
+document.getElementById("food-name")?.addEventListener("input", function () {
+    setNutritionFoodUnits(currentFoodEntryData());
+});
+
+window.updateNutritionFoodUnits = function (foodData) {
+    setNutritionFoodUnits(foodData, { forceDefault: true });
+};
+
+function normalizeFoodAmountUnit(unit) {
+    const value = String(unit || "g").toLowerCase();
+    if (value === "grams") return "g";
+    if (value === "servings") return "serving";
+    return ["g", "ml", "piece", "cup", "tbsp", "tsp", "serving"].includes(value) ? value : "g";
+}
+
+function gramsPerFoodUnit(foodData, unit) {
+    const selected = normalizeFoodAmountUnit(unit);
+    const builtIn = foodData && foodData.source !== "Open Food Facts" && foodData.source !== "Custom food"
+        ? foodDatabase.find(function (item) { return normalizeFoodName(item.name) === normalizeFoodName(foodData.name); })
+        : null;
+    const unitGrams = foodData && foodData.unitGrams || {};
+    const fallbackUnitGrams = builtIn && builtIn.unitGrams || {};
+    const grams = Number(unitGrams[selected]) > 0 ? Number(unitGrams[selected]) : Number(fallbackUnitGrams[selected]);
+    if (selected === "g") return 1;
+    if (selected === "serving") {
+        const serving = Number(foodData && foodData.servingGrams);
+        if (serving > 0) return serving;
+        return Number(builtIn && builtIn.servingGrams) > 0 ? Number(builtIn.servingGrams) : null;
+    }
+    return grams > 0 ? grams : null;
+}
+
+function updateNutritionFoodPreview() {
+    const preview = document.getElementById("food-nutrition-preview");
+    if (!preview) return;
+    const name = document.getElementById("food-name");
+    const amount = document.getElementById("food-amount");
+    const unit = document.getElementById("food-amount-unit");
+    const foodName = name ? name.value.trim() : "";
+    const pending = window.fitcalcPendingFood;
+    const foodData = pending && pending.name.toLowerCase() === foodName.toLowerCase() ? pending : findFood(foodName);
+    const quantity = Number(amount && amount.value);
+    if (!foodData || !foodName) {
+        preview.textContent = "Choose a food from the list or food database to preview its nutrition.";
+        return;
+    }
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+        preview.textContent = "Enter an amount to preview nutrition for " + foodData.name + ".";
+        return;
+    }
+    const selectedUnit = normalizeFoodAmountUnit(unit && unit.value);
+    const gramsPerUnit = gramsPerFoodUnit(foodData, selectedUnit);
+    if (!(gramsPerUnit > 0)) {
+        preview.textContent = "Choose a supported amount unit for " + foodData.name + ".";
+        return;
+    }
+    const grams = gramsPerUnit * quantity;
+    const logged = calculateLoggedFood(foodData, quantity, "", selectedUnit);
+    const amountText = formatFoodAmount(quantity) + " " + (quantity === 1 ? selectedUnit : (selectedUnit === "piece" ? "pieces" : selectedUnit === "cup" ? "cups" : selectedUnit === "serving" ? "servings" : selectedUnit));
+    const stateText = foodData.preparation ? " (" + foodData.preparation + ")" : "";
+    preview.textContent = "Preview: " + foodData.name + stateText + " · " + amountText + " · " + formatFoodAmount(grams) + " g used · " + formatFoodNutrient(logged.calories, "kcal") +
+        " · " + formatFoodNutrient(logged.protein, "g protein") + " · " + formatFoodNutrient(logged.carbs, "g carbs") +
+        " · " + formatFoodNutrient(logged.fat, "g fat") + ". Values update before saving.";
+}
+
+function formatFoodAmount(value) {
+    return (Math.round(Number(value) * 10) / 10).toString();
+}
+
+document.getElementById("food-name")?.addEventListener("input", updateNutritionFoodPreview);
+document.getElementById("food-amount")?.addEventListener("input", updateNutritionFoodPreview);
 
 function cancelFoodEdit() {
     editingFoodIndex = -1;
@@ -859,6 +965,7 @@ function cancelFoodEdit() {
     const amount = document.getElementById("food-amount");
     if (name) name.value = "";
     if (amount) amount.value = "";
+    updateNutritionFoodPreview();
 }
 
 const cancelFoodEditButton = document.getElementById("cancel-food-edit");
@@ -866,19 +973,32 @@ if (cancelFoodEditButton) cancelFoodEditButton.addEventListener("click", cancelF
 
 function calculateLoggedFood(foodData, amount, meal, amountUnit) {
     const enteredAmount = Number(amount);
-    const servingGrams = Number(foodData.servingGrams) > 0 ? Number(foodData.servingGrams) : 100;
-    const usesServings = amountUnit === "servings";
-    const actualGrams = usesServings ? enteredAmount * servingGrams : enteredAmount;
+    const servingGrams = Number(foodData.servingGrams) > 0 ? Number(foodData.servingGrams) : null;
+    const unit = normalizeFoodAmountUnit(amountUnit);
+    const gramsPerUnit = gramsPerFoodUnit(foodData, unit);
+    const actualGrams = Number.isFinite(enteredAmount) && gramsPerUnit > 0 ? enteredAmount * gramsPerUnit : NaN;
     const factor = actualGrams / 100;
+    const scaled = function (key) {
+        const value = foodData[key];
+        return value === null || value === undefined || !Number.isFinite(Number(value)) ? null : Number(value) * factor;
+    };
     return {
         name: String(foodData.name), amount: actualGrams, meal: meal || "Snack",
-        servingCount: usesServings ? enteredAmount : null,
+        enteredAmount: enteredAmount,
+        amountUnit: unit,
+        gramsPerUnit: gramsPerUnit,
+        servingCount: unit === "serving" ? enteredAmount : null,
         servingGrams: servingGrams,
-        calories: (Number(foodData.calories) || 0) * factor,
-        protein: (Number(foodData.protein) || 0) * factor,
-        carbs: (Number(foodData.carbs) || 0) * factor,
-        fat: (Number(foodData.fat) || 0) * factor,
-        fiber: (Number(foodData.fiber) || 0) * factor,
+        unitGrams: Object.assign({}, foodData.unitGrams || {}),
+        units: supportedFoodUnits(foodData),
+        defaultUnit: foodData.defaultUnit || "g",
+        preparation: foodData.preparation || "",
+        calories: scaled("calories"),
+        protein: scaled("protein"),
+        carbs: scaled("carbs"),
+        fat: scaled("fat"),
+        fiber: scaled("fiber"),
+        missingNutrients: Array.isArray(foodData.missingNutrients) ? foodData.missingNutrients.slice() : [],
         source: foodData.source || "FitCalc local list",
         barcode: foodData.barcode || ""
     };
@@ -899,7 +1019,12 @@ function addFoodToSelectedDay(foodData, amount, meal, amountUnit) {
 
 function recalculateNutritionTotals(nutrition) {
     ["calories", "protein", "carbs", "fat", "fiber"].forEach(function (key) {
-        nutrition[key] = (nutrition.foods || []).reduce(function (sum, food) { return sum + (Number(food[key]) || 0); }, 0);
+        const foods = nutrition.foods || [];
+        if (foods.some(function (food) { return food[key] === null || food[key] === undefined || !Number.isFinite(Number(food[key])); })) {
+            nutrition[key] = null;
+        } else {
+            nutrition[key] = foods.reduce(function (sum, food) { return sum + Number(food[key]); }, 0);
+        }
     });
 }
 
@@ -972,6 +1097,10 @@ if (addFoodButton) {
 
             const amountUnit = document.getElementById("food-amount-unit")?.value || "grams";
             const food = calculateLoggedFood(foodData, foodAmount, document.getElementById("food-meal").value, amountUnit);
+            if (!Number.isFinite(food.amount) || food.amount <= 0) {
+                window.fitcalcToast("Choose a supported amount unit for this food.", "error");
+                return;
+            }
             if (food.amount > 10000) {
                 window.fitcalcToast("Food amount cannot exceed 10,000 g.", "error");
                 return;

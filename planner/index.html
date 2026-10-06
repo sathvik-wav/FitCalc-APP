@@ -11,9 +11,9 @@
 </head>
 <body>
 <header class="topbar">
-  <a class="brand" href="../index.html" aria-label="FitCalc home"><span class="brand-mark" aria-hidden="true">+</span><span>FitCalc</span></a>
+  <a class="brand" href="../index.html" aria-label="FitCalc home"><span class="brand-mark" aria-hidden="true">+</span><span>FitCalc™</span></a>
   <nav class="desktop-nav" aria-label="Main navigation"></nav>
-  <div class="topbar-right"><button class="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch theme"></button><button class="menu-toggle" id="hamburger-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button></div>
+  <div class="topbar-right"><button class="menu-toggle" id="hamburger-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button></div>
 </header>
 <nav class="mobile-menu" id="mobile-menu" aria-label="More navigation" hidden></nav>
 
@@ -59,8 +59,8 @@
 
     <div class="planner-focus" role="group" aria-label="Choose planner sections">
       <button type="button" id="planner-view-workouts" aria-pressed="false">Workouts</button>
-      <button type="button" id="planner-view-tasks" aria-pressed="false">Tasks</button>
-      <button type="button" id="planner-view-all" aria-pressed="true">All</button>
+      <button type="button" id="planner-view-tasks" aria-pressed="false">Daily Activity</button>
+      <button type="button" id="planner-view-templates" aria-pressed="false">Templates</button>
     </div>
 
     <section class="card planner-card planner-workouts-card" id="planner-workouts-card" aria-labelledby="workouts-heading">
@@ -69,24 +69,17 @@
         <p class="planner-section-count">Completed <strong id="completed-workouts">0</strong></p>
       </div>
       <p>Build a session, log actual sets, then mark it complete.</p>
-      <div class="planner-input-row">
-        <div class="field"><label for="workout-name">Workout name</label><input type="text" id="workout-name" maxlength="80" placeholder="e.g. Upper body"></div>
-        <button type="button" class="primary-btn" id="create-workout">Create workout</button>
+      <div class="planner-input-row planner-create-row">
+        <div class="field"><label for="workout-name">Workout name</label><input type="text" id="workout-name" maxlength="80" placeholder="e.g. Upper body" style="box-sizing:border-box;height:44px;min-height:44px;max-height:44px;padding-block:7px"></div>
+        <button type="button" class="primary-btn" id="create-workout">Create</button>
       </div>
       <div id="workout-list"><p class="empty-state"><strong>No workouts planned</strong><span>Add a workout above to start logging.</span></p></div>
       <small>Exercise discovery is optional. Sets and performance are recorded only when you enter them.</small>
-      <div class="planner-template-subsection" aria-labelledby="templates-heading">
-        <div class="planner-card-heading">
-          <div><span class="page-kicker">Reusable</span><h3 id="templates-heading">Workout templates</h3></div>
-        </div>
-        <p>Load a saved routine into the selected day.</p>
-        <div id="template-list"><p class="empty-state"><strong>No templates saved</strong><span>Save a workout to reuse its structure.</span></p></div>
-      </div>
     </section>
 
     <section class="card planner-card planner-task-card" id="planner-task-card" aria-labelledby="tasks-heading">
       <div class="planner-card-heading">
-        <div><span class="page-kicker">Daily plan</span><h2 id="tasks-heading">Tasks</h2></div>
+        <div><span class="page-kicker">Daily plan</span><h2 id="tasks-heading">Daily Activity</h2></div>
         <p class="planner-section-count">Completed <strong id="completed-tasks">0</strong></p>
       </div>
       <p>Keep small daily intentions alongside your activity.</p>
@@ -95,6 +88,18 @@
         <button type="button" class="primary-btn" id="add-task">Add task</button>
       </div>
       <div id="task-list"><p class="empty-state"><strong>No tasks yet</strong><span>Add one above to keep your day organized.</span></p></div>
+    </section>
+
+    <section class="card planner-card planner-templates-card" id="planner-templates-card" aria-labelledby="templates-heading" hidden>
+      <div class="planner-card-heading">
+        <div><span class="page-kicker">Reusable</span><h2 id="templates-heading">Workout templates</h2></div>
+      </div>
+      <p>Load a saved routine into the selected day, or save one of today’s workouts for later.</p>
+      <div class="planner-input-row planner-template-save-row">
+        <div class="field"><label for="template-workout-select">Workout to save</label><select id="template-workout-select"><option value="">No workouts on this day</option></select></div>
+        <button type="button" class="primary-btn" id="save-workout-template" disabled>Save as template</button>
+      </div>
+      <div id="template-list"><p class="empty-state"><strong>No templates saved</strong><span>Save a workout to reuse its structure.</span></p></div>
     </section>
   </div>
 </main>

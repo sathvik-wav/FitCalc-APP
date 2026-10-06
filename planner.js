@@ -337,6 +337,7 @@ function updateWorkoutList() {
 
     const workouts = Array.isArray(planner.workouts) ? planner.workouts : [];
     ensureWorkoutRecordIds(workouts, getDateKey(selectedDate));
+    if (typeof renderWorkoutTemplateSource === "function") renderWorkoutTemplateSource();
 
     if (workouts.length === 0) {
             workoutList.innerHTML =
@@ -510,16 +511,22 @@ function updateWorkoutList() {
 
                     <div class="add-exercise-form">
 
-                        <div class="field">
-                            <label for="exercise-name-${workoutIndex}">Exercise</label>
-
-                            <input
-                                type="text"
-                                class="exercise-name-input"
-                                id="exercise-name-${workoutIndex}"
-                                placeholder="e.g. Bench Press"
-                            >
-
+                        <div class="exercise-name-row">
+                            <div class="field">
+                                <label for="exercise-name-${workoutIndex}">Exercise</label>
+                                <input
+                                    type="text"
+                                    class="exercise-name-input"
+                                    id="exercise-name-${workoutIndex}"
+                                    placeholder="e.g. Bench Press"
+                                    style="box-sizing:border-box;height:44px;min-height:44px;max-height:44px;padding-block:7px"
+                                >
+                            </div>
+                            <button
+                                type="button"
+                                class="primary-btn add-exercise"
+                                data-index="${workoutIndex}"
+                            >Add</button>
                         </div>
 
                         <div class="exercise-library-tools">
@@ -529,16 +536,6 @@ function updateWorkoutList() {
                             </div>
                             <div class="exercise-library-results" aria-live="polite"></div>
                         </div>
-
-
-                        <button
-                            type="button"
-                            class="primary-btn add-exercise"
-                            data-index="${workoutIndex}"
-                        >
-                            Add
-                        </button>
-
 
                         <button
                             type="button"
@@ -552,14 +549,6 @@ function updateWorkoutList() {
                             }
                         </button>
 
-
-                        <button
-                            type="button"
-                            class="secondary-btn save-template"
-                            data-index="${workoutIndex}"
-                        >
-                            Save
-                        </button>
 
                     </div>
 
@@ -944,62 +933,6 @@ function updateWorkoutList() {
                 }
             );
         });
-
-
-    /*
-     * SAVE WORKOUT AS TEMPLATE
-     */
-
-    workoutList
-        .querySelectorAll(".save-template")
-        .forEach(function (button) {
-
-            button.addEventListener(
-                "click",
-                async function () {
-
-                    const workoutIndex =
-                        Number(
-                            button.dataset.index
-                        );
-
-                    const planner =
-                        getPlanner();
-
-                    const workout =
-                        planner.workouts[
-                            workoutIndex
-                        ];
-
-                    if (!workout) {
-                        return;
-                    }
-
-                    const templateNameKey = workout.name.trim().replace(/\s+/g, " ").toLowerCase();
-                    const storedTemplates = getWorkoutTemplates();
-                    const templates = Array.isArray(storedTemplates) ? storedTemplates : [];
-                    const existingTemplate = templates.find(function (template) {
-                        return template && typeof template.name === "string" &&
-                            template.name.trim().replace(/\s+/g, " ").toLowerCase() === templateNameKey;
-                    });
-                    if (existingTemplate && !await window.fitcalcDialog.confirm(
-                        "A workout template with this name already exists. Overwrite it?",
-                        "Overwrite template",
-                        "Overwrite"
-                    )) return;
-
-                    const template = createWorkoutTemplate(
-                        workout.name,
-                        workout.exercises
-                    );
-                    if (!template) return;
-
-                    renderWorkoutTemplates();
-
-                    window.fitcalcToast("Workout saved as a reusable template.");
-                }
-            );
-        });
 }
 
 
@@ -1270,15 +1203,18 @@ if (todayDayButton) {
 function setPlannerView(view) {
     const workoutsCard = document.getElementById("planner-workouts-card");
     const tasksCard = document.getElementById("planner-task-card");
-    const showWorkouts = view !== "tasks";
-    const showTasks = view !== "workouts";
+    const templatesCard = document.getElementById("planner-templates-card");
+    const showWorkouts = view === "workouts";
+    const showTasks = view === "tasks";
+    const showTemplates = view === "templates";
     if (workoutsCard) workoutsCard.hidden = !showWorkouts;
     if (tasksCard) tasksCard.hidden = !showTasks;
+    if (templatesCard) templatesCard.hidden = !showTemplates;
 
     [
         ["planner-view-workouts", "workouts"],
         ["planner-view-tasks", "tasks"],
-        ["planner-view-all", "all"]
+        ["planner-view-templates", "templates"]
     ].forEach(function (item) {
         const button = document.getElementById(item[0]);
         if (button) button.setAttribute("aria-pressed", String(item[1] === view));
@@ -1288,12 +1224,12 @@ function setPlannerView(view) {
 [
     ["planner-view-workouts", "workouts"],
     ["planner-view-tasks", "tasks"],
-    ["planner-view-all", "all"]
+    ["planner-view-templates", "templates"]
 ].forEach(function (item) {
     const button = document.getElementById(item[0]);
     if (button) button.addEventListener("click", function () { setPlannerView(item[1]); });
 });
-setPlannerView("all");
+setPlannerView("workouts");
 
 function handlePlannerDateChange() {
     if (document.visibilityState === "hidden") return;
@@ -1330,3 +1266,4 @@ updateWorkoutList();
 updateTaskList();
 updateDailyProgress();
 updateSelectedDay();
+if (typeof renderWorkoutTemplates === "function") renderWorkoutTemplates();

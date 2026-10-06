@@ -175,12 +175,33 @@ function updateDashboardPriority() {
 function updateHomeGreeting(now) {
     const date = now || new Date();
     const hour = date.getHours();
-    const greeting = hour < 12 ? "Good Morning," : (hour < 18 ? "Good Afternoon," : "Good Evening,");
+    const period = hour >= 5 && hour < 12 ? "morning" :
+        (hour >= 12 && hour < 17 ? "afternoon" :
+            (hour >= 17 && hour < 21 ? "evening" : "night"));
+    const greetings = { morning: "Good morning,", afternoon: "Good afternoon,", evening: "Good evening,", night: "Good night," };
+    const greeting = greetings[period];
     setDashboardText("home-greeting-label", greeting);
+    const icon = document.getElementById("home-greeting-icon");
+    if (icon) icon.dataset.period = period;
 
     const profile = getProfile();
-    const name = String(profile.name || profile.firstName || "there").trim();
+    const name = String(profile.name || "there").trim();
     setDashboardText("home-user-name", name || "there");
+}
+
+const homeMotivations = [
+    "Small steps still move you forward.",
+    "Show up for the next choice.",
+    "Consistency beats perfection.",
+    "Give yourself credit for starting."
+];
+let homeMotivationIndex = 0;
+const homeGreetingButton = document.getElementById("home-greeting");
+if (homeGreetingButton) {
+    homeGreetingButton.addEventListener("click", function () {
+        homeMotivationIndex = (homeMotivationIndex + 1) % homeMotivations.length;
+        setDashboardText("home-motivation", homeMotivations[homeMotivationIndex]);
+    });
 }
 
 function updateHomeWeightCard() {
@@ -289,3 +310,8 @@ window.addEventListener(
 );
 
 window.addEventListener("fitcalc:data-change", updateDashboard);
+if (document && typeof document.addEventListener === "function") {
+    document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "visible") updateDashboard();
+    });
+}
