@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.openfoodfacts.org; font-src 'self'; connect-src 'self' https://world.openfoodfacts.org https://wger.de https://api.wger.de; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Track your daily nutrition, workouts and progress with FitCalc.">
+<meta property="og:title" content="FitCalc — Today">
+<meta property="og:description" content="Your nutrition, activity and progress in one place.">
+<meta property="og:type" content="website">
+<title>Today — FitCalc</title>
+<link rel="stylesheet" href="main.css">
+<link rel="icon" type="image/png" sizes="32x32" href="build/icon.iconset/icon_32x32.png">
+<link rel="apple-touch-icon" href="build/icon.iconset/icon_128x128.png">
+<meta name="theme-color" content="#664250">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<script src="theme-init.js"></script>
+</head>
+<body class="splash-active home-screen">
+<section class="splash-screen" id="fitcalc-splash" aria-labelledby="splash-title">
+  <div class="splash-content">
+    <div class="splash-intro">
+      <div class="splash-brand"><span class="splash-brand-mark" aria-hidden="true">+</span><span>FitCalc</span></div>
+      <h1 id="splash-title">Track. Calculate.<br>Improve.</h1>
+      <p class="splash-tagline">Your nutrition, workouts, goals and progress in one place.</p>
+      <button class="splash-start" id="splash-start" type="button">Get Started <span aria-hidden="true">→</span></button>
+      <p class="splash-footnote">Start with today.</p>
+    </div>
+    <div class="splash-features" aria-label="FitCalc features">
+      <article class="splash-feature"><span class="splash-feature-icon" aria-hidden="true">N</span><div><strong>Nutrition</strong><p>Track calories, protein and food.</p></div></article>
+      <article class="splash-feature"><span class="splash-feature-icon" aria-hidden="true">A</span><div><strong>Activity</strong><p>Log workouts, steps and daily activity.</p></div></article>
+      <article class="splash-feature"><span class="splash-feature-icon" aria-hidden="true">P</span><div><strong>Progress</strong><p>See your trends, goals and consistency.</p></div></article>
+    </div>
+  </div>
+</section>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="FitCalc home">
+    <span class="brand-mark" aria-hidden="true">+</span>
+    <span>FitCalc</span>
+  </a>
+  <nav class="desktop-nav" aria-label="Main navigation"></nav>
+  <div class="topbar-right">
+    <button class="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch theme"></button>
+    <button class="menu-toggle" id="hamburger-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+<nav class="mobile-menu" id="mobile-menu" aria-label="More navigation" hidden></nav>
+<main>
+  <section class="page-shell dashboard-page" id="home-top">
+    <header class="home-heading">
+      <div class="home-greeting">
+        <p id="home-greeting-label">Good Morning,</p>
+        <h1><span id="home-user-name">there</span> <span aria-hidden="true">👋</span></h1>
+        <time class="today-date" id="today-date"></time>
+      </div>
+      <button class="home-notifications" type="button" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+        <span class="home-notification-badge" aria-hidden="true"></span>
+      </button>
+    </header>
+
+    <section class="home-overview" aria-labelledby="home-overview-title">
+      <header class="home-section-heading">
+        <div><span class="home-overline">Your daily rhythm</span><h2 id="home-overview-title">Today’s Overview</h2></div>
+        <a id="home-overview-edit" href="nutrition/index.html">Edit <span aria-hidden="true">→</span></a>
+      </header>
+      <div class="home-metrics-grid">
+        <article class="home-metric-card">
+          <div class="home-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.4 22c4.1-1.2 6.1-4.3 5.5-8.2-.3-2-1.6-3.8-3.8-5.4.2 2.4-.9 3.5-1.8 4.1.2-4.3-2.3-7.7-5.3-9.5.4 3.6-2.5 6.2-2.5 10.2 0 4.2 2.8 7.5 7.9 8.8Z"/><path d="M11.1 22c-1.6-1.1-2.1-2.7-1.3-4.5.5-1 1.2-1.5 2.1-2 .1 1.3.6 1.9 1.4 2.4"/></svg></div>
+          <div class="home-metric-copy"><span class="home-metric-label">Calories</span><strong><span id="terminal-calories">0</span><small>kcal</small></strong><p><span id="terminal-calorie-target">—</span> kcal goal</p></div>
+          <div class="home-ring" role="progressbar" aria-label="Calories" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="terminal-calorie-progress" aria-hidden="true"></span><b>kcal</b></div>
+        </article>
+        <article class="home-metric-card">
+          <div class="home-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.4 15.63a7.875 6 135 1 1 6.23-6.23 4.5 3.43 135 0 0-6.23 6.23"/><path d="m8.29 12.71-2.6 2.6a2.5 2.5 0 1 0-1.65 4.65A2.5 2.5 0 1 0 8.7 18.3l2.59-2.59"/></svg></div>
+          <div class="home-metric-copy"><span class="home-metric-label">Protein</span><strong><span id="terminal-protein">0</span><small>g</small></strong><p><span id="terminal-protein-target">—</span> g goal</p></div>
+          <div class="home-ring" role="progressbar" aria-label="Protein" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="terminal-protein-progress" aria-hidden="true"></span><b>g</b></div>
+        </article>
+        <article class="home-metric-card">
+          <div class="home-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15c4.5.2 7.4-1.4 9.2-5.4l2.2 2.1c1.3 1.2 3.6 1.8 6.6 1.8v4H4.5A1.5 1.5 0 0 1 3 16Z"/><path d="M12.2 9.6 14 6l3.5 4.2"/><path d="M6 18.5h.01M17 18.5h.01"/></svg></div>
+          <div class="home-metric-copy"><span class="home-metric-label">Steps</span><strong><span id="terminal-steps">0</span></strong><p><span id="terminal-steps-goal">10,000</span> step goal</p></div>
+          <div class="home-ring" role="progressbar" aria-label="Steps" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="terminal-steps-progress" aria-hidden="true"></span><b>steps</b></div>
+        </article>
+        <article class="home-metric-card">
+          <div class="home-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2S5.5 10 5.5 14.6a6.5 6.5 0 0 0 13 0C18.5 10 12 3.2 12 3.2Z"/><path d="M9 15.5a3 3 0 0 0 3 3"/></svg></div>
+          <div class="home-metric-copy"><span class="home-metric-label">Water</span><strong><span id="terminal-water">0.00</span><small>L</small></strong><p><span id="terminal-water-target">—</span> L goal</p></div>
+          <div class="home-ring" role="progressbar" aria-label="Water" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="terminal-water-progress" aria-hidden="true"></span><b>L</b></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="home-weight-card" aria-labelledby="home-weight-title">
+      <div class="home-weight-copy">
+        <span class="home-overline">Keep showing up</span>
+        <h2 id="home-weight-title">Your weight</h2>
+        <p class="home-weight-current"><strong id="home-weight-value">—</strong> <span id="home-weight-unit">kg</span></p>
+        <p class="home-weight-change" id="home-weight-change">Log another weigh-in to see your weekly change.</p>
+        <a href="history/index.html">View progress <span aria-hidden="true">→</span></a>
+      </div>
+      <svg class="home-weight-sparkline" viewBox="0 0 120 44" role="img" aria-label="Weight trend for the last seven days">
+        <polyline id="home-weight-sparkline-line" points="0,35 120,35" fill="none" stroke="var(--home-sparkline)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </section>
+
+    <section class="home-workouts-card" aria-labelledby="home-workouts-title">
+      <header class="home-section-heading">
+        <div><span class="home-overline">Today’s activity</span><h2 id="home-workouts-title">Workouts</h2></div>
+        <a href="planner/index.html" aria-label="Open today’s activity planner">Activity <span aria-hidden="true">→</span></a>
+      </header>
+      <div class="home-workout-summary" id="home-workout-summary" hidden>
+        <strong id="terminal-workout">0 / 0 complete</strong>
+        <p id="terminal-workout-name"></p>
+      </div>
+      <div class="home-workout-empty" id="home-workout-empty">
+        <p>No workouts planned for today.</p>
+        <a href="planner/index.html">Plan a workout <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+
+    <section class="home-quote-card" aria-label="Daily motivation">
+      <div class="home-quote-content">
+        <span class="home-overline">A thought for today</span>
+        <blockquote>Progress is built one small choice at a time.</blockquote>
+      </div>
+    </section>
+
+    <section class="home-quick-tools" aria-labelledby="home-quick-tools-heading">
+      <header class="home-section-heading">
+        <div><span class="home-overline">At a glance</span><h2 id="home-quick-tools-heading">Quick Tools</h2></div>
+        <a href="calculators/index.html">See all <span aria-hidden="true">→</span></a>
+      </header>
+      <div class="home-quick-tools-grid">
+        <a class="home-quick-tool" href="bmi/index.html"><span aria-hidden="true">BMI</span><strong>BMI</strong></a>
+        <a class="home-quick-tool" href="calories/index.html"><span aria-hidden="true">TDEE</span><strong>TDEE</strong></a>
+        <a class="home-quick-tool" href="macro/index.html"><span aria-hidden="true">M</span><strong>Macro</strong></a>
+        <a class="home-quick-tool" href="protein/index.html"><span aria-hidden="true">P</span><strong>Protein</strong></a>
+      </div>
+    </section>
+  </section>
+</main>
+<footer class="footer">
+  <div class="footer-brand"><span class="brand-mark">+</span><strong>FitCalc</strong></div>
+  <p>FitCalc stores your tracking data in this browser. Estimates are informational and are not medical advice.</p>
+</footer>
+<script src="constants.js"></script>
+<script src="store.js"></script>
+<script src="script.js"></script>
+<script src="target.js"></script>
+<script src="progress.js"></script>
+<script src="dashboard.js"></script>
+<script src="adaptive.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+node_modules/
+dist/
+netlify-dist/
+.DS_Store
+__pycache__/
+
+# Android / Capacitor generated files
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+
+# IDE / OS files
+.idea/
+*.iml

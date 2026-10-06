@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.openfoodfacts.org; font-src 'self'; connect-src 'self' https://world.openfoodfacts.org https://wger.de https://api.wger.de; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Estimate body fat percentage using the U.S. Navy tape-measure method.">
+<meta property="og:title" content="Body Fat Calculator // FitCalc">
+<meta property="og:description" content="Estimate body fat percentage using the U.S. Navy tape-measure method.">
+<meta property="og:type" content="website">
+<title>Body Fat Calculator // FitCalc</title>
+<link rel="stylesheet" href="../main.css">
+<script src="../theme-init.js"></script>
+</head>
+<body data-calc="bodyfat">
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="FitCalc home">
+    <span class="brand-mark">+</span>
+    <span>FitCalc</span>
+    </a>
+  <nav class="desktop-nav" aria-label="Main navigation"></nav>
+  <div class="topbar-right"><button class="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch theme"></button><button class="menu-toggle" id="hamburger-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+      <span></span><span></span><span></span>
+    </button></div>
+</header>
+
+<nav class="mobile-menu" id="mobile-menu" aria-label="More navigation" hidden></nav>
+
+<main>
+<section class="calc-page shell">
+  <div class="calc-crumb">
+    <a href="../index.html">fitcalc</a><span>/</span><span>bodyfat</span>
+    <span class="ws-tag">workspace 03</span>
+  </div>
+
+  <div class="calc-window window">
+    <div class="window-titlebar">
+      <span class="tl-dots"><i></i><i></i><i></i></span>
+      <span class="window-title">bodyfat.calc</span>
+      <span class="window-meta">ws03</span>
+    </div>
+    <div class="calc-tiles">
+      <div class="tile tile-input">
+        <h1>Body Fat Calculator</h1>
+        <p class="calc-desc">Estimate body fat percentage using the U.S. Navy tape-measure method.</p>
+        <form id="calc-form" class="calc-form" autocomplete="off">
+          <div class="field">
+            <label>Sex</label>
+            <div class="pill-group">
+              <input type="radio" name="sex" id="sex-m" value="m" checked><label for="sex-m">Male</label>
+              <input type="radio" name="sex" id="sex-f" value="f" ><label for="sex-f">Female</label>
+            </div>
+          </div>
+          <div class="field">
+            <label for="height" id="height-label">Height (cm)</label>
+            <input type="number" id="height" name="height" placeholder="e.g. 172" step="0.1" min="0"  required>
+            <div class="unit-input-pair" id="height-imperial" hidden>
+              <div class="field"><label for="height-feet">Feet</label><input type="number" id="height-feet" min="1" max="8" step="1" inputmode="numeric" disabled required></div>
+              <div class="field"><label for="height-inches">Inches</label><input type="number" id="height-inches" min="0" max="11.9" step="0.1" inputmode="decimal" disabled required></div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="neck">Neck (cm)</label>
+            <input type="number" id="neck" name="neck" placeholder="e.g. 38" step="0.1" min="0"  required>
+          </div>
+          <div class="field">
+            <label for="waist">Waist (cm)</label>
+            <input type="number" id="waist" name="waist" placeholder="e.g. 84" step="0.1" min="0"  required>
+          </div>
+          <div class="field" id="hip-field" style="display:none">
+            <label for="hip">Hip (cm)</label>
+            <input type="number" id="hip" name="hip" placeholder="e.g. 96" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label for="weight" id="weight-label" data-optional="true">Weight (kg) — optional</label>
+            <input type="number" id="weight" name="weight" placeholder="for fat/lean mass" step="0.1" min="0">
+          </div>
+          <button type="submit" class="primary-btn"><span>Calculate</span><span class="btn-arrow">&#8600;</span></button>
+        </form>
+      </div>
+      <div class="tile tile-output" id="result-panel">
+        <div class="tile-titlebar-mini"><i></i><i></i><i></i><span>output</span></div>
+        <div id="result-wrapper" aria-live="polite" aria-atomic="true">
+        <div class="result-empty" id="result-empty"><span class="result-empty-icon" aria-hidden="true">+</span><strong>Your result will appear here</strong><p>Enter your details to get started.</p></div>
+        <div class="result-content" id="result-content" hidden></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="calc-note"><p>Informational only &mdash; not medical advice. Talk to a healthcare professional for personalized guidance.</p></div>
+</section>
+</main>
+
+<footer class="footer shell">
+  <div class="footer-brand"><span class="brand-mark">+</span><strong>fitcalc</strong></div>
+  <div class="footer-links">
+    <a href="../index.html">HOME</a>
+  </div>
+  <p>&copy; 2026 FitCalc &middot; For informational purposes only. Consult a qualified professional for personalized guidance.</p>
+</footer>
+
+<script src="../constants.js"></script>
+<script src="../store.js"></script>
+<script src="../script.js"></script>
+<script src="../calculators.js"></script>
+</body>
+</html>

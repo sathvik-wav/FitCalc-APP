@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FitCalc UI preview</title>
+<style>
+html,body{width:100%;height:100%;margin:0;background:#0b1020;overflow:hidden}.preview-frame{display:block;border:0;background:#0b1020}
+</style>
+<script>window.FITCALC_TEST_MODE = true;</script>
+</head>
+<body>
+<iframe class="preview-frame" id="preview" title="FitCalc preview"></iframe>
+<script>
+(function () {
+  const params = new URLSearchParams(location.search);
+  const route = params.get("route") || "index.html";
+  const mobile = params.get("size") === "mobile";
+  const frame = document.getElementById("preview");
+  frame.style.width = mobile ? "390px" : "1366px";
+  frame.style.height = mobile ? "844px" : "900px";
+  frame.style.margin = mobile ? "0 auto" : "0";
+  if (params.get("fixture") === "demo") {
+    const current = new Date();
+    const key = function (date) {
+      return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+    };
+    const profile = { age: 28, sex: "female", height: 168, weight: 67.4, activity: "moderate", goal: "maintain" };
+    const targets = { calories: 2100, protein: 120, carbs: 260, fat: 70, fiber: 29, bmr: 1400, tdee: 2100 };
+    const foods = [
+      { name: "Overnight oats", amount: 80, meal: "Breakfast", calories: 311, protein: 13.5, carbs: 52.8, fat: 5.5, fiber: 8.5 },
+      { name: "Greek yogurt", amount: 150, meal: "Breakfast", calories: 89, protein: 15.3, carbs: 5.4, fat: 0.6, fiber: 0 },
+      { name: "Chicken breast", amount: 150, meal: "Lunch", calories: 248, protein: 46.5, carbs: 0, fat: 5.4, fiber: 0 },
+      { name: "Brown rice", amount: 140, meal: "Lunch", calories: 182, protein: 3.8, carbs: 39.2, fat: 0.4, fiber: 0.6 },
+      { name: "Banana", amount: 120, meal: "Snack", calories: 107, protein: 1.3, carbs: 27.4, fat: 0.4, fiber: 3.1 }
+    ];
+    const totals = {};
+    ["calories", "protein", "carbs", "fat", "fiber"].forEach(function (field) {
+      totals[field] = foods.reduce(function (sum, food) { return sum + food[field]; }, 0);
+    });
+    const dailyNutrition = Object.assign({}, totals, { water: 2.25, foods: foods });
+    const workout = { name: "Strength · Upper body", completed: true, exercises: [{ name: "Bench press", sets: [{ reps: 8, weight: 45 }, { reps: 8, weight: 47.5 }] }, { name: "Dumbbell row", sets: [{ reps: 10, weight: 18 }] }] };
+    const dailyPlanner = { steps: 6420, weight: 72.5, workouts: [workout], tasks: [{ name: "Morning walk", completed: true }, { name: "Prepare lunch", completed: true }, { name: "Stretch for 10 minutes", completed: false }] };
+    const nutritionDays = {};
+    const plannerDays = {};
+    for (let offset = 6; offset >= 0; offset--) {
+      const day = new Date(current);
+      day.setDate(current.getDate() - offset);
+      const dateKey = key(day);
+      const modifier = (6 - offset) * 11;
+      nutritionDays[dateKey] = Object.assign({}, dailyNutrition, { calories: totals.calories + modifier * 4, protein: totals.protein + modifier / 3, water: Math.min(3.1, 1.4 + (6 - offset) * 0.12), foods: offset === 0 ? foods : foods.slice(0, 3) });
+      plannerDays[dateKey] = Object.assign({}, dailyPlanner, { date: dateKey, steps: 5100 + (6 - offset) * 380, weight: 73.1 - (6 - offset) * 0.1, workouts: offset % 2 === 0 ? [workout] : [], tasks: dailyPlanner.tasks });
+    }
+    localStorage.setItem("test_fitcalc_profile", JSON.stringify(profile));
+    localStorage.setItem("test_fitcalc_targets", JSON.stringify(targets));
+    localStorage.setItem("test_fitcalc_nutrition", JSON.stringify(nutritionDays));
+    localStorage.setItem("test_fitcalc_planner", JSON.stringify(plannerDays));
+    localStorage.setItem("test_fitcalc_workout_templates", JSON.stringify([{ name: "Upper body A", exercises: [{ name: "Bench press", sets: [] }, { name: "Dumbbell row", sets: [] }] }]));
+  }
+  if (params.get("theme") === "light") localStorage.setItem("test_fitcalc_preferences", JSON.stringify({ theme: "light" }));
+  else if (params.get("theme") === "dark") localStorage.setItem("test_fitcalc_preferences", JSON.stringify({ theme: "dark" }));
+  const destination = new URL("../" + route.replace(/^\//, ""), location.href);
+  if (!/\.html$/i.test(destination.pathname)) {
+    destination.pathname = destination.pathname.replace(/\/?$/, "/") + "index.html";
+  }
+  frame.src = destination.href;
+  frame.addEventListener("load", function () {
+    const scroll = Number(params.get("scroll") || 0);
+    if (scroll) frame.contentWindow.scrollTo(0, scroll);
+  });
+}());
+</script>
+</body>
+</html>

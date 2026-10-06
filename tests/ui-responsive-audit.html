@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FitCalc responsive UI audit</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; color: #f2f5ff; background: #0b1020; font: 14px/1.5 system-ui,sans-serif; }
+    h1 { margin: 0 0 6px; font-size: 23px; }
+    p { margin: 0 0 16px; color: #a9b4ce; }
+    pre { max-width: 900px; padding: 16px; border: 1px solid #34415e; border-radius: 12px; background: #182238; white-space: pre-wrap; }
+    iframe { position: fixed; top: 0; left: -5000px; display: block; border: 0; background: #0b1020; }
+    [data-result="pass"] { color: #9d83ff; }
+    [data-result="fail"] { color: #ff8d8d; }
+  </style>
+<script>window.FITCALC_TEST_MODE = true;</script>
+</head>
+<body>
+  <h1>FitCalc responsive UI audit</h1>
+  <p>All 20 routes at 1440, 1024, 768, 430, 390, 375, and 320 CSS pixels.</p>
+  <pre id="results" role="status" aria-live="polite">Loading responsive route matrix…</pre>
+  <script>
+    (function () {
+      "use strict";
+      var widths = [1440, 1024, 768, 430, 390, 375, 320];
+      var routes = [
+        ["Home", "../index.html", ".dashboard-page"],
+        ["Calculators", "../calculators/index.html", ".calculator-directory-row"],
+        ["Nutrition", "../nutrition/index.html", ".nutrition-page"],
+        ["Planner", "../planner/index.html", ".planner-layout"],
+        ["History", "../history/index.html", "#history-list"],
+        ["Profile", "../profile/index.html", "#profile-form"],
+        ["BMI", "../bmi/index.html", ".calc-page"],
+        ["BMR", "../bmr/index.html", ".calc-page"],
+        ["Body fat", "../bodyfat/index.html", ".calc-page"],
+        ["Calories", "../calories/index.html", ".calc-page"],
+        ["Macros", "../macro/index.html", ".calc-page"],
+        ["Workout calories", "../exercisecalories/index.html", ".calc-page"],
+        ["Healthy weight", "../idealweight/index.html", ".calc-page"],
+        ["Heart rate", "../maxhr/index.html", ".calc-page"],
+        ["Protein", "../protein/index.html", ".calc-page"],
+        ["Rest timer", "../resttimer/index.html", ".calc-page"],
+        ["Sleep", "../sleep/index.html", ".calc-page"],
+        ["Step calories", "../steptocalories/index.html", ".calc-page"],
+        ["Water calculator", "../water/index.html", ".calc-page"],
+        ["Settings", "../settings/index.html", "#settings-theme"]
+      ];
+      var expectedNav = "Home|Calculators|Activity|Progress|Profile";
+      var expectedMobileNav = "Home|Calculators|Activity|Progress|Profile";
+      var checks = [];
+      var pending = routes.length * widths.length;
+      var done = false;
+      var output = document.getElementById("results");
+      function check(label, condition) {
+        checks.push((condition ? "PASS " : "FAIL ") + label);
+      }
+      function finish() {
+        if (done || pending) return;
+        done = true;
+        var failures = checks.filter(function (line) { return line.indexOf("FAIL ") === 0; }).length;
+        output.textContent = (failures ? failures + " checks failed" : "All responsive UI checks passed") + " · " + checks.length + " assertions\n\n" + checks.join("\n");
+        output.dataset.result = failures ? "fail" : "pass";
+        document.title = failures ? "FAIL FitCalc responsive audit" : "PASS FitCalc responsive audit";
+      }
+      function inspect(route, width, frame) {
+        var label = route[0] + " @ " + width;
+        try {
+          var win = frame.contentWindow;
+          var doc = win.document;
+          if (route[1] === "../index.html" && doc.body.classList.contains("splash-active")) {
+            var splashStart = doc.getElementById("splash-start");
+            if (splashStart) splashStart.click();
+            check(label + " onboarding CTA opens Today", !doc.body.classList.contains("splash-active") && !!doc.querySelector(".dashboard-page"));
+          }
+          check(label + " viewport width", Math.abs(win.innerWidth - width) <= 1);
+          check(label + " screen rendered", !!doc.querySelector(route[2]));
+          check(label + " shared navigation order", Array.prototype.map.call(doc.querySelectorAll(".desktop-nav a"), function (link) { return link.textContent.trim(); }).join("|") === expectedNav);
+          check(label + " no horizontal overflow", Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth) <= width + 2);
+          var navigationState = win.fitcalcNavigation.getState();
+          var expectedPrimary = {
+            "Home": "Home", "Calculators": "Calculators", "Nutrition": null,
+            "Planner": "Activity", "History": "Progress", "Profile": "Profile", "Settings": null
+          }[route[0]] || null;
+          if (route[0] === "Home" || route[0] === "Calculators" || route[0] === "Planner" || route[0] === "History" || route[0] === "Profile" || route[0] === "Settings" || route[0] === "Nutrition") {
+            check(label + " route state selects the expected primary destination", navigationState.primary === expectedPrimary);
+          }
+          var currentPrimary = doc.querySelector(".mobile-menu .mobile-primary-link[aria-current=\"page\"]");
+          check(label + " menu primary active item matches shared route state", navigationState.primary
+            ? !!currentPrimary && currentPrimary.textContent.trim() === navigationState.primary
+            : !currentPrimary);
+          var currentBottom = doc.querySelector(".bottom-nav .mobile-tab[aria-current=\"page\"]");
+          check(label + " bottom active item matches shared route state", navigationState.primary
+            ? !!currentBottom && currentBottom.textContent.indexOf(navigationState.primary) !== -1
+            : !currentBottom);
+          var currentTracking = doc.querySelector(".mobile-menu .mobile-secondary-link[aria-current=\"page\"]");
+          check(label + " tracking active item matches shared route state", navigationState.tracking
+            ? !!currentTracking && currentTracking.textContent.trim() === navigationState.tracking
+            : !currentTracking);
+          var currentTool = doc.querySelector(".mobile-menu .mobile-tool-link[aria-current=\"page\"]");
+          check(label + " tool active item matches shared route state", navigationState.tool
+            ? !!currentTool && currentTool.textContent.trim() === navigationState.tool
+            : !currentTool);
+          if (route[0] === "Nutrition") {
+            var trackingHeading = Array.prototype.find.call(doc.querySelectorAll(".mobile-menu-heading"), function (heading) { return heading.textContent.trim() === "Tracking"; });
+            check(label + " Nutrition is visible inside Tracking without a primary highlight", !!trackingHeading && !!currentTracking && !currentPrimary && !currentBottom);
+          }
+          if (route[0] === "Home") {
+            var overviewEdit = doc.getElementById("home-overview-edit");
+            check(label + " Today's Overview Edit resolves to Nutrition", !!overviewEdit && new URL(overviewEdit.getAttribute("href"), win.location.href).pathname.endsWith("/nutrition/index.html"));
+          }
+          var desktopNav = doc.querySelector(".desktop-nav");
+          var bottomNav = doc.querySelector(".bottom-nav");
+          if (route[0] === "Planner") {
+            check(label + " planner uses the shared page shell", !!doc.querySelector("main.page-shell.planner-page") && !doc.querySelector("main.workspace"));
+            check(label + " planner sections use shared cards", Array.prototype.every.call(doc.querySelectorAll(".planner-layout > section"), function (section) { return section.classList.contains("card") && !section.classList.contains("tile"); }));
+          }
+          if (width <= 768) {
+            check(label + " mobile navigation layout", win.getComputedStyle(desktopNav).display === "none" && win.getComputedStyle(bottomNav).display === "grid");
+            var navBounds = bottomNav.getBoundingClientRect();
+            var navStyle = win.getComputedStyle(bottomNav);
+            var pageShell = doc.querySelector(".page-shell, main.profile, .calc-page.shell, .history-page-shell");
+            check(label + " mobile touch targets", doc.querySelector(".menu-toggle").getBoundingClientRect().height >= 40 && navBounds.height >= 60);
+            check(label + " floating pill stays inset", navBounds.left >= 13 && navBounds.right <= width - 13 && navBounds.bottom <= win.innerHeight - 9 && navBounds.width <= 421);
+            check(label + " floating pill shape", navStyle.position === "fixed" && parseFloat(navStyle.borderTopLeftRadius) >= 32 && navStyle.borderTopWidth === "1px" && navStyle.borderBottomWidth === "1px");
+            check(label + " page shell clears floating navigation", !!pageShell && parseFloat(win.getComputedStyle(pageShell).paddingBottom) >= 96);
+            check(label + " mobile navigation order", Array.prototype.map.call(bottomNav.querySelectorAll(".mobile-tab > span:last-child"), function (item) { return item.textContent.trim(); }).join("|") === expectedMobileNav);
+            if (route[0] === "Settings") {
+              var settingsMenu = doc.getElementById("mobile-menu");
+              check(label + " settings is selected in the complete menu", !!settingsMenu.querySelector('.mobile-app-link[aria-current="page"]'));
+              if (width <= 480) {
+                var menuButton = doc.getElementById("hamburger-btn");
+                menuButton.click();
+                var appMenuLink = settingsMenu.querySelector('.mobile-app-link[aria-current="page"]');
+                var menuBounds = settingsMenu.getBoundingClientRect();
+                settingsMenu.scrollTop = settingsMenu.scrollHeight;
+                var appLinkBounds = appMenuLink.getBoundingClientRect();
+                check(label + " hamburger menu scrolls to App destinations", settingsMenu.scrollHeight > settingsMenu.clientHeight && appLinkBounds.top >= menuBounds.top && appLinkBounds.bottom <= menuBounds.bottom && settingsMenu.querySelector(".mobile-primary-link").getBoundingClientRect().height >= 44);
+                menuButton.click();
+              }
+              var themeSelect = doc.getElementById("settings-theme");
+              themeSelect.value = "light";
+              themeSelect.dispatchEvent(new win.Event("change", { bubbles: true }));
+              check(label + " Settings applies the Light theme", doc.documentElement.dataset.theme === "light");
+              themeSelect.value = "system";
+              themeSelect.dispatchEvent(new win.Event("change", { bubbles: true }));
+              var weightSelect = doc.getElementById("unit-weight");
+              var heightSelect = doc.getElementById("unit-height");
+              weightSelect.value = "lb";
+              heightSelect.value = "ft-in";
+              doc.getElementById("unit-preferences-form").dispatchEvent(new win.Event("submit", { bubbles: true, cancelable: true }));
+              var preferenceJson = win.localStorage.getItem("test_fitcalc_preferences") || win.localStorage.getItem("fitcalc_preferences") || "{}";
+              var preferences = JSON.parse(preferenceJson);
+              check(label + " Settings saves shared unit preferences", preferences.units && preferences.units.weight === "lb" && preferences.units.height === "ft-in");
+            }
+          } else {
+            check(label + " desktop keeps the mobile pill hidden", win.getComputedStyle(bottomNav).display === "none" && win.getComputedStyle(doc.querySelector(".menu-toggle")).display !== "none");
+            check(label + " desktop pages use the wide app canvas", doc.body.getBoundingClientRect().width > width * .75);
+          }
+          if (route[1] === "../index.html" && width === 390) {
+            var theme = doc.querySelector(".theme-toggle");
+            var originalTheme = doc.documentElement.dataset.theme;
+            theme.click();
+            check("Home mobile theme switch updates the visual theme", doc.documentElement.dataset.theme !== originalTheme);
+            theme.click();
+            var menuButton = doc.querySelector(".menu-toggle");
+            menuButton.click();
+            check("Home mobile menu opens accessibly", menuButton.getAttribute("aria-expanded") === "true" && !doc.getElementById("mobile-menu").hidden);
+            doc.dispatchEvent(new win.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+            check("Home mobile menu closes with Escape", menuButton.getAttribute("aria-expanded") === "false" && doc.activeElement === menuButton);
+          }
+        } catch (error) {
+          check(label + " audit completed (" + error.message + ")", false);
+        }
+        pending -= 1;
+        finish();
+      }
+      routes.forEach(function (route) {
+        widths.forEach(function (width) {
+          var frame = document.createElement("iframe");
+          frame.title = route[0] + " at " + width + " pixels";
+          frame.style.width = width + "px";
+          frame.style.height = "1000px";
+          frame.addEventListener("load", function () { inspect(route, width, frame); }, { once: true });
+          frame.src = route[1];
+          document.body.appendChild(frame);
+        });
+      });
+      window.setTimeout(function () {
+        if (done) return;
+        var failedLoads = pending;
+        pending = 0;
+        check("all route frames completed before audit timeout", failedLoads === 0);
+        finish();
+      }, 60000);
+    }());
+  </script>
+</body>
+</html>

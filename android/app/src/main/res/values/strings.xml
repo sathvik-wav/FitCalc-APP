@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FitCalc</string>
+    <string name="title_activity_main">FitCalc</string>
+    <string name="package_name">com.vikx.fitcalc</string>
+    <string name="custom_url_scheme">com.vikx.fitcalc</string>
+</resources>

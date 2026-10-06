@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.openfoodfacts.org; font-src 'self'; connect-src 'self' https://world.openfoodfacts.org https://wger.de https://api.wger.de; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Estimate maximum heart rate and useful training zones.">
+<meta property="og:title" content="Max Heart Rate Calculator // FitCalc">
+<meta property="og:description" content="Estimate maximum heart rate and useful training zones.">
+<meta property="og:type" content="website">
+<title>Max Heart Rate Calculator // FitCalc</title>
+<link rel="stylesheet" href="../main.css">
+<script src="../theme-init.js"></script>
+</head>
+<body data-calc="maxhr">
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="FitCalc home">
+    <span class="brand-mark">+</span>
+    <span>FitCalc</span>
+    </a>
+  <nav class="desktop-nav" aria-label="Main navigation"></nav>
+  <div class="topbar-right"><button class="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch theme"></button><button class="menu-toggle" id="hamburger-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+      <span></span><span></span><span></span>
+    </button></div>
+</header>
+
+<nav class="mobile-menu" id="mobile-menu" aria-label="More navigation" hidden></nav>
+
+<main>
+<section class="calc-page shell">
+  <div class="calc-crumb">
+    <a href="../index.html">fitcalc</a><span>/</span><span>maxhr</span>
+    <span class="ws-tag">workspace 07</span>
+  </div>
+
+  <div class="calc-window window">
+    <div class="window-titlebar">
+      <span class="tl-dots"><i></i><i></i><i></i></span>
+      <span class="window-title">maxhr.calc</span>
+      <span class="window-meta">ws07</span>
+    </div>
+    <div class="calc-tiles">
+      <div class="tile tile-input">
+        <h1>Max Heart Rate Calculator</h1>
+        <p class="calc-desc">Estimate maximum heart rate and useful training zones.</p>
+        <form id="calc-form" class="calc-form" autocomplete="off">
+          <div class="field">
+            <label for="age">Age (years)</label>
+            <input type="number" id="age" name="age" placeholder="e.g. 24" step="1" min="1" max="120" required>
+          </div>
+          <button type="submit" class="primary-btn"><span>Calculate</span><span class="btn-arrow">&#8600;</span></button>
+        </form>
+      </div>
+      <div class="tile tile-output" id="result-panel">
+        <div class="tile-titlebar-mini"><i></i><i></i><i></i><span>output</span></div>
+        <div id="result-wrapper" aria-live="polite" aria-atomic="true">
+        <div class="result-empty" id="result-empty"><span class="result-empty-icon" aria-hidden="true">+</span><strong>Your result will appear here</strong><p>Enter your details to get started.</p></div>
+        <div class="result-content" id="result-content" hidden></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="calc-note"><p>Informational only &mdash; not medical advice. Talk to a healthcare professional for personalized guidance.</p></div>
+</section>
+</main>
+
+<footer class="footer shell">
+  <div class="footer-brand"><span class="brand-mark">+</span><strong>fitcalc</strong></div>
+  <div class="footer-links">
+    <a href="../index.html">HOME</a>
+  </div>
+  <p>&copy; 2026 FitCalc &middot; For informational purposes only. Consult a qualified professional for personalized guidance.</p>
+</footer>
+
+<script src="../constants.js"></script>
+<script src="../store.js"></script>
+<script src="../script.js"></script>
+<script src="../calculators.js"></script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+[build]
+command = "node scripts/sync-service-worker-cache.js && node scripts/prepare-netlify.js"
+publish = "netlify-dist"

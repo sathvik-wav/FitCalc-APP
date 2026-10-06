@@ -1,0 +1,80 @@
+{
+  "name": "fitcalc",
+  "version": "1.1.13",
+  "description": "FitCalc - Fitness tools, Made simple",
+  "homepage": "https://github.com/sathvik-labs/cccccc",
+  "desktopName": "FitCalc",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "prebuild": "node scripts/sync-service-worker-cache.js",
+    "smoke:packaged": "npm run build -- --dir && node tests/packaged-smoke.js",
+    "mobile:prepare": "node scripts/sync-service-worker-cache.js && node scripts/prepare-netlify.js",
+    "mobile:add:android": "npm run mobile:prepare && cap add android",
+    "mobile:add:ios": "npm run mobile:prepare && cap add ios",
+    "mobile:sync:android": "npm run mobile:prepare && cap sync android",
+    "mobile:sync:ios": "npm run mobile:prepare && cap sync ios",
+    "mobile:open:android": "cap open android",
+    "mobile:open:ios": "cap open ios",
+    "mobile:run:android": "npm run mobile:prepare && cap sync android && cap run android",
+    "mobile:run:ios": "npm run mobile:prepare && cap sync ios && cap run ios",
+    "test": "node tests/core.test.js && python3 tests/check_assets.py && node tests/run-browser-tests.js"
+  },
+  "author": "Sathvik",
+  "license": "ISC",
+  "devDependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/ios": "^8.5.2",
+    "electron": "^43.7.3",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.fitcalc.app",
+    "productName": "FitCalc",
+    "icon": "build/icon.icns",
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "extendInfo": {
+        "NSCameraUsageDescription": "FitCalc uses the camera only when you choose to scan a food barcode."
+      }
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/linux-icons",
+      "category": "Utility",
+      "maintainer": "Sathvik",
+      "syncDesktopName": true
+    },
+    "files": [
+      "*.js",
+      "*.css",
+      "*.html",
+      "*/index.html",
+      "manifest.webmanifest",
+      "package.json",
+      "LICENSE",
+      "assets/**",
+      "build/icon.ico",
+      "build/icon.icns",
+      "build/icon.iconset/**",
+      "build/linux-icons/**",
+      "!tests/**"
+    ]
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.5.2"
+  }
+}

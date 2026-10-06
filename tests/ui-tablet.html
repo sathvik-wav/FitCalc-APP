@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FitCalc tablet layout audit</title>
+  <style>
+    body { margin: 0; padding: 24px; color: #f2f5ff; background: #101624; font: 14px/1.5 system-ui, sans-serif; }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    p { margin: 0 0 16px; color: #a9b4ce; }
+    #results { padding: 16px; white-space: pre-wrap; border: 1px solid #34415e; border-radius: 12px; background: #182238; }
+    .app-frame { position: fixed; top: 0; left: -2000px; width: 900px; height: 1000px; border: 0; }
+  </style>
+<script>window.FITCALC_TEST_MODE = true;</script>
+</head>
+<body>
+  <h1>FitCalc tablet layout audit</h1>
+  <p>Core screens at a 900px tablet width, checking navigation, content, and horizontal overflow.</p>
+  <pre id="results" role="status">Loading routes…</pre>
+  <script>
+    (function () {
+      const routes = [
+        ["Home", "../index.html", ".dashboard-page"],
+        ["Calculators", "../calculators/index.html", ".calculator-directory-row"],
+        ["Nutrition", "../nutrition/index.html", ".nutrition-page"],
+        ["Planner", "../planner/index.html", ".planner-layout"],
+        ["Profile", "../profile/index.html", "#profile-form"],
+        ["History", "../history/index.html", "#history-list"],
+        ["Settings", "../settings/index.html", "#settings-theme"]
+      ];
+      const checks = [];
+      const frames = routes.map(function (route) {
+        const frame = document.createElement("iframe");
+        frame.className = "app-frame";
+        frame.title = route[0] + " tablet";
+        const loaded = new Promise(function (resolve) {
+          frame.addEventListener("load", resolve, { once: true });
+        });
+        frame.src = route[1];
+        document.body.appendChild(frame);
+        return { route: route, frame: frame, loaded: loaded };
+      });
+      let failures = 0;
+      function check(label, condition) {
+        if (!condition) failures += 1;
+        checks.push((condition ? "PASS " : "FAIL ") + label);
+      }
+      Promise.all(frames.map(function (item) { return item.loaded; })).then(function () {
+        frames.forEach(function (item) {
+          const doc = item.frame.contentDocument;
+          const win = item.frame.contentWindow;
+          const name = item.route[0];
+          check(name + " uses the 900px tablet viewport", win.innerWidth === 900);
+          check(name + " has shared navigation and theme control", !!doc.querySelector(".theme-toggle") && doc.querySelectorAll(".desktop-nav a").length === 5 && doc.querySelectorAll(".bottom-nav a").length === 5);
+          check(name + " fits without horizontal overflow", Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth) <= 902);
+          check(name + " screen content is present", !!doc.querySelector(item.route[2]));
+        });
+        checks.push("\n" + (failures ? failures + " checks failed" : "All tablet checks passed"));
+        document.getElementById("results").textContent = checks.join("\n");
+        document.body.dataset.result = failures ? "fail" : "pass";
+        document.title = failures ? "FAIL FitCalc tablet audit" : "PASS FitCalc tablet audit";
+      });
+    }());
+  </script>
+</body>
+</html>

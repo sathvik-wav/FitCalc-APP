@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.openfoodfacts.org; font-src 'self'; connect-src 'self' https://world.openfoodfacts.org https://wger.de https://api.wger.de; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Plan your steps, workouts, weight, and daily tasks.">
+<title>Planner — FitCalc</title>
+<link rel="stylesheet" href="../main.css">
+<script src="../theme-init.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="FitCalc home"><span class="brand-mark" aria-hidden="true">+</span><span>FitCalc</span></a>
+  <nav class="desktop-nav" aria-label="Main navigation"></nav>
+  <div class="topbar-right"><button class="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch theme"></button><button class="menu-toggle" id="hamburger-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button></div>
+</header>
+<nav class="mobile-menu" id="mobile-menu" aria-label="More navigation" hidden></nav>
+
+<main class="page-shell planner-page">
+  <header class="page-heading">
+    <div><span class="page-kicker">Your activity</span><h1>Planner</h1><p>Log what you do and organize the day ahead.</p></div>
+  </header>
+
+  <div class="day-navigation" aria-label="Choose planner date">
+    <button type="button" id="previous-day" aria-label="Previous day">←</button>
+    <div class="selected-day"><strong id="selected-day-label">Today</strong><span id="selected-date"></span></div>
+    <button type="button" id="today-day" aria-label="Go to today">Today</button>
+    <button type="button" id="next-day" aria-label="Next day">→</button>
+  </div>
+
+  <div class="planner-layout">
+    <section class="card planner-card planner-steps-card" aria-labelledby="steps-heading">
+      <div class="planner-card-heading">
+        <div><span class="page-kicker">Movement</span><h2 id="steps-heading">Steps</h2></div>
+        <strong class="planner-card-value"><span id="planner-steps">0</span><small> / <span id="planner-steps-goal"></span></small></strong>
+      </div>
+      <p>Record additional steps for this day. Goal: <span id="planner-steps-goal-copy"></span> steps.</p>
+      <div class="progress-bar" role="progressbar" aria-label="Step goal progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-fill" id="steps-progress"></div></div>
+      <div class="planner-input-row">
+        <div class="field"><label for="steps-input">Add steps</label><input type="number" id="steps-input" min="1" step="1" inputmode="numeric" placeholder="e.g. 2,500"></div>
+        <button type="button" class="primary-btn" id="save-steps">Add steps</button>
+      </div>
+      <button type="button" class="ghost-btn reset-step-button" id="reset-steps">Reset steps for this day</button>
+    </section>
+
+    <section class="card planner-card planner-weight-card" aria-labelledby="weight-heading">
+      <div class="planner-card-heading">
+        <div><span class="page-kicker">Check-in</span><h2 id="weight-heading">Body weight</h2></div>
+        <strong class="planner-card-value"><span id="planner-weight-value">—</span><small id="planner-weight-unit">kg</small></strong>
+      </div>
+      <p>Optional daily weigh-in, saved with the selected date.</p>
+      <p>Check-in for <span id="planner-weight-date">this day</span>. Your logged value appears here.</p>
+      <div class="planner-input-row">
+        <div class="field"><label for="planner-weight-input" id="planner-weight-input-label">Weight in kg</label><input type="number" id="planner-weight-input" min="30" max="300" step="0.1" inputmode="decimal" placeholder="e.g. 72.5"></div>
+        <button type="button" class="primary-btn" id="save-weight">Save weight</button>
+      </div>
+    </section>
+
+    <div class="planner-focus" role="group" aria-label="Choose planner sections">
+      <button type="button" id="planner-view-workouts" aria-pressed="false">Workouts</button>
+      <button type="button" id="planner-view-tasks" aria-pressed="false">Tasks</button>
+      <button type="button" id="planner-view-all" aria-pressed="true">All</button>
+    </div>
+
+    <section class="card planner-card planner-workouts-card" id="planner-workouts-card" aria-labelledby="workouts-heading">
+      <div class="planner-card-heading">
+        <div><span class="page-kicker">Training</span><h2 id="workouts-heading">Workouts</h2></div>
+        <p class="planner-section-count">Completed <strong id="completed-workouts">0</strong></p>
+      </div>
+      <p>Build a session, log actual sets, then mark it complete.</p>
+      <div class="planner-input-row">
+        <div class="field"><label for="workout-name">Workout name</label><input type="text" id="workout-name" maxlength="80" placeholder="e.g. Upper body"></div>
+        <button type="button" class="primary-btn" id="create-workout">Create workout</button>
+      </div>
+      <div id="workout-list"><p class="empty-state"><strong>No workouts planned</strong><span>Add a workout above to start logging.</span></p></div>
+      <small>Exercise discovery is optional. Sets and performance are recorded only when you enter them.</small>
+      <div class="planner-template-subsection" aria-labelledby="templates-heading">
+        <div class="planner-card-heading">
+          <div><span class="page-kicker">Reusable</span><h3 id="templates-heading">Workout templates</h3></div>
+        </div>
+        <p>Load a saved routine into the selected day.</p>
+        <div id="template-list"><p class="empty-state"><strong>No templates saved</strong><span>Save a workout to reuse its structure.</span></p></div>
+      </div>
+    </section>
+
+    <section class="card planner-card planner-task-card" id="planner-task-card" aria-labelledby="tasks-heading">
+      <div class="planner-card-heading">
+        <div><span class="page-kicker">Daily plan</span><h2 id="tasks-heading">Tasks</h2></div>
+        <p class="planner-section-count">Completed <strong id="completed-tasks">0</strong></p>
+      </div>
+      <p>Keep small daily intentions alongside your activity.</p>
+      <div class="planner-input-row">
+        <div class="field"><label for="task-name">Task name</label><input type="text" id="task-name" maxlength="100" placeholder="e.g. Take a walk"></div>
+        <button type="button" class="primary-btn" id="add-task">Add task</button>
+      </div>
+      <div id="task-list"><p class="empty-state"><strong>No tasks yet</strong><span>Add one above to keep your day organized.</span></p></div>
+    </section>
+  </div>
+</main>
+<footer class="footer"><div class="footer-brand"><span class="brand-mark">+</span><strong>FitCalc</strong></div><p>Your activity and workout entries stay on this device.</p></footer>
+<script src="../constants.js"></script>
+<script src="../store.js"></script>
+<script src="../target.js"></script>
+<script src="../script.js"></script>
+<script src="../progress.js"></script>
+<script src="../workout.js"></script>
+<script src="../planner.js"></script>
+<script src="../exercise-api.js"></script>
+</body>
+</html>

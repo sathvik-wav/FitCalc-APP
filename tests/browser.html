@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>FitCalc browser checks</title><script>window.FITCALC_TEST_MODE = true;</script>
+</head>
+<body>
+<h1>FitCalc browser checks</h1>
+<pre id="results" role="status">Starting…</pre>
+<script src="../constants.js"></script>
+<script src="../store.js"></script>
+<script src="../target.js"></script>
+<script src="../progress.js"></script>
+<script src="../nutrition.js"></script>
+<script src="../workout.js"></script>
+<script src="../food-api.js"></script>
+<script src="../exercise-api.js"></script>
+<script src="../dashboard.js"></script>
+<script src="../adaptive.js"></script>
+<script>
+(function () {
+    const lines = [];
+    let failures = 0;
+    function check(name, condition) {
+        if (!condition) failures += 1;
+        lines.push((condition ? "PASS " : "FAIL ") + name);
+    }
+    function close(actual, expected, tolerance) { return Math.abs(actual - expected) <= (tolerance || 0.01); }
+    window.addEventListener("error", function (event) { failures += 1; lines.push("FAIL runtime error: " + event.message); });
+    try {
+        for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+            const key = localStorage.key(index);
+            if (key && key.startsWith("test_")) localStorage.removeItem(key);
+        }
+        check("BMR Mifflin-St Jeor", calculateBMR({ sex: "male", age: 25, height: 180, weight: 80 }) === 1805);
+        check("date key uses local calendar date", getDateKey(new Date(2026, 8, 28)) === "2026-09-28");
+        localStorage.setItem(fitcalcStorageKey("broken"), "{");
+        check("corrupt JSON falls back safely", readJSON("broken", { ok: true }).ok === true);
+        const before = localStorage.getItem(fitcalcStorageKey(NUTRITION_KEY));
+        getNutritionFor("2026-09-28");
+        check("nutrition read does not create stored day", localStorage.getItem(fitcalcStorageKey(NUTRITION_KEY)) === before);
+        check("opening history does not create blank record", getProgressRecord(getDateKey(new Date())) === null && localStorage.getItem(fitcalcStorageKey(HISTORY_KEY)) === null);
+
+        const meal = calculateLoggedFood({ name: "Rice", calories: 130, protein: 2.7, carbs: 28, fat: 0.3, fiber: 0.4 }, 150, "Lunch");
+        check("food amount scales calories correctly", close(meal.calories, 195));
+        check("food amount scales macros and preserves meal", close(meal.protein, 4.05) && meal.meal === "Lunch");
+
+        const today = getDateKey(new Date());
+        let changeEvents = 0;
+        window.addEventListener("fitcalc:data-change", function () { changeEvents += 1; });
+        saveNutritionFor(today, { calories: meal.calories, protein: meal.protein, carbs: meal.carbs, fat: meal.fat, fiber: meal.fiber, water: 0.5, foods: [meal] });
+        check("domain saves publish same-window change events", changeEvents === 1);
+        check("nutrition write creates a dated progress record", getProgressRecord(today).calories === 195 && getProgressRecord(today).water === 0.5);
+        const workout = { name: "Push", completed: true, exercises: [{ name: "Bench Press", sets: [{ reps: 8, weight: 60 }] }] };
+        savePlannerFor(today, { date: today, steps: 6420, weight: 72.5, workouts: [workout], tasks: [{ name: "Walk", completed: true }] });
+        const record = getProgressRecord(today);
+        check("planner writes merge actual activity into history", record.steps === 6420 && record.weight === 72.5 && record.completedWorkouts === 1 && record.tasks.length === 1 && record.completedTasks === 1);
+        check("history retains actual workout sets", record.workouts[0].exercises[0].sets[0].weight === 60);
+
+        const product = normalizeOpenFoodFactsProduct({ code: "12345678", product_name: "Example oats", nutriments: { "energy-kcal_100g": 389, proteins_100g: 16.9, carbohydrates_100g: 66, fat_100g: 6.9, fiber_100g: 10.6 } });
+        check("food API product normalization", product.name === "Example oats" && product.calories === 389 && product.barcode === "12345678");
+        check("food API rejects nutrition-free products", normalizeOpenFoodFactsProduct({ product_name: "No data" }) === null);
+        const exercise = normalizeWgerExercise({ id: 17, name: "Bench press", category: { name: "Chest" }, muscles: [{ name: "Pectoralis major" }] });
+        check("exercise API normalization", exercise.name === "Bench press" && exercise.category === "Chest" && exercise.provider === "wger");
+        check("workout completion accepts logged performance", hasWorkoutPerformance(workout));
+        check("workout completion rejects empty planned workout", !hasWorkoutPerformance({ name: "Empty", exercises: [{ name: "Bench", sets: [] }] }));
+        check("timed workout set formats actual duration", formatWorkoutSet({ durationMinutes: 30 }) === "30 min");
+        const progress = getDashboardDailyProgress();
+        check("dashboard progress is deterministic and bounded", Number.isFinite(progress) && progress >= 0 && progress <= 100);
+        check("adaptive priorities read current targets and data", Array.isArray(getAdaptivePlan()));
+        for (let offset = 1; offset <= 3; offset += 1) {
+            const date = new Date();
+            date.setDate(date.getDate() - offset);
+            const key = getDateKey(date);
+            savePlannerFor(key, { date: key, workouts: [{ name: "Push", completed: true, exercises: [{ name: "Bench press", sets: [{ reps: 8, weight: 60 }] }] }], tasks: [] });
+            saveProgressRecord(key);
+        }
+        check("adaptive engine detects repeated real performance", getWorkoutProgressionInsights().some(function (item) { return item.includes("Bench press") && item.includes("three sessions"); }));
+        const oldDate = new Date();
+        oldDate.setDate(oldDate.getDate() - 12);
+        const oldKey = getDateKey(oldDate);
+        savePlannerFor(oldKey, { date: oldKey, steps: 8000, workouts: [], tasks: [] });
+        saveProgressRecord(oldKey);
+        check("history ranges use calendar days, not record count", !getProgressRecordsForDays(7).some(function (item) { return item.date === oldKey; }));
+    } catch (error) {
+        failures += 1;
+        lines.push("FAIL uncaught: " + (error.stack || error.message));
+    }
+    lines.push("\n" + (failures ? failures + " checks failed" : "All checks passed"));
+    document.getElementById("results").textContent = lines.join("\n");
+    document.title = failures ? "FAIL " + failures : "PASS FitCalc browser checks";
+    document.body.dataset.result = failures ? "fail" : "pass";
+}());
+</script>
+</body>
+</html>

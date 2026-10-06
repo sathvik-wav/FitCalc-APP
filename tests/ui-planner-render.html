@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FitCalc Planner first render check</title>
+  <style>
+    body { margin: 0; padding: 24px; color: #f2f5ff; background: #101624; font: 14px/1.5 system-ui, sans-serif; }
+    h1 { margin: 0 0 12px; font-size: 24px; }
+    #results { padding: 16px; white-space: pre-wrap; border: 1px solid #34415e; border-radius: 12px; background: #182238; }
+    iframe { position: fixed; top: 0; left: -2000px; width: 1366px; height: 900px; border: 0; }
+  </style>
+<script>window.FITCALC_TEST_MODE = true;</script>
+</head>
+<body>
+  <h1>FitCalc Planner first render check</h1>
+  <pre id="results" role="status">Loading Planner…</pre>
+  <script>
+    (function () {
+      const now = new Date();
+      const key = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+      const day = {
+        date: key,
+        steps: 6420,
+        weight: 72.5,
+        workouts: [{ name: "Push Day", completed: true, exercises: [{ name: "Bench Press", sets: [{ reps: 8, weight: 60 }] }] }],
+        tasks: [{ name: "Morning walk", completed: true }, { name: "Prepare lunch", completed: true }, { name: "Stretch", completed: false }]
+      };
+      localStorage.setItem("test_fitcalc_planner", JSON.stringify({ [key]: day }));
+      const frame = document.createElement("iframe");
+      frame.title = "Planner initial render";
+      frame.src = "../planner/index.html";
+      frame.addEventListener("load", function () {
+        const doc = frame.contentDocument;
+        const checks = [
+          ["steps display on first render", doc.getElementById("planner-steps").textContent === "6420"],
+          ["completed workout count on first render", doc.getElementById("completed-workouts").textContent === "1"],
+          ["completed task count on first render", doc.getElementById("completed-tasks").textContent === "2"],
+          ["actual set data displays on first render", doc.getElementById("workout-list").textContent.includes("8×60kg")]
+        ];
+        const failed = checks.filter(function (item) { return !item[1]; }).length;
+        document.getElementById("results").textContent = checks.map(function (item) { return (item[1] ? "PASS " : "FAIL ") + item[0]; }).join("\n") + "\n\n" + (failed ? failed + " checks failed" : "All first-render checks passed");
+        document.body.dataset.result = failed ? "fail" : "pass";
+        document.title = failed ? "FAIL Planner first render" : "PASS Planner first render";
+      }, { once: true });
+      document.body.appendChild(frame);
+    }());
+  </script>
+</body>
+</html>
