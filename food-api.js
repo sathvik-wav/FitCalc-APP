@@ -40,13 +40,14 @@ function normalizeFoodSearchResult(food, sourceOverride) {
     const knownMacros = [nutrients.protein, nutrients.carbs, nutrients.fat].filter(function (value) { return value !== null; });
     if (knownMacros.reduce(function (total, value) { return total + value; }, 0) > 105) return null;
 
-    const unitGrams = Object.assign({}, food.unitGrams || {});
+    const unitGrams = Object.assign({}, food.unitGrams || {}, { oz: 28.35 });
     const pieceGrams = foodNumber(food.pieceGrams) || foodNumber(unitGrams.piece);
     const servingGrams = foodNumber(food.servingGrams);
     if (pieceGrams && !unitGrams.piece) unitGrams.piece = pieceGrams;
     const units = Array.isArray(food.units) ? food.units.slice() : ["g"];
     if (pieceGrams && !units.includes("piece")) units.push("piece");
     if (servingGrams && !units.includes("serving")) units.push("serving");
+    if (!units.includes("oz")) units.push("oz");
     if (!units.includes("g")) units.unshift("g");
     const missingNutrients = ["protein", "carbs", "fat", "fiber"].filter(function (key) { return nutrients[key] === null; });
 
@@ -64,6 +65,7 @@ function normalizeFoodSearchResult(food, sourceOverride) {
         barcode: String(food.barcode || food.code || ""),
         unitGrams: unitGrams,
         units: units,
+        approximateUnits: Array.isArray(food.approximateUnits) ? food.approximateUnits.slice() : [],
         defaultUnit: food.defaultUnit || (pieceGrams ? "piece" : (servingGrams ? "serving" : "g")),
         preparation: String(food.preparation || ""),
         missingNutrients: Array.isArray(food.missingNutrients) ? food.missingNutrients.slice() : missingNutrients,
@@ -142,7 +144,7 @@ function normalizeOpenFoodFactsProduct(product) {
         fat: foodNumber(n.fat_100g),
         fiber: foodNumber(n.fiber_100g),
         servingGrams: servingGrams,
-        units: ["g"].concat(servingGrams ? ["serving"] : []),
+        units: ["g", "oz"].concat(servingGrams ? ["serving"] : []),
         defaultUnit: servingGrams ? "serving" : "g",
         source: "Open Food Facts",
         barcode: product.code || ""
@@ -288,6 +290,64 @@ function findFdcNutrient(food, nutrientId, namePattern) {
     return foodNumber(match.value !== undefined ? match.value : match.amount);
 }
 
+function getUsdaPortionConversions(portions, foodName) {
+    const result = { unitGrams: { oz: 28.35 }, units: ["g", "oz"], approximateUnits: [] };
+    const volumeMl = { tsp: 5, tablespoon: 15, tbsp: 15, cup: 240, glass: 250 };
+    const portionRows = Array.isArray(portions) ? portions : [];
+    const normalizedRows = portionRows.map(function (portion) {
+        const measure = portion && portion.measureUnit || {};
+        const amount = foodNumber(portion && portion.amount) || 1;
+        const grams = foodNumber(portion && portion.gramWeight);
+        const description = [portion && portion.modifier, portion && portion.portionDescription, measure.name, measure.abbreviation]
+            .filter(Boolean).join(" ").toLowerCase();
+        return { description: description, grams: grams && grams > 0 ? grams * amount : null };
+    }).filter(function (portion) { return portion.grams > 0; });
+
+    // Use a source-reported food portion (cup, tablespoon, or teaspoon) as
+    // the density basis, then apply the standard volume ratios. A food with
+    // no matching USDA portion receives no volume choices.
+    const volumePortion = normalizedRows.find(function (portion) { return /\b(cup|cups)\b/.test(portion.description); }) ||
+        normalizedRows.find(function (portion) { return /\b(tablespoon|tablespoons|tbsp)\b/.test(portion.description); }) ||
+        normalizedRows.find(function (portion) { return /\b(teaspoon|teaspoons|tsp)\b/.test(portion.description); });
+    if (volumePortion) {
+        const sourceUnit = /\b(cup|cups)\b/.test(volumePortion.description) ? "cup" :
+            (/\b(tablespoon|tablespoons|tbsp)\b/.test(volumePortion.description) ? "tbsp" : "tsp");
+        const milliliters = sourceUnit === "cup" ? 240 : (sourceUnit === "tbsp" ? 15 : 5);
+        const gramsPerMl = volumePortion.grams / milliliters;
+        result.unitGrams.ml = gramsPerMl;
+        result.unitGrams.tsp = gramsPerMl * volumeMl.tsp;
+        result.unitGrams.tbsp = gramsPerMl * volumeMl.tbsp;
+        result.unitGrams.cup = gramsPerMl * volumeMl.cup;
+        result.unitGrams.glass = gramsPerMl * volumeMl.glass;
+        result.units.push("ml", "tsp", "tbsp", "cup", "glass");
+        if (/\b(rice|lentils?|dal|curry)\b/i.test(String(foodName || ""))) {
+            result.unitGrams.katori = gramsPerMl * 180;
+            result.units.push("katori");
+            result.approximateUnits.push("katori");
+        }
+    }
+
+    ["piece", "slice"].forEach(function (unit) {
+        const portion = normalizedRows.find(function (candidate) {
+            return new RegExp("\\b" + unit + "s?\\b").test(candidate.description);
+        });
+        if (!portion) return;
+        result.unitGrams[unit] = portion.grams;
+        result.units.push(unit);
+    });
+    ["ladle", "plate", "katori"].forEach(function (unit) {
+        const portion = normalizedRows.find(function (candidate) {
+            const pattern = unit === "ladle" ? /\b(ladle|kadchi)\b/ : new RegExp("\\b" + unit + "s?\\b");
+            return pattern.test(candidate.description);
+        });
+        if (!portion) return;
+        result.unitGrams[unit] = portion.grams;
+        if (!result.units.includes(unit)) result.units.push(unit);
+        if (!result.approximateUnits.includes(unit)) result.approximateUnits.push(unit);
+    });
+    return result;
+}
+
 function normalizeUSDAFood(food) {
     if (!food || typeof food !== "object") return null;
     const energyEntries = Array.isArray(food.foodNutrients) ? food.foodNutrients : [];
@@ -309,6 +369,9 @@ function normalizeUSDAFood(food) {
     const servingSize = foodNumber(food.servingSize);
     const servingSizeUnit = String(food.servingSizeUnit || "").toLowerCase();
     const servingGrams = servingSize && ["g", "gram", "grams"].includes(servingSizeUnit) ? servingSize : null;
+    const portions = getUsdaPortionConversions(food.foodPortions, food.description);
+    const portionUnits = portions.units.slice();
+    if (servingGrams) portionUnits.push("serving");
     const normalized = normalizeFoodSearchResult({
         name: food.description,
         brand: food.brandOwner || food.brandName || "",
@@ -318,7 +381,9 @@ function normalizeUSDAFood(food) {
         fat: fat,
         fiber: fiber,
         servingGrams: servingGrams,
-        units: ["g"].concat(servingGrams ? ["serving"] : []),
+        unitGrams: portions.unitGrams,
+        units: portionUnits,
+        approximateUnits: portions.approximateUnits,
         defaultUnit: servingGrams ? "serving" : "g",
         source: "USDA FoodData Central",
         fdcId: food.fdcId

@@ -63,6 +63,12 @@
             foodName.value = "milk";
             foodName.dispatchEvent(new win.Event("input", { bubbles: true }));
             check("Milk has no piece unit", !Array.from(unit.options).some(function (option) { return option.value === "piece"; }));
+            check("Milk exposes weight and volume units", ["g", "oz", "ml", "tsp", "tbsp", "cup", "glass"].every(function (value) {
+              return Array.from(unit.options).some(function (option) { return option.value === value; });
+            }));
+            unit.value = "glass";
+            unit.dispatchEvent(new win.Event("change", { bubbles: true }));
+            check("Unit changes update the amount label and step", doc.getElementById("food-amount-label").textContent === "Number of glasses" && amount.step === "0.25");
             foodName.value = "egg";
             foodName.dispatchEvent(new win.Event("input", { bubbles: true }));
             amount.value = "1";
@@ -77,6 +83,7 @@
             win.updateBarcodeCameraAvailability();
             check("Unsupported camera scanner is hidden with manual-entry hint", doc.getElementById("start-barcode-camera").hidden && !doc.getElementById("barcode-camera-hint").hidden && /Type the barcode number/.test(doc.getElementById("barcode-camera-hint").textContent));
             check("Custom food disclosure has a visible plus indicator", win.getComputedStyle(doc.querySelector(".custom-food-details summary"), "::before").content.replace(/[\"']/g, "") === "+");
+            check("Custom food form includes optional portion weights", ["custom-food-piece-grams", "custom-food-tbsp-grams", "custom-food-cup-grams", "custom-food-katori-grams"].every(function (id) { return !!doc.getElementById(id); }));
 
             frame.contentWindow.location.reload();
             return;

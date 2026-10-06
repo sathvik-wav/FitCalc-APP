@@ -248,7 +248,7 @@ function loadNutritionSandbox(search = "", options = {}) {
     CustomEvent: function (type, init) { this.type = type; this.detail = init && init.detail; }
   };
   vm.createContext(sandbox);
-  ["constants.js", "store.js", "target.js", "progress.js", "nutrition.js"].forEach((file) => {
+  ["constants.js", "store.js", "target.js", "progress.js", "foods-india.js", "nutrition.js"].forEach((file) => {
     vm.runInContext(fs.readFileSync(__dirname + "/../" + file, "utf8"), sandbox);
   });
   return {
@@ -702,6 +702,34 @@ test("USDA search normalization uses FoodData Central nutrient IDs and kcal unit
   assert.strictEqual(normalized.fiber, 4.9);
   assert.strictEqual(normalized.servingGrams, 68);
   assert.strictEqual(normalized.source, "USDA FoodData Central");
+  const milk = app.sandbox.normalizeUSDAFood({
+    description: "Milk, whole",
+    servingSize: 244,
+    servingSizeUnit: "g",
+    foodNutrients: [
+      { nutrientId: 1008, nutrientName: "Energy", unitName: "kcal", value: 61 },
+      { nutrientId: 1003, nutrientName: "Protein", unitName: "g", value: 3.2 }
+    ],
+    foodPortions: [{ amount: 1, gramWeight: 244, modifier: "cup", measureUnit: { name: "undetermined" } }]
+  });
+  assert.deepStrictEqual(Array.from(milk.units), ["g", "oz", "ml", "tsp", "tbsp", "cup", "glass", "serving"]);
+  assert.strictEqual(milk.unitGrams.cup, 244);
+  assert.ok(Math.abs(milk.unitGrams.ml - 244 / 240) < 1e-9);
+  assert.ok(Math.abs(milk.unitGrams.glass - 244 * 250 / 240) < 1e-9);
+  assert.deepStrictEqual(Array.from(app.sandbox.getUsdaPortionConversions([]).units), ["g", "oz"]);
+  const portions = app.sandbox.getUsdaPortionConversions([
+    { amount: 1, gramWeight: 120, modifier: "cup", measureUnit: { name: "undetermined" } },
+    { amount: 1, gramWeight: 45, modifier: "ladle", measureUnit: { name: "undetermined" } },
+    { amount: 1, gramWeight: 250, modifier: "plate", measureUnit: { name: "undetermined" } },
+    { amount: 1, gramWeight: 28, modifier: "slice", measureUnit: { name: "undetermined" } }
+  ], "Cooked rice");
+  assert.ok(portions.units.includes("katori") && portions.approximateUnits.includes("katori"));
+  assert.strictEqual(portions.unitGrams.katori, 90);
+  assert.ok(portions.units.includes("ladle") && portions.approximateUnits.includes("ladle"));
+  assert.strictEqual(portions.unitGrams.ladle, 45);
+  assert.ok(portions.units.includes("plate") && portions.approximateUnits.includes("plate"));
+  assert.strictEqual(portions.unitGrams.plate, 250);
+  assert.strictEqual(portions.unitGrams.slice, 28);
   assert.strictEqual(app.sandbox.normalizeUSDAFood({ description: "No kcal", foodNutrients: [] }), null);
 });
 
@@ -713,9 +741,15 @@ test("offline Indian entries use verified USDA records with explicit portion wei
   assert.strictEqual(roti.calories, 297);
   assert.strictEqual(roti.pieceGrams, 68);
   assert.strictEqual(roti.unitGrams.piece, 68);
+  assert.deepStrictEqual(Array.from(roti.units), ["g", "oz", "piece"]);
   assert.strictEqual(curd.calories, 61);
   assert.strictEqual(curd.servingGrams, 245);
+  assert.deepStrictEqual(Array.from(curd.units), ["g", "oz", "ml", "tsp", "tbsp", "cup", "glass"]);
   assert.ok(entries.every((food) => food.source === "USDA FoodData Central"));
+  entries.forEach((food) => food.units.forEach((unit) => {
+    if (unit === "g" || unit === "serving") return;
+    assert.ok(food.unitGrams[unit] > 0, food.name + " needs a gram weight for " + unit);
+  }));
   assert.strictEqual(ctx.searchBuiltInFoodList("cooked rice")[0].name, "white rice");
   assert.strictEqual(ctx.searchBuiltInFoodList("dal")[0].name, "lentils");
 });
@@ -1437,6 +1471,139 @@ test("nutrition serving units scale live food values and preserve unknown nutrie
   app.sandbox.recalculateNutritionTotals(day);
   assert.strictEqual(day.calories, null);
   assert.strictEqual(day.fat, 0);
+});
+
+test("food amount units convert to grams before scaling per-100g macros", () => {
+  const app = loadNutritionSandbox();
+  const get = (name) => app.sandbox.findFood(name);
+  const calculate = (name, amount, unit) => app.sandbox.calculateLoggedFood(get(name), amount, "Snack", unit);
+  assert.strictEqual(calculate("egg", 100, "g").amount, 100);
+  assert.strictEqual(calculate("egg", 1, "oz").amount, 28.35);
+  assert.ok(Math.abs(calculate("milk", 100, "ml").amount - 244 / 240 * 100) < 1e-9);
+  assert.ok(Math.abs(calculate("milk", 1, "tsp").amount - 244 / 48) < 1e-9);
+  assert.ok(Math.abs(calculate("milk", 1, "tbsp").amount - 244 / 16) < 1e-9);
+  assert.strictEqual(calculate("milk", 1, "cup").amount, 244);
+  assert.ok(Math.abs(calculate("milk", 1, "glass").amount - 244 * 250 / 240) < 1e-9);
+  const milk = get("milk");
+  ["g", "oz", "ml", "tsp", "tbsp", "cup", "glass"].forEach((unit) => {
+    const grams = unit === "g" ? 1 : (unit === "oz" ? 28.35 : milk.unitGrams[unit]);
+    const sameWeight = app.sandbox.calculateLoggedFood(milk, 100 / grams, "Snack", unit);
+    assert.ok(Math.abs(sameWeight.amount - 100) < 1e-9, unit + " should resolve to the same 100 g portion");
+    assert.ok(Math.abs(sameWeight.calories - milk.calories) < 1e-9, unit + " should preserve per-100g calories");
+  });
+  assert.strictEqual(calculate("lentils", 2, "katori").amount, 297);
+  assert.strictEqual(calculate("egg", 1, "piece").amount, 50);
+  assert.strictEqual(calculate("whole wheat bread", 1, "slice").amount, 28);
+  assert.strictEqual(calculate("oats", 2, "serving").amount, 80);
+  const riceCup = calculate("white rice", 1, "cup");
+  assert.strictEqual(riceCup.calories, 205.4);
+  assert.match(app.getElement("food-amount-label").textContent, /Amount \(g\)/);
+  app.getElement("food-name").value = "lentils";
+  app.sandbox.window.updateNutritionFoodUnits(get("lentils"));
+  app.getElement("food-amount").value = "2";
+  app.getElement("food-amount-unit").value = "katori";
+  app.sandbox.updateFoodAmountLabel();
+  app.sandbox.updateNutritionFoodPreview();
+  assert.match(app.getElement("food-amount-label").textContent, /Number of katoris \(approx\.\)/);
+  assert.match(app.getElement("food-nutrition-preview").textContent, /2 katori ≈ 297 g/);
+});
+
+test("food unit choices follow verified food portions and imperial preferences", () => {
+  const app = loadNutritionSandbox();
+  const units = (name) => Array.from(app.sandbox.supportedFoodUnits(app.sandbox.findFood(name)));
+  assert.deepStrictEqual(units("egg"), ["g", "oz", "piece"]);
+  assert.deepStrictEqual(units("banana"), ["g", "oz", "piece"]);
+  assert.deepStrictEqual(units("milk"), ["g", "oz", "ml", "tsp", "tbsp", "cup", "glass"]);
+  assert.deepStrictEqual(units("white rice"), ["g", "oz", "katori", "cup", "serving"]);
+  assert.ok(!units("white rice").includes("piece"));
+  assert.deepStrictEqual(units("curd or dahi, plain whole-milk (yogurt equivalent)"), ["g", "oz", "ml", "tsp", "tbsp", "cup", "glass"]);
+  assert.deepStrictEqual(Array.from(app.sandbox.supportedFoodUnits({ name: "Unverified food", units: ["g"] })), ["g", "oz"]);
+
+  app.sandbox.saveFitCalcPreferences({ units: { weight: "lb" } });
+  app.sandbox.window.updateNutritionFoodUnits({ name: "Unverified food", calories: 100, protein: 1, carbs: 1, fat: 1, units: ["g"], defaultUnit: "g" });
+  assert.strictEqual(app.getElement("food-amount-unit").value, "oz");
+  assert.match(app.getElement("food-amount-label").textContent, /Amount \(oz\)/);
+
+  app.sandbox.rememberFoodAmountUnit(app.sandbox.findFood("egg"), "piece");
+  app.sandbox.window.updateNutritionFoodUnits(app.sandbox.findFood("egg"));
+  assert.strictEqual(app.getElement("food-amount-unit").value, "piece");
+  assert.strictEqual(app.sandbox.getFitCalcPreferences().foodAmountUnits["egg\u0000"], "piece");
+});
+
+test("custom food portion weights enable only their measured units", () => {
+  const app = loadNutritionSandbox();
+  const custom = { name: "Measured porridge", calories: 100, protein: 4, carbs: 15, fat: 2, fiber: 3, servingGrams: 200,
+    pieceGrams: 50, tablespoonGrams: 15, cupGrams: 240, katoriGrams: 150 };
+  assert.strictEqual(app.sandbox.saveCustomFood(custom), true);
+  const food = app.sandbox.findFood(custom.name);
+  assert.strictEqual(food.unitGrams.piece, 50);
+  assert.strictEqual(food.unitGrams.tbsp, 15);
+  assert.strictEqual(food.unitGrams.cup, 240);
+  assert.strictEqual(food.unitGrams.katori, 150);
+  assert.strictEqual(food.unitGrams.ml, 1);
+  assert.strictEqual(food.unitGrams.glass, 250);
+  assert.ok(food.units.includes("piece") && food.units.includes("katori") && food.units.includes("glass"));
+  assert.ok(food.approximateUnits.includes("katori"));
+  const html = fs.readFileSync(__dirname + "/../nutrition/index.html", "utf8");
+  ["piece-grams", "tbsp-grams", "cup-grams", "katori-grams"].forEach((id) => assert.match(html, new RegExp("custom-food-" + id)));
+});
+
+test("legacy food logs migrate to the grams-based amount format without changing macros", () => {
+  const app = loadNutritionSandbox();
+  const today = app.sandbox.getDateKey(new Date());
+  app.sandbox.saveNutritionFor(today, { foods: [
+    { name: "egg", amount: 50, calories: 71.5, protein: 6.3, carbs: 0.35, fat: 4.75, fiber: 0, meal: "Breakfast" }
+  ] });
+  const migrated = app.sandbox.getNutrition().foods[0];
+  assert.strictEqual(migrated.amount, 50);
+  assert.strictEqual(migrated.amountGrams, 50);
+  assert.strictEqual(migrated.enteredAmount, 50);
+  assert.strictEqual(migrated.amountUnit, "g");
+  assert.strictEqual(migrated.gramsPerUnit, 1);
+  assert.strictEqual(migrated.calories, 71.5);
+  const stored = JSON.parse(app.storage.get("fitcalc_nutrition"))[today].foods[0];
+  assert.strictEqual(stored.amountGrams, 50);
+  assert.strictEqual(stored.calories, 71.5);
+
+  app.sandbox.saveNutritionFor(today, { foods: [{
+    name: "oats", amount: 13.2, enteredAmount: 2, amountUnit: "tbsp", calories: 51.348,
+    protein: 2.2308, carbs: 8.712, fat: 0.9108, fiber: 1.3992, meal: "Breakfast"
+  }] });
+  const oldMeasured = app.sandbox.getNutrition().foods[0];
+  assert.strictEqual(oldMeasured.amountGrams, 13.2);
+  assert.strictEqual(oldMeasured.enteredAmount, 2);
+  assert.strictEqual(oldMeasured.amountUnit, "tbsp");
+  assert.strictEqual(oldMeasured.gramsPerUnit, 6.6);
+  assert.strictEqual(oldMeasured.calories, 51.348);
+  app.sandbox.editFood(0);
+  assert.strictEqual(app.getElement("food-amount-unit").value, "tbsp");
+  assert.strictEqual(Number(app.getElement("food-amount").value), 2);
+  app.getElement("add-food").click();
+  const savedMeasured = app.sandbox.getNutrition().foods[0];
+  assert.strictEqual(savedMeasured.amountGrams, 13.2);
+  assert.ok(Math.abs(savedMeasured.calories - 51.348) < 1e-9);
+});
+
+test("editing a food keeps its selected amount unit and quantity", () => {
+  const app = loadNutritionSandbox();
+  const today = app.sandbox.getDateKey(new Date());
+  app.sandbox.saveNutritionFor(today, { foods: [{
+    name: "oats", amount: 10, calories: 38.9, protein: 1.69, carbs: 6.6, fat: 0.69, fiber: 1.06,
+    enteredAmount: 2, amountUnit: "tbsp", gramsPerUnit: 5, servingGrams: 40,
+    unitGrams: { cup: 81, tbsp: 5, tsp: 1.7 }, units: ["g", "cup", "tbsp", "tsp", "serving"], meal: "Breakfast"
+  }] });
+  app.sandbox.rememberFoodAmountUnit(app.sandbox.findFood("oats"), "cup");
+  app.sandbox.editFood(0);
+  assert.strictEqual(app.getElement("food-amount-unit").value, "tbsp");
+  assert.strictEqual(Number(app.getElement("food-amount").value), 2);
+  app.getElement("add-food").click();
+  const saved = app.sandbox.getNutrition().foods[0];
+  assert.strictEqual(saved.amount, 10);
+  assert.strictEqual(saved.enteredAmount, 2);
+  assert.strictEqual(saved.amountUnit, "tbsp");
+  assert.ok(Math.abs(saved.calories - 38.9) < 1e-9);
+  app.sandbox.window.updateNutritionFoodUnits(app.sandbox.findFood("oats"));
+  assert.strictEqual(app.getElement("food-amount-unit").value, "tbsp");
 });
 
 test("R5-11 weight chart summary, header, and tooltips use one decimal in pounds", () => {
