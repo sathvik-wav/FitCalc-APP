@@ -1,67 +1,13 @@
-/* Public read-only food search and barcode adapter for Open Food Facts. */
+/* Unified local and remote food search plus Open Food Facts barcode lookup. */
 const OPEN_FOOD_FACTS_API = "https://world.openfoodfacts.org";
+const OPEN_FOOD_FACTS_SEARCH_API = "https://search.openfoodfacts.org/search";
+const USDA_FOOD_DATA_API = "https://api.nal.usda.gov/fdc/v1/foods/search";
 let barcodeStream = null;
 let barcodeFrame = null;
 let barcodeDetector = null;
-
-function normalizeOpenFoodFactsProduct(product) {
-    if (!product || typeof product !== "object") return null;
-    const n = product.nutriments || {};
-    const name = String(product.product_name || product.product_name_en || "").trim();
-    if (!name) return null;
-    const hasNutrition = ["energy-kcal_100g", "energy_100g", "proteins_100g", "carbohydrates_100g", "fat_100g", "fiber_100g"]
-        .some(function (key) { return n[key] !== undefined && n[key] !== null && n[key] !== "" && Number.isFinite(Number(n[key])); });
-    if (!hasNutrition) return null;
-    const kcalValue = n["energy-kcal_100g"];
-    const hasKcal = kcalValue !== undefined && kcalValue !== null && kcalValue !== "" && Number.isFinite(Number(kcalValue));
-    const kjValue = n.energy_100g;
-    const hasKj = kjValue !== undefined && kjValue !== null && kjValue !== "" && Number.isFinite(Number(kjValue));
-    const nutrient = function (key) {
-        const value = n[key];
-        return value !== undefined && value !== null && value !== "" && Number.isFinite(Number(value))
-            ? Number(value)
-            : null;
-    };
-    const calories = hasKcal ? Number(kcalValue) : (hasKj ? Number(kjValue) / 4.184 : null);
-    const macros = {
-        calories: calories,
-        protein: nutrient("proteins_100g"),
-        carbs: nutrient("carbohydrates_100g"),
-        fat: nutrient("fat_100g"),
-        fiber: nutrient("fiber_100g")
-    };
-    const missingNutrients = Object.keys(macros).filter(function (key) { return macros[key] === null; });
-    const servingGrams = parseOpenFoodFactsServingGrams(product.serving_size);
-    const unitGrams = {};
-    const units = ["g"];
-    if (servingGrams) units.push("serving");
-    return {
-        name: name,
-        calories: calories,
-        caloriesMissing: !hasKcal && !hasKj,
-        protein: macros.protein,
-        carbs: macros.carbs,
-        fat: macros.fat,
-        fiber: macros.fiber,
-        missingNutrients: missingNutrients,
-        servingGrams: servingGrams,
-        unitGrams: unitGrams,
-        units: units,
-        defaultUnit: servingGrams ? "serving" : "g",
-        preparation: "",
-        source: "Open Food Facts",
-        barcode: String(product.code || "")
-    };
-}
-
-function parseOpenFoodFactsServingGrams(value) {
-    const text = String(value || "").trim();
-    if (!text) return null;
-    const match = text.match(/(?:^|[,(\s])(?:about\s*)?(\d+(?:[.,]\d+)?)\s*(g|grams?|ml|millilit(?:er|re)s?)\b/i);
-    if (!match) return null;
-    const amount = Number(match[1].replace(",", "."));
-    return Number.isFinite(amount) && amount > 0 && amount <= 5000 ? amount : null;
-}
+let foodSearchTimer = null;
+let foodSearchController = null;
+let foodSearchVersion = 0;
 
 function createFoodApiError(message, kind, status) {
     const error = new Error(message);
@@ -70,30 +16,199 @@ function createFoodApiError(message, kind, status) {
     return error;
 }
 
-async function requestOpenFoodFacts(url, options) {
-    const settings = Object.assign({ timeoutMs: 0, retries: 0, retryDelayMs: 250 }, options || {});
+function foodNumber(value) {
+    if (value === null || value === undefined || value === "") return null;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+}
+
+function normalizeFoodSearchResult(food, sourceOverride) {
+    if (!food || typeof food !== "object") return null;
+    const name = String(food.name || food.product_name || food.product_name_en || food.description || "").trim();
+    if (!name) return null;
+    const nutrients = {
+        calories: foodNumber(food.calories),
+        protein: foodNumber(food.protein),
+        carbs: foodNumber(food.carbs),
+        fat: foodNumber(food.fat),
+        fiber: foodNumber(food.fiber)
+    };
+    if (nutrients.calories === null || nutrients.calories < 0 || nutrients.calories > 900) return null;
+    for (const key of ["protein", "carbs", "fat", "fiber"]) {
+        if (nutrients[key] !== null && (nutrients[key] < 0 || nutrients[key] > 100)) return null;
+    }
+    const knownMacros = [nutrients.protein, nutrients.carbs, nutrients.fat].filter(function (value) { return value !== null; });
+    if (knownMacros.reduce(function (total, value) { return total + value; }, 0) > 105) return null;
+
+    const unitGrams = Object.assign({}, food.unitGrams || {});
+    const pieceGrams = foodNumber(food.pieceGrams) || foodNumber(unitGrams.piece);
+    const servingGrams = foodNumber(food.servingGrams);
+    if (pieceGrams && !unitGrams.piece) unitGrams.piece = pieceGrams;
+    const units = Array.isArray(food.units) ? food.units.slice() : ["g"];
+    if (pieceGrams && !units.includes("piece")) units.push("piece");
+    if (servingGrams && !units.includes("serving")) units.push("serving");
+    if (!units.includes("g")) units.unshift("g");
+    const missingNutrients = ["protein", "carbs", "fat", "fiber"].filter(function (key) { return nutrients[key] === null; });
+
+    return {
+        name: name,
+        brand: String(food.brand || food.brands || food.brandOwner || food.brandName || "").trim(),
+        calories: nutrients.calories,
+        protein: nutrients.protein,
+        carbs: nutrients.carbs,
+        fat: nutrients.fat,
+        fiber: nutrients.fiber,
+        pieceGrams: pieceGrams,
+        servingGrams: servingGrams,
+        source: String(sourceOverride || food.source || "Food database"),
+        barcode: String(food.barcode || food.code || ""),
+        unitGrams: unitGrams,
+        units: units,
+        defaultUnit: food.defaultUnit || (pieceGrams ? "piece" : (servingGrams ? "serving" : "g")),
+        preparation: String(food.preparation || ""),
+        missingNutrients: Array.isArray(food.missingNutrients) ? food.missingNutrients.slice() : missingNutrients,
+        fdcId: food.fdcId || food.fdcId === 0 ? food.fdcId : undefined
+    };
+}
+
+function foodSearchDedupeKey(food) {
+    const normalize = function (value) { return String(value || "").trim().replace(/\s+/g, " ").toLocaleLowerCase(); };
+    return normalize(food.name) + "\u0000" + normalize(food.brand);
+}
+
+function mergeFoodSearchResults(sourceGroups) {
+    const groups = Array.isArray(sourceGroups) ? sourceGroups : [];
+    const seen = new Set();
+    const merged = [];
+    groups.forEach(function (group) {
+        (Array.isArray(group) ? group : [group]).forEach(function (candidate) {
+            const normalized = normalizeFoodSearchResult(candidate);
+            if (!normalized) return;
+            const key = foodSearchDedupeKey(normalized);
+            if (seen.has(key)) return;
+            seen.add(key);
+            merged.push(normalized);
+        });
+    });
+    return merged;
+}
+
+function matchesFoodQuery(food, query) {
+    const normalizedQuery = String(query || "").trim().replace(/\s+/g, " ").toLocaleLowerCase();
+    if (!normalizedQuery) return false;
+    const text = (String(food.name || "") + " " + String(food.brand || "")).toLocaleLowerCase();
+    const words = normalizedQuery.split(/\s+/).filter(Boolean);
+    return text.includes(normalizedQuery) || words.every(function (word) { return text.includes(word); });
+}
+
+function searchLocalFoodSources(query) {
+    if (!String(query || "").trim()) return [];
+    let library = { customFoods: [], favorites: [] };
+    try {
+        if (typeof getFoodLibrary === "function") library = getFoodLibrary() || library;
+    } catch (error) { /* Local built-ins remain searchable if saved data cannot be read. */ }
+    const favorites = (Array.isArray(library.favorites) ? library.favorites : []).filter(function (food) { return matchesFoodQuery(food, query); })
+        .map(function (food) { return Object.assign({}, food, { source: "Favorite" }); });
+    const customFoods = (Array.isArray(library.customFoods) ? library.customFoods : []).filter(function (food) { return matchesFoodQuery(food, query); })
+        .map(function (food) { return Object.assign({}, food, { source: "Custom food" }); });
+    const builtIns = typeof searchBuiltInFoodList === "function" ? searchBuiltInFoodList(query) : [];
+    const india = typeof indianFoodDatabase !== "undefined" && Array.isArray(indianFoodDatabase)
+        ? indianFoodDatabase.filter(function (food) { return matchesFoodQuery(food, query); })
+        : [];
+    return mergeFoodSearchResults([favorites, customFoods, builtIns, india]);
+}
+
+function parseOpenFoodFactsServingGrams(value) {
+    const text = String(value || "").trim();
+    const match = text.match(/(?:^|[, (])(?:about\s*)?(\d+(?:[.,]\d+)?)\s*(g|grams?)\b/i);
+    if (!match) return null;
+    const amount = Number(match[1].replace(",", "."));
+    return Number.isFinite(amount) && amount > 0 && amount <= 5000 ? amount : null;
+}
+
+function normalizeOpenFoodFactsProduct(product) {
+    if (!product || typeof product !== "object") return null;
+    const n = product.nutriments || {};
+    const calories = foodNumber(n["energy-kcal_100g"]);
+    const kj = foodNumber(n.energy_100g);
+    const kcal = calories !== null ? calories : (kj !== null ? kj / 4.184 : null);
+    const servingGrams = parseOpenFoodFactsServingGrams(product.serving_size);
+    const macros = {
+        name: product.product_name || product.product_name_en,
+        brand: product.brands || "",
+        calories: kcal,
+        protein: foodNumber(n.proteins_100g),
+        carbs: foodNumber(n.carbohydrates_100g),
+        fat: foodNumber(n.fat_100g),
+        fiber: foodNumber(n.fiber_100g),
+        servingGrams: servingGrams,
+        units: ["g"].concat(servingGrams ? ["serving"] : []),
+        defaultUnit: servingGrams ? "serving" : "g",
+        source: "Open Food Facts",
+        barcode: product.code || ""
+    };
+    return normalizeFoodSearchResult(macros);
+}
+
+function openFoodFactsSearchHit(hit) {
+    if (!hit || typeof hit !== "object") return null;
+    const product = hit._source || hit.source || hit.document || hit;
+    return normalizeOpenFoodFactsProduct(product);
+}
+
+function getOpenFoodFactsSearchItems(data) {
+    if (!data || typeof data !== "object") return [];
+    const rawHits = Array.isArray(data.hits) ? data.hits :
+        (data.hits && Array.isArray(data.hits.hits) ? data.hits.hits :
+            (Array.isArray(data.products) ? data.products : []));
+    return rawHits.map(openFoodFactsSearchHit).filter(Boolean);
+}
+
+function createAbortError() {
+    return createFoodApiError("Food search was cancelled.", "aborted");
+}
+
+function delayFoodApi(ms, signal) {
+    return new Promise(function (resolve, reject) {
+        if (signal && signal.aborted) { reject(createAbortError()); return; }
+        const timeoutId = setTimeout(function () {
+            if (signal) signal.removeEventListener("abort", onAbort);
+            resolve();
+        }, ms);
+        function onAbort() {
+            clearTimeout(timeoutId);
+            signal.removeEventListener("abort", onAbort);
+            reject(createAbortError());
+        }
+        if (signal) signal.addEventListener("abort", onAbort, { once: true });
+    });
+}
+
+async function requestFoodApiJson(url, options) {
+    const settings = Object.assign({ timeoutMs: 8000, retries: 0, retryDelayMs: 300, headers: {} }, options || {});
     for (let attempt = 0; ; attempt += 1) {
+        if (settings.signal && settings.signal.aborted) throw createAbortError();
         const controller = typeof AbortController === "function" ? new AbortController() : null;
+        const abortFromParent = function () { if (controller) controller.abort(); };
+        if (settings.signal) settings.signal.addEventListener("abort", abortFromParent, { once: true });
         let timeoutId = null;
         try {
             const request = fetch(url, {
-                headers: { Accept: "application/json" }, credentials: "omit",
-                ...(controller ? { signal: controller.signal } : {})
+                method: settings.method || "GET",
+                headers: Object.assign({ Accept: "application/json" }, settings.headers),
+                credentials: "omit",
+                ...(settings.body ? { body: settings.body } : {}),
+                ...((controller || settings.signal) ? { signal: controller ? controller.signal : settings.signal } : {})
             });
-            let response;
-            if (settings.timeoutMs > 0) {
-                response = await Promise.race([
-                    request,
-                    new Promise(function (_resolve, reject) {
-                        timeoutId = setTimeout(function () {
-                            if (controller) controller.abort();
-                            reject(createFoodApiError("Food database request timed out.", "timeout"));
-                        }, settings.timeoutMs);
-                    })
-                ]);
-            } else {
-                response = await request;
-            }
+            const response = await Promise.race([
+                request,
+                new Promise(function (_resolve, reject) {
+                    timeoutId = setTimeout(function () {
+                        if (controller) controller.abort();
+                        reject(createFoodApiError("Food database request timed out.", "timeout"));
+                    }, settings.timeoutMs);
+                })
+            ]);
             if (!response.ok) {
                 const status = Number(response.status) || 0;
                 const kind = status === 429 || status >= 500 ? "service" : (status === 404 ? "notFound" : "http");
@@ -101,52 +216,125 @@ async function requestOpenFoodFacts(url, options) {
             }
             return await response.json();
         } catch (error) {
+            if (settings.signal && settings.signal.aborted) throw createAbortError();
             const failure = error && error.kind ? error : createFoodApiError(error && error.message || "Food database request failed.", "network");
             const retryable = failure.kind === "network" || failure.kind === "timeout" || failure.kind === "service";
             if (attempt >= settings.retries || !retryable) throw failure;
-            await new Promise(function (resolve) { setTimeout(resolve, settings.retryDelayMs); });
+            await delayFoodApi(settings.retryDelayMs, settings.signal);
         } finally {
             if (timeoutId !== null) clearTimeout(timeoutId);
+            if (settings.signal) settings.signal.removeEventListener("abort", abortFromParent);
         }
     }
 }
 
-async function searchOpenFoodFacts(query) {
-    const value = String(query || "").trim();
-    if (value.length < 2) throw new Error("Enter at least two letters to search.");
-    const params = new URLSearchParams({
-        search_terms: value,
-        search_simple: "1",
-        action: "process",
-        json: "1",
-        page_size: "12",
-        fields: "product_name,product_name_en,brands,code,nutriments,serving_size"
-    });
-    const data = await requestOpenFoodFacts(OPEN_FOOD_FACTS_API + "/cgi/search.pl?" + params.toString(), {
-        timeoutMs: 8000, retries: 1, retryDelayMs: 300
-    });
-    return (Array.isArray(data.products) ? data.products : []).map(normalizeOpenFoodFactsProduct).filter(Boolean);
-}
-
-async function lookupOpenFoodFactsBarcode(barcode) {
-    const code = String(barcode || "").replace(/\s/g, "");
-    if (!/^\d{8,14}$/.test(code)) throw new Error("Enter a barcode with 8 to 14 digits.");
-    const params = new URLSearchParams({ fields: "code,product_name,product_name_en,nutriments,serving_size" });
-    let data;
+async function searchOpenFoodFacts(query, options) {
+    const search = String(query || "").trim();
+    if (search.length < 2) return [];
+    const signal = options && options.signal;
+    let searchError = null;
     try {
-        data = await requestOpenFoodFacts(OPEN_FOOD_FACTS_API + "/api/v3/product/" + encodeURIComponent(code) + "?" + params.toString());
+        const data = await requestFoodApiJson(OPEN_FOOD_FACTS_SEARCH_API, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                q: search, page: 1, page_size: 12, langs: ["en"],
+                fields: ["product_name", "product_name_en", "brands", "code", "nutriments", "serving_size"]
+            }),
+            timeoutMs: 8000, retries: 1, retryDelayMs: 300, signal: signal
+        });
+        const foods = getOpenFoodFactsSearchItems(data);
+        if (foods.length) return foods;
     } catch (error) {
-        if (error.status === 404 || error.kind === "notFound") {
-            throw createFoodApiError("Barcode not found. Add it as a custom food instead.", "notFound", 404);
-        }
-        throw error;
+        if (error.kind === "aborted") throw error;
+        searchError = error;
     }
-    if (!data || !data.product || !String(data.status || "").startsWith("success")) {
-        throw createFoodApiError("Barcode not found. Add it as a custom food instead.", "notFound", 404);
+
+    // The older CGI endpoint remains a compatibility fallback while the new
+    // Search-a-licious endpoint is being rolled out and its browser CORS support
+    // is stabilized. It is the only OFF endpoint that supports full text today.
+    try {
+        const legacyParams = new URLSearchParams({
+            search_terms: search,
+            search_simple: "1",
+            action: "process",
+            json: "1",
+            page_size: "12",
+            fields: "product_name,product_name_en,brands,code,nutriments,serving_size"
+        });
+        const data = await requestFoodApiJson(OPEN_FOOD_FACTS_API + "/cgi/search.pl?" + legacyParams.toString(), {
+            timeoutMs: 8000, retries: 0, retryDelayMs: 300, signal: signal
+        });
+        return (Array.isArray(data.products) ? data.products : []).map(normalizeOpenFoodFactsProduct).filter(Boolean);
+    } catch (error) {
+        if (error.kind === "aborted") throw error;
+        throw searchError || error;
     }
-    const product = normalizeOpenFoodFactsProduct(Object.assign({ code: code }, data.product));
-    if (!product) throw new Error("The product has no usable nutrition values in the database.");
-    return product;
+}
+
+function findFdcNutrient(food, nutrientId, namePattern) {
+    const nutrients = Array.isArray(food && food.foodNutrients) ? food.foodNutrients : [];
+    let match = nutrients.find(function (item) {
+        const id = item.nutrientId !== undefined ? item.nutrientId : (item.nutrient && item.nutrient.id);
+        return Number(id) === nutrientId;
+    });
+    if (!match && namePattern) {
+        match = nutrients.find(function (item) {
+            const nutrient = item.nutrient || item;
+            return namePattern.test(String(item.nutrientName || nutrient.name || ""));
+        });
+    }
+    if (!match) return null;
+    return foodNumber(match.value !== undefined ? match.value : match.amount);
+}
+
+function normalizeUSDAFood(food) {
+    if (!food || typeof food !== "object") return null;
+    const energyEntries = Array.isArray(food.foodNutrients) ? food.foodNutrients : [];
+    const nutrientId = function (item) {
+        const nutrient = item.nutrient || item;
+        return Number(item.nutrientId !== undefined ? item.nutrientId : (nutrient.id !== undefined ? nutrient.id : item.number));
+    };
+    const energy = energyEntries.find(function (item) { return nutrientId(item) === 1008; }) ||
+        energyEntries.find(function (item) { return nutrientId(item) === 2048; }) ||
+        energyEntries.find(function (item) { return nutrientId(item) === 2047; }) ||
+        energyEntries.find(function (item) { return /^Energy(?:,|$)/i.test(String(item.nutrientName || (item.nutrient || {}).name || "")); });
+    const energyValue = energy ? foodNumber(energy.value !== undefined ? energy.value : energy.amount) : null;
+    const energyUnit = String(energy && (energy.unitName || energy.nutrientUnit || (energy.nutrient || {}).unitName) || "kcal").toLowerCase();
+    const calories = energyValue === null ? null : (energyUnit === "kj" || energyUnit === "kilojoule" || energyUnit === "kilojoules" ? energyValue / 4.184 : (/kcal|kilocalorie/.test(energyUnit) ? energyValue : null));
+    const protein = findFdcNutrient(food, 1003, /^Protein$/i);
+    const fat = findFdcNutrient(food, 1004, /^(?:Total lipid \(fat\)|Fat, total lipid)$/i);
+    const carbs = findFdcNutrient(food, 1005, /^Carbohydrate, by difference$/i);
+    const fiber = findFdcNutrient(food, 1079, /^Fiber, total dietary$/i);
+    const servingSize = foodNumber(food.servingSize);
+    const servingSizeUnit = String(food.servingSizeUnit || "").toLowerCase();
+    const servingGrams = servingSize && ["g", "gram", "grams"].includes(servingSizeUnit) ? servingSize : null;
+    const normalized = normalizeFoodSearchResult({
+        name: food.description,
+        brand: food.brandOwner || food.brandName || "",
+        calories: calories,
+        protein: protein,
+        carbs: carbs,
+        fat: fat,
+        fiber: fiber,
+        servingGrams: servingGrams,
+        units: ["g"].concat(servingGrams ? ["serving"] : []),
+        defaultUnit: servingGrams ? "serving" : "g",
+        source: "USDA FoodData Central",
+        fdcId: food.fdcId
+    });
+    return normalized;
+}
+
+async function searchUSDAFoods(query, apiKey, options) {
+    const search = String(query || "").trim();
+    const key = String(apiKey || "").trim();
+    if (!key || search.length < 2) return [];
+    const params = new URLSearchParams({ query: search, pageSize: "12", api_key: key });
+    const data = await requestFoodApiJson(USDA_FOOD_DATA_API + "?" + params.toString(), {
+        timeoutMs: 8000, retries: 0, signal: options && options.signal
+    });
+    return (Array.isArray(data.foods) ? data.foods : []).map(normalizeUSDAFood).filter(Boolean);
 }
 
 function setFoodApiStatus(message, state) {
@@ -156,32 +344,41 @@ function setFoodApiStatus(message, state) {
     el.dataset.state = state || "";
 }
 
+function cancelUnifiedFoodSearch() {
+    foodSearchVersion += 1;
+    if (foodSearchTimer !== null) clearTimeout(foodSearchTimer);
+    foodSearchTimer = null;
+    if (foodSearchController) foodSearchController.abort();
+    foodSearchController = null;
+    return foodSearchVersion;
+}
+
 function chooseFoodFromApi(food) {
-    window.fitcalcPendingFood = food;
+    const normalized = normalizeFoodSearchResult(food);
+    if (!normalized) return;
+    cancelUnifiedFoodSearch();
+    window.fitcalcPendingFood = normalized;
     const name = document.getElementById("food-name");
-    if (name) name.value = food.name;
-    if (typeof window.updateNutritionFoodUnits === "function") window.updateNutritionFoodUnits(food);
-    const missing = Array.isArray(food.missingNutrients)
-        ? food.missingNutrients
-        : (food.caloriesMissing ? ["calories"] : []);
-    if (missing.length) {
-        const labels = { calories: "calories", protein: "protein", carbs: "carbohydrates", fat: "fat", fiber: "fiber" };
-        setFoodApiStatus(food.name + " selected. " + missing.map(function (key) { return labels[key] || key; }).join(", ") + " unavailable; missing values will stay marked as unknown. Check the package label.", "warning");
-    } else {
-        setFoodApiStatus(food.name + " selected. Set the amount and add it to your log.", "success");
-    }
+    if (name) name.value = normalized.name;
+    if (typeof window.updateNutritionFoodUnits === "function") window.updateNutritionFoodUnits(normalized);
+    setFoodApiStatus(normalized.name + " selected. Set the amount and add it to your log.", "success");
     const amount = document.getElementById("food-amount");
     if (amount && !amount.value) amount.value = document.getElementById("food-amount-unit")?.value === "g" ? "100" : "1";
     if (typeof window.updateNutritionFoodPreview === "function") window.updateNutritionFoodPreview();
     document.getElementById("food-amount")?.focus();
 }
 
-function renderFoodApiResults(foods) {
+function renderFoodApiResults(foods, query) {
     const root = document.getElementById("food-api-results");
     if (!root) return;
     root.replaceChildren();
     if (!foods.length) {
-        root.textContent = "No matching products with nutrition data were found. You can still log foods from the built-in list.";
+        if (String(query || "").trim()) {
+            const empty = document.createElement("p");
+            empty.className = "food-search-empty";
+            empty.textContent = "No matching foods found yet.";
+            root.appendChild(empty);
+        }
         return;
     }
     foods.forEach(function (food) {
@@ -191,11 +388,13 @@ function renderFoodApiResults(foods) {
         const title = document.createElement("strong");
         title.textContent = food.name;
         const details = document.createElement("small");
-        const calories = food.calories === null ? "—" : Math.round(food.calories);
-        const protein = food.protein === null ? "—" : Math.round(food.protein);
-        details.textContent = calories + " kcal · " + protein + "g protein per 100g" +
-            (Array.isArray(food.missingNutrients) && food.missingNutrients.length ? " · incomplete data" : "");
-        info.append(title, details);
+        const value = function (number, unit) { return number === null ? "—" : (Math.round(number * 10) / 10) + unit; };
+        details.textContent = (food.brand ? food.brand + " · " : "") + value(food.calories, " kcal") + " · " +
+            value(food.protein, "g protein") + " · " + value(food.carbs, "g carbs") + " · " + value(food.fat, "g fat") + " per 100 g";
+        const source = document.createElement("span");
+        source.className = "food-source-tag";
+        source.textContent = food.source;
+        info.append(title, details, source);
         const select = document.createElement("button");
         select.type = "button";
         select.className = "secondary-btn";
@@ -204,6 +403,73 @@ function renderFoodApiResults(foods) {
         card.append(info, select);
         root.appendChild(card);
     });
+}
+
+function getSavedUSDAKey() {
+    try {
+        const preferences = typeof getFitCalcPreferences === "function" ? getFitCalcPreferences() : {};
+        return String(preferences.usdaApiKey || "").trim();
+    } catch (error) {
+        return "";
+    }
+}
+
+function beginFoodSearch(query, version, signal) {
+    const localResults = searchLocalFoodSources(query);
+    const onlineResults = { off: [], usda: [] };
+    const unavailable = new Set();
+    let pending = 0;
+    const draw = function () {
+        if (version !== foodSearchVersion) return;
+        renderFoodApiResults(mergeFoodSearchResults([localResults, onlineResults.off, onlineResults.usda]), query);
+        if (unavailable.size) setFoodApiStatus("Some sources unavailable; showing the results that are available.", "warning");
+        else if (pending > 0) setFoodApiStatus("Searching online food sources…", "loading");
+        else if (query.trim().length >= 2) setFoodApiStatus("Search complete.", "");
+    };
+    draw();
+    if (String(query || "").trim().length < 2) {
+        setFoodApiStatus("Type at least two characters to search online sources.", "");
+        return;
+    }
+    const sources = [{ key: "off", run: function () { return searchOpenFoodFacts(query, { signal: signal }); } }];
+    const usdaKey = getSavedUSDAKey();
+    if (usdaKey) sources.push({ key: "usda", run: function () { return searchUSDAFoods(query, usdaKey, { signal: signal }); } });
+    pending = sources.length;
+    draw();
+    sources.forEach(function (source) {
+        source.run().then(function (foods) {
+            if (version !== foodSearchVersion || (signal && signal.aborted)) return;
+            onlineResults[source.key] = Array.isArray(foods) ? foods : [];
+        }).catch(function (error) {
+            if (version !== foodSearchVersion || (signal && signal.aborted) || error.kind === "aborted") return;
+            unavailable.add(source.key);
+        }).finally(function () {
+            if (version !== foodSearchVersion || (signal && signal.aborted)) return;
+            pending -= 1;
+            draw();
+        });
+    });
+}
+
+function scheduleUnifiedFoodSearch(query) {
+    const version = cancelUnifiedFoodSearch();
+    const localResults = searchLocalFoodSources(query);
+    renderFoodApiResults(localResults, query);
+    if (!String(query || "").trim()) {
+        setFoodApiStatus("", "");
+        return;
+    }
+    if (String(query).trim().length < 2) {
+        setFoodApiStatus("Type at least two characters to search online sources.", "");
+        return;
+    }
+    setFoodApiStatus("Searching online food sources…", "loading");
+    foodSearchController = typeof AbortController === "function" ? new AbortController() : null;
+    const signal = foodSearchController && foodSearchController.signal;
+    foodSearchTimer = setTimeout(function () {
+        foodSearchTimer = null;
+        beginFoodSearch(query, version, signal);
+    }, 300);
 }
 
 function renderFoodApiRetry(message, retryLabel, retry) {
@@ -221,29 +487,27 @@ function renderFoodApiRetry(message, retryLabel, retry) {
     root.append(note, button);
 }
 
-async function searchFoodDatabase() {
-    const input = document.getElementById("food-database-search");
-    const query = input ? input.value : "";
-    setFoodApiStatus("Searching Open Food Facts…", "loading");
-    const root = document.getElementById("food-api-results");
-    if (root) root.replaceChildren();
+async function lookupOpenFoodFactsBarcode(barcode, options) {
+    const code = String(barcode || "").replace(/\s/g, "");
+    if (!/^\d{8,14}$/.test(code)) throw createFoodApiError("Enter a barcode with 8 to 14 digits.", "invalid");
+    const params = new URLSearchParams({ fields: "code,product_name,product_name_en,brands,nutriments,serving_size" });
+    let data;
     try {
-        const products = await searchOpenFoodFacts(query);
-        renderFoodApiResults(products);
-        setFoodApiStatus(products.length ? "Found " + products.length + " products." : "No matching products found.", "success");
+        data = await requestFoodApiJson(OPEN_FOOD_FACTS_API + "/api/v3/product/" + encodeURIComponent(code) + "?" + params.toString(), {
+            timeoutMs: 8000, retries: 0, signal: options && options.signal
+        });
     } catch (error) {
-        if (/^Enter at least/.test(error.message || "")) {
-            setFoodApiStatus(error.message, "error");
-            root.textContent = "Enter at least two letters to search the food database.";
-            return;
+        if (error.status === 404 || error.kind === "notFound") {
+            throw createFoodApiError("Barcode not found. Add it as a custom food instead.", "notFound", 404);
         }
-        const matches = typeof searchBuiltInFoodList === "function" ? searchBuiltInFoodList(query) : [];
-        renderFoodApiResults(matches);
-        const failureText = error.kind === "network" || error.kind === "timeout"
-            ? "Open Food Facts could not be reached; matching built-in foods are shown below."
-            : "Open Food Facts search is temporarily unavailable; matching built-in foods are shown below.";
-        setFoodApiStatus(failureText, "warning");
+        throw error;
     }
+    if (!data || !data.product || !String(data.status || "").startsWith("success")) {
+        throw createFoodApiError("Barcode not found. Add it as a custom food instead.", "notFound", 404);
+    }
+    const product = normalizeOpenFoodFactsProduct(Object.assign({ code: code }, data.product));
+    if (!product) throw createFoodApiError("This product has no usable calories per 100 g in the database.", "invalid");
+    return product;
 }
 
 async function lookupBarcodeInput() {
@@ -256,7 +520,7 @@ async function lookupBarcodeInput() {
     } catch (error) {
         setFoodApiStatus(error.message || "Food database lookup failed.", error.kind === "notFound" ? "warning" : "error");
         if (error.kind === "network" || error.kind === "timeout") {
-            renderFoodApiRetry("Lookup failed because the food database could not be reached. Check your connection and try again.", "Retry lookup", lookupBarcodeInput);
+            renderFoodApiRetry("The food database could not be reached. Check your connection and try again.", "Retry lookup", lookupBarcodeInput);
         } else if (error.kind === "service") {
             renderFoodApiRetry("The food database is temporarily unavailable. Try again shortly.", "Retry lookup", lookupBarcodeInput);
         }
@@ -330,11 +594,10 @@ async function startBarcodeCamera() {
     }
 }
 
-document.getElementById("search-food-database")?.addEventListener("click", searchFoodDatabase);
-document.getElementById("food-database-search")?.addEventListener("keydown", function (event) { if (event.key === "Enter") searchFoodDatabase(); });
+document.getElementById("food-name")?.addEventListener("input", function (event) { scheduleUnifiedFoodSearch(event.target.value); });
 document.getElementById("lookup-food-barcode")?.addEventListener("click", lookupBarcodeInput);
 document.getElementById("food-barcode")?.addEventListener("keydown", function (event) { if (event.key === "Enter") lookupBarcodeInput(); });
 document.getElementById("start-barcode-camera")?.addEventListener("click", startBarcodeCamera);
 document.getElementById("stop-barcode-camera")?.addEventListener("click", function () { stopBarcodeCamera("Camera stopped."); });
-window.addEventListener("pagehide", function () { stopBarcodeCamera(); });
+window.addEventListener("pagehide", function () { cancelUnifiedFoodSearch(); stopBarcodeCamera(); });
 updateBarcodeCameraAvailability();

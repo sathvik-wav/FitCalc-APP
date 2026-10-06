@@ -2,7 +2,8 @@ const foodDatabase = [
     // Existing nutrient values are retained per 100 g. Preparation notes
     // narrow each generic food to the closest matching source record.
     { name: "chicken breast", calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0, preparation: "cooked, roasted, skinless", servingGrams: 85, unitGrams: { piece: 174 }, units: ["g", "piece", "serving"], defaultUnit: "piece" },
-    { name: "white rice", calories: 130, protein: 2.7, carbs: 28, fat: 0.3, fiber: 0.4, preparation: "cooked, long-grain", servingGrams: 158, unitGrams: { cup: 158 }, units: ["g", "cup", "serving"], defaultUnit: "cup" },
+    // USDA SR Legacy FDC 168878; searchable by common Indian meal wording.
+    { name: "white rice", aliases: ["cooked rice", "cooked white rice"], calories: 130, protein: 2.7, carbs: 28, fat: 0.3, fiber: 0.4, preparation: "cooked, long-grain", servingGrams: 158, unitGrams: { cup: 158 }, units: ["g", "cup", "serving"], defaultUnit: "cup" },
     { name: "brown rice", calories: 112, protein: 2.3, carbs: 24, fat: 0.8, fiber: 1.8, preparation: "cooked, medium-grain", servingGrams: 195, unitGrams: { cup: 195 }, units: ["g", "cup", "serving"], defaultUnit: "cup" },
     { name: "banana", calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6, preparation: "raw, edible portion", servingGrams: 118, unitGrams: { piece: 118, cup: 150 }, units: ["g", "piece", "cup", "serving"], defaultUnit: "piece" },
     { name: "apple", calories: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4, preparation: "raw, with skin", servingGrams: 182, unitGrams: { piece: 182, cup: 109 }, units: ["g", "piece", "cup", "serving"], defaultUnit: "piece" },
@@ -17,7 +18,8 @@ const foodDatabase = [
     { name: "greek yogurt", calories: 59, protein: 10, carbs: 3.6, fat: 0.4, fiber: 0, preparation: "plain, nonfat", servingGrams: 170, unitGrams: { cup: 245 }, units: ["g", "cup", "serving"], defaultUnit: "serving" },
     { name: "cottage cheese", calories: 98, protein: 11, carbs: 3.4, fat: 4.3, fiber: 0, preparation: "4% milkfat", servingGrams: 113, unitGrams: { cup: 226 }, units: ["g", "cup", "serving"], defaultUnit: "serving" },
     { name: "cheddar cheese", calories: 403, protein: 25, carbs: 1.3, fat: 33, fiber: 0, preparation: "natural, full-fat", servingGrams: 28, unitGrams: { piece: 28, cup: 113, tbsp: 7, tsp: 2.3 }, units: ["g", "piece", "cup", "tbsp", "tsp", "serving"], defaultUnit: "piece" },
-    { name: "lentils", calories: 116, protein: 9, carbs: 20, fat: 0.4, fiber: 7.9, preparation: "cooked, boiled", servingGrams: 198, unitGrams: { cup: 198 }, units: ["g", "cup", "serving"], defaultUnit: "cup" },
+    // USDA SR Legacy FDC 172421; this is plain boiled lentils, not a dal recipe.
+    { name: "lentils", aliases: ["dal", "cooked dal"], calories: 116, protein: 9, carbs: 20, fat: 0.4, fiber: 7.9, preparation: "cooked, boiled", servingGrams: 198, unitGrams: { cup: 198 }, units: ["g", "cup", "serving"], defaultUnit: "cup" },
     { name: "chickpeas", calories: 164, protein: 8.9, carbs: 27, fat: 2.6, fiber: 7.6, preparation: "cooked, boiled", servingGrams: 164, unitGrams: { cup: 164 }, units: ["g", "cup", "serving"], defaultUnit: "cup" },
     { name: "potato", calories: 87, protein: 1.9, carbs: 20, fat: 0.1, fiber: 1.8, preparation: "boiled, flesh and skin", servingGrams: 173, unitGrams: { piece: 173, cup: 150 }, units: ["g", "piece", "cup", "serving"], defaultUnit: "piece" },
     { name: "sweet potato", calories: 90, protein: 2, carbs: 21, fat: 0.2, fiber: 3.3, preparation: "baked, flesh", servingGrams: 130, unitGrams: { piece: 130, cup: 255 }, units: ["g", "piece", "cup", "serving"], defaultUnit: "piece" },
@@ -176,7 +178,10 @@ function findFood(name) {
     }
 
 
-    const availableFoods = foodDatabase.concat(getFoodLibrary().customFoods);
+    const availableFoods = foodDatabase.concat(
+        typeof indianFoodDatabase !== "undefined" ? indianFoodDatabase : [],
+        getFoodLibrary().customFoods
+    );
     const exactMatch = availableFoods.find(function (food) {
         return String(food.name).toLowerCase().trim() === searchName;
     });
@@ -194,10 +199,10 @@ function searchBuiltInFoodList(query) {
     if (!normalized) return [];
     const words = normalized.split(/\s+/).filter(Boolean);
     return foodDatabase.filter(function (food) {
-        const name = normalizeFoodName(food.name);
-        return name.includes(normalized) || words.every(function (word) { return name.includes(word); });
+        const searchableText = [food.name].concat(Array.isArray(food.aliases) ? food.aliases : []).map(normalizeFoodName).join(" ");
+        return searchableText.includes(normalized) || words.every(function (word) { return searchableText.includes(word); });
     }).slice(0, 12).map(function (food) {
-        return Object.assign({}, food, { source: "FitCalc built-in list" });
+        return Object.assign({}, food, { source: "FitCalc built-in" });
     });
 }
 
@@ -208,7 +213,7 @@ function normalizeFoodName(value) {
 function foodDefinitionFromEntry(food) {
     const amount = Number(food && food.amount);
     const divisor = amount > 0 ? amount / 100 : 1;
-    const knownFood = foodDatabase.find(function (item) {
+    const knownFood = foodDatabase.concat(typeof indianFoodDatabase !== "undefined" ? indianFoodDatabase : []).find(function (item) {
         return normalizeFoodName(item.name) === normalizeFoodName(food && food.name);
     });
     const servingGrams = Number(food && food.servingGrams) > 0
@@ -225,6 +230,8 @@ function foodDefinitionFromEntry(food) {
         carbs: per100("carbs"),
         fat: per100("fat"),
         fiber: per100("fiber"),
+        brand: String(food && food.brand || ""),
+        pieceGrams: Number(food && food.pieceGrams) > 0 ? Number(food.pieceGrams) : (knownFood && knownFood.pieceGrams || null),
         servingGrams: servingGrams,
         unitGrams: Object.assign({}, knownFood && knownFood.unitGrams || {}, food && food.unitGrams || {}),
         units: Array.isArray(food && food.units) ? food.units.slice() : (knownFood && knownFood.units ? knownFood.units.slice() : ["g"].concat(servingGrams ? ["serving"] : [])),
@@ -250,7 +257,7 @@ function saveCustomFood(food) {
     if (!Number.isFinite(servingGrams) || servingGrams <= 0 || servingGrams > 5000) return false;
 
     const library = getFoodLibrary();
-    const builtIn = foodDatabase.some(function (item) { return normalizeFoodName(item.name) === normalizeFoodName(name); });
+    const builtIn = foodDatabase.concat(typeof indianFoodDatabase !== "undefined" ? indianFoodDatabase : []).some(function (item) { return normalizeFoodName(item.name) === normalizeFoodName(name); });
     if (builtIn) return false;
     const existing = library.customFoods.findIndex(function (item) { return normalizeFoodName(item.name) === normalizeFoodName(name); });
     const definition = Object.assign({ name: name, servingGrams: servingGrams, units: ["g", "serving"], defaultUnit: "serving", source: "Custom food" }, values);
@@ -897,9 +904,9 @@ function normalizeFoodAmountUnit(unit) {
 
 function gramsPerFoodUnit(foodData, unit) {
     const selected = normalizeFoodAmountUnit(unit);
-    const builtIn = foodData && foodData.source !== "Open Food Facts" && foodData.source !== "Custom food"
-        ? foodDatabase.find(function (item) { return normalizeFoodName(item.name) === normalizeFoodName(foodData.name); })
-        : null;
+    const builtIn = foodDatabase.concat(typeof indianFoodDatabase !== "undefined" ? indianFoodDatabase : []).find(function (item) {
+        return normalizeFoodName(item.name) === normalizeFoodName(foodData && foodData.name);
+    });
     const unitGrams = foodData && foodData.unitGrams || {};
     const fallbackUnitGrams = builtIn && builtIn.unitGrams || {};
     const grams = Number(unitGrams[selected]) > 0 ? Number(unitGrams[selected]) : Number(fallbackUnitGrams[selected]);

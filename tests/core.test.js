@@ -19,7 +19,7 @@ const ctx = {
   window: { addEventListener() {} }
 };
 vm.createContext(ctx);
-["constants.js", "store.js", "target.js", "progress.js", "nutrition.js", "workout.js", "food-api.js", "exercise-api.js", "dashboard.js", "adaptive.js", "history.js"].forEach((f) =>
+["constants.js", "store.js", "target.js", "progress.js", "foods-india.js", "nutrition.js", "workout.js", "food-api.js", "exercise-api.js", "dashboard.js", "adaptive.js", "history.js"].forEach((f) =>
   vm.runInContext(fs.readFileSync(__dirname + "/../" + f, "utf8"), ctx));
 const { computeTargets, calculateBMR } = ctx.module.exports;
 const CURRENT_SCHEMA_VERSION = vm.runInContext("APP_SCHEMA_VERSION", ctx);
@@ -330,7 +330,7 @@ function loadFoodApiRetrySandbox() {
   const sandbox = { document, window: { addEventListener() {} }, navigator: {}, fetch: async function () { throw new Error("offline"); }, URLSearchParams, AbortController, setTimeout, clearTimeout };
   vm.createContext(sandbox);
   vm.runInContext(fs.readFileSync(__dirname + "/../food-api.js", "utf8"), sandbox);
-  document.getElementById("food-database-search").value = "oats";
+  document.getElementById("food-name").value = "oats";
   return { sandbox, nodes, document };
 }
 
@@ -628,38 +628,105 @@ test("external food and exercise records are normalized without trusting markup"
   assert.strictEqual(exercise.category, "Chest");
 });
 
-test("Open Food Facts calories use kcal, convert kJ, or warn when unavailable", () => {
+test("Open Food Facts normalization converts kJ and drops missing or invalid food energy", () => {
   const kcal = ctx.normalizeOpenFoodFactsProduct({ product_name: "Kcal product", nutriments: {
     "energy-kcal_100g": 210, proteins_100g: 4
   } });
   assert.strictEqual(kcal.calories, 210);
-  assert.strictEqual(kcal.caloriesMissing, false);
+  assert.strictEqual(kcal.source, "Open Food Facts");
 
   const kj = ctx.normalizeOpenFoodFactsProduct({ product_name: "Kilojoule product", nutriments: {
     energy_100g: 418.4, proteins_100g: 4
   } });
   assert.ok(Math.abs(kj.calories - 100) < 1e-9);
-  assert.strictEqual(kj.caloriesMissing, false);
 
   const missing = ctx.normalizeOpenFoodFactsProduct({ product_name: "No calorie product", nutriments: {
     proteins_100g: 4, carbohydrates_100g: 10
   } });
-  assert.strictEqual(missing.calories, null);
-  assert.strictEqual(missing.caloriesMissing, true);
-  assert.deepStrictEqual(Array.from(missing.missingNutrients), ["calories", "fat", "fiber"]);
+  assert.strictEqual(missing, null);
 
   const ambiguous = ctx.normalizeOpenFoodFactsProduct({ product_name: "Serving-only energy", serving_size: "1 bar (40 g)", nutriments: {
     "energy-kcal": 180, proteins_100g: 10, carbohydrates_100g: 20, fat_100g: 5
   } });
-  assert.strictEqual(ambiguous.calories, null);
-  assert.strictEqual(ambiguous.caloriesMissing, true);
-  assert.strictEqual(ambiguous.servingGrams, 40);
+  assert.strictEqual(ambiguous, null);
+  assert.strictEqual(ctx.normalizeFoodSearchResult({ name: "Bad energy", calories: 901, protein: 1, carbs: 1, fat: 1 }), null);
+  assert.strictEqual(ctx.normalizeFoodSearchResult({ name: "Impossible macros", calories: 500, protein: 40, carbs: 50, fat: 20 }), null);
 
   const app = loadFoodApiRetrySandbox();
-  app.document.getElementById("food-amount").focus = () => {};
-  app.sandbox.chooseFoodFromApi(missing);
-  assert.match(app.nodes.get("food-api-status").textContent, /calories.*unavailable.*check the package label/i);
-  assert.strictEqual(app.nodes.get("food-api-status").dataset.state, "warning");
+  assert.strictEqual(app.sandbox.normalizeOpenFoodFactsProduct({ product_name: "Valid", nutriments: { "energy-kcal_100g": 100 } }).calories, 100);
+});
+
+test("unified food search normalizes, validates, deduplicates, and preserves source priority", () => {
+  const app = loadFoodApiRetrySandbox();
+  const favorite = { name: "Oats", brand: "Mill A", calories: 389, protein: 16.9, carbs: 66, fat: 6.9, fiber: 10.6 };
+  const duplicate = { name: " oats ", brand: "mill a", calories: 400, protein: 10, carbs: 70, fat: 8, fiber: 5, source: "Open Food Facts" };
+  const otherBrand = { name: "Oats", brand: "Mill B", calories: 389, protein: 16.9, carbs: 66, fat: 6.9, fiber: 10.6 };
+  const merged = app.sandbox.mergeFoodSearchResults([
+    [Object.assign({}, favorite, { source: "Favorite" }), { name: "No calories" }],
+    [duplicate, otherBrand, { name: "Impossible", calories: 300, protein: 20, carbs: 50, fat: 40 }]
+  ]);
+  assert.strictEqual(merged.length, 2);
+  assert.strictEqual(merged[0].source, "Favorite");
+  assert.strictEqual(merged[0].fiber, 10.6);
+  assert.strictEqual(merged[1].brand, "Mill B");
+
+  app.sandbox.getFoodLibrary = function () {
+    return { favorites: [{ name: "banana", calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6 }], customFoods: [] };
+  };
+  app.sandbox.searchBuiltInFoodList = function () {
+    return [{ name: "banana", calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6, source: "FitCalc built-in" }];
+  };
+  app.sandbox.indianFoodDatabase = [{ name: "Banana", calories: 80, protein: 1, carbs: 20, fat: 0.2, fiber: 2, source: "USDA FoodData Central" }];
+  const local = app.sandbox.searchLocalFoodSources("banana");
+  assert.strictEqual(local.length, 1);
+  assert.strictEqual(local[0].source, "Favorite");
+});
+
+test("USDA search normalization uses FoodData Central nutrient IDs and kcal units", () => {
+  const app = loadFoodApiRetrySandbox();
+  const normalized = app.sandbox.normalizeUSDAFood({
+    fdcId: 171844,
+    description: "Bread, chapati or roti, plain, commercially prepared",
+    servingSize: 68,
+    servingSizeUnit: "g",
+    foodNutrients: [
+      { nutrientId: 1008, nutrientName: "Energy", unitName: "kcal", value: 297 },
+      { nutrientId: 1003, nutrientName: "Protein", unitName: "g", value: 11.25 },
+      { nutrientId: 1004, nutrientName: "Total lipid (fat)", unitName: "g", value: 7.45 },
+      { nutrientId: 1005, nutrientName: "Carbohydrate, by difference", unitName: "g", value: 46.36 },
+      { nutrientId: 1079, nutrientName: "Fiber, total dietary", unitName: "g", value: 4.9 }
+    ]
+  });
+  assert.strictEqual(normalized.calories, 297);
+  assert.strictEqual(normalized.protein, 11.25);
+  assert.strictEqual(normalized.fiber, 4.9);
+  assert.strictEqual(normalized.servingGrams, 68);
+  assert.strictEqual(normalized.source, "USDA FoodData Central");
+  assert.strictEqual(app.sandbox.normalizeUSDAFood({ description: "No kcal", foodNutrients: [] }), null);
+});
+
+test("offline Indian entries use verified USDA records with explicit portion weights", () => {
+  const entries = vm.runInContext("indianFoodDatabase", ctx);
+  const roti = entries.find((food) => food.fdcId === 171844);
+  const curd = entries.find((food) => food.fdcId === 171284);
+  assert.ok(roti && curd);
+  assert.strictEqual(roti.calories, 297);
+  assert.strictEqual(roti.pieceGrams, 68);
+  assert.strictEqual(roti.unitGrams.piece, 68);
+  assert.strictEqual(curd.calories, 61);
+  assert.strictEqual(curd.servingGrams, 245);
+  assert.ok(entries.every((food) => food.source === "USDA FoodData Central"));
+  assert.strictEqual(ctx.searchBuiltInFoodList("cooked rice")[0].name, "white rice");
+  assert.strictEqual(ctx.searchBuiltInFoodList("dal")[0].name, "lentils");
+});
+
+test("Nutrition has one unified search box with the inline barcode control", () => {
+  const html = fs.readFileSync(__dirname + "/../nutrition/index.html", "utf8");
+  assert.match(html, /type="search"[^>]*id="food-name"/);
+  assert.match(html, /id="food-barcode"/);
+  assert.doesNotMatch(html, /food-database-search|search-food-database|Packaged food/);
+  assert.match(html, /<script src="\.\.\/foods-india\.js"><\/script>/);
+  assert.match(fs.readFileSync(__dirname + "/../service-worker.js", "utf8"), /"\.\/foods-india\.js"/);
 });
 
 test("dashboard progress is finite and bounded using saved daily state", () => {
@@ -2650,27 +2717,34 @@ test("A9 calculator target values arrive in the Profile target editor for explic
   assert.strictEqual(app.sandbox.getTargets().protein, 155);
 });
 
-test("B food search retries once and falls back to matching built-in foods after HTTP 503", async () => {
+test("B unified search shows built-ins immediately and OFF retries before its compatibility endpoint", async () => {
   const app = loadFoodApiRetrySandbox();
   const status = app.document.getElementById("food-api-status");
   const results = app.document.getElementById("food-api-results");
-  const requests = [];
   app.sandbox.searchBuiltInFoodList = function (query) {
     assert.strictEqual(query, "bread");
-    return [{ name: "whole wheat bread", calories: 252, protein: 12.3, carbs: 43, fat: 3.5, fiber: 6 }];
+    return [{ name: "whole wheat bread", calories: 252, protein: 12.3, carbs: 43, fat: 3.5, fiber: 6, source: "FitCalc built-in" }];
   };
-  app.document.getElementById("food-database-search").value = "bread";
-  app.sandbox.fetch = async function (url) {
-    requests.push(url);
-    return { ok: false, status: 503 };
-  };
-  await app.sandbox.searchFoodDatabase();
-  assert.strictEqual(requests.length, 2);
-  assert.ok(requests.every((url) => url.includes("/cgi/search.pl")));
-  assert.strictEqual(status.dataset.state, "warning");
-  assert.match(status.textContent, /temporarily unavailable/i);
+  app.sandbox.scheduleUnifiedFoodSearch("bread");
   assert.strictEqual(results.children.length, 1);
   assert.strictEqual(results.children[0].children[0].children[0].textContent, "whole wheat bread");
+  assert.match(status.textContent, /searching online/i);
+  app.sandbox.cancelUnifiedFoodSearch();
+
+  const requests = [];
+  app.sandbox.fetch = async function (url) {
+    requests.push(url);
+    if (url.includes("search.openfoodfacts.org")) return { ok: false, status: 503 };
+    return {
+      ok: true,
+      json: async function () { return { products: [{ product_name: "whole wheat bread", nutriments: { "energy-kcal_100g": 252, proteins_100g: 12.3, carbohydrates_100g: 43, fat_100g: 3.5, fiber_100g: 6 } }] }; }
+    };
+  };
+  const products = await app.sandbox.searchOpenFoodFacts("bread");
+  assert.strictEqual(requests.length, 3);
+  assert.ok(requests.slice(0, 2).every((url) => url.includes("search.openfoodfacts.org/search")));
+  assert.ok(requests[2].includes("/cgi/search.pl"));
+  assert.strictEqual(products[0].name, "whole wheat bread");
 });
 
 test("B barcode lookup handles the real Nutella barcode, HTTP 404, and network failures separately", async () => {
@@ -3275,12 +3349,24 @@ test("Settings exposes shared app preferences, data tools, and app information",
   assert.match(html, /id="unit-preferences-form"/);
   assert.match(html, /id="unit-weight"[\s\S]*value="kg"[\s\S]*value="lb"/);
   assert.match(html, /id="unit-height"[\s\S]*value="cm"[\s\S]*value="ft-in"/);
-  ["export-data", "import-data-file", "reset-data", "settings-about", "settings-privacy", "settings-app-version"].forEach((id) => {
+  ["export-data", "import-data-file", "reset-data", "settings-about", "settings-privacy", "settings-app-version", "usda-key-form", "usda-api-key", "clear-usda-key"].forEach((id) => {
     assert.match(html, new RegExp(`id="${id}"`));
   });
   assert.doesNotMatch(html, /id="profile-(?:name|age|sex|height|weight|activity|goal)"/);
   assert.match(html, /<script src="\.\.\/settings\.js"><\/script>/);
   assert.match(fs.readFileSync(__dirname + "/../service-worker.js", "utf8"), /"\.\/settings\/index\.html"/);
+});
+
+test("USDA API key is saved and cleared through the existing preferences storage key", () => {
+  const app = loadProfileSandbox();
+  app.getElement("usda-api-key").value = "user-provided-key";
+  app.getElement("usda-key-form").handlers.submit({ preventDefault() {} });
+  assert.strictEqual(app.sandbox.getFitCalcPreferences().usdaApiKey, "user-provided-key");
+  assert.strictEqual(app.storage.has("fitcalc_preferences"), true);
+
+  app.getElement("clear-usda-key").click();
+  assert.strictEqual(app.sandbox.getFitCalcPreferences().usdaApiKey, "");
+  assert.strictEqual(app.getElement("usda-api-key").value, "");
 });
 
 test("B21 initial theme follows OS light preference unless a theme is stored", () => {

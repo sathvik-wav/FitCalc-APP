@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.openfoodfacts.org; font-src 'self'; connect-src 'self' https://world.openfoodfacts.org https://wger.de https://api.wger.de; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.openfoodfacts.org; font-src 'self'; connect-src 'self' https://world.openfoodfacts.org https://search.openfoodfacts.org https://api.nal.usda.gov https://wger.de https://api.wger.de; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Manage FitCalc appearance, unit preferences, and local data backups.">
 <title>Settings — FitCalc</title>
@@ -37,6 +37,15 @@
         <p class="profile-status" id="unit-status" role="status" aria-live="polite"></p>
       </form>
     </section>
+    <section class="settings-card" aria-labelledby="settings-usda-title">
+      <span class="section-kicker">Optional food search</span><h2 id="settings-usda-title">USDA FoodData Central</h2>
+      <p>Paste your free USDA API key to include USDA foods in Nutrition search. The key is saved with your existing local preferences on this device.</p>
+      <form id="usda-key-form">
+        <div class="field"><label for="usda-api-key">USDA API key</label><input id="usda-api-key" type="password" autocomplete="new-password" spellcheck="false" placeholder="Paste your API key"></div>
+        <div class="button-row"><button type="submit" class="primary-btn">Save key</button><button type="button" class="secondary-btn" id="clear-usda-key">Clear key</button></div>
+        <p class="profile-status" id="usda-key-status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
     <section class="settings-card settings-data-card" id="settings-data" aria-labelledby="settings-data-title">
       <span class="section-kicker">On this device</span><h2 id="settings-data-title">Data</h2>
       <p>Back up or restore your FitCalc profile, targets, nutrition, planner, workouts, history, saved foods, and preferences.</p>
@@ -49,7 +58,7 @@
     <section class="settings-card" id="settings-about" aria-labelledby="settings-about-title">
       <span class="section-kicker">FitCalc™</span><h2 id="settings-about-title">About FitCalc™</h2>
       <p>Track, calculate, and improve with FitCalc.</p>
-      <p class="settings-version">App version <strong id="settings-app-version">v1.1.15</strong></p>
+      <p class="settings-version">App version <strong id="settings-app-version">v1.1.16</strong></p>
     </section>
     <section class="settings-card" id="settings-privacy" aria-labelledby="settings-privacy-title">
       <span class="section-kicker">Your information</span><h2 id="settings-privacy-title">Privacy</h2>

@@ -12,10 +12,45 @@ function populateUnitPreferences() {
 
 function populateSettingsPreferences() {
     populateUnitPreferences();
+    const preferences = typeof getFitCalcPreferences === "function" ? getFitCalcPreferences() : {};
+    const usdaKey = document.getElementById("usda-api-key");
+    if (usdaKey) usdaKey.value = preferences.usdaApiKey || "";
     const theme = document.getElementById("settings-theme");
     if (!theme || typeof getFitCalcPreferences !== "function") return;
-    const preference = getFitCalcPreferences().theme;
+    const preference = preferences.theme;
     theme.value = preference === "light" || preference === "dark" || preference === "system" ? preference : "system";
+}
+
+const usdaKeyForm = document.getElementById("usda-key-form");
+if (usdaKeyForm) {
+    usdaKeyForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        const value = document.getElementById("usda-api-key").value.trim();
+        try {
+            saveFitCalcPreferences({ usdaApiKey: value });
+            const status = document.getElementById("usda-key-status");
+            if (status) status.textContent = value ? "USDA search key saved on this device." : "USDA search key cleared.";
+            if (typeof announceDataChange === "function") announceDataChange(getDateKey(new Date()), PREFERENCES_KEY);
+        } catch (error) {
+            const status = document.getElementById("usda-key-status");
+            if (status) {
+                status.textContent = "The key could not be saved. Check device storage and try again.";
+                status.dataset.state = "error";
+            }
+        }
+    });
+}
+
+const clearUsdaKeyButton = document.getElementById("clear-usda-key");
+if (clearUsdaKeyButton) {
+    clearUsdaKeyButton.addEventListener("click", function () {
+        const input = document.getElementById("usda-api-key");
+        if (input) input.value = "";
+        saveFitCalcPreferences({ usdaApiKey: "" });
+        const status = document.getElementById("usda-key-status");
+        if (status) status.textContent = "USDA search key cleared.";
+        if (typeof announceDataChange === "function") announceDataChange(getDateKey(new Date()), PREFERENCES_KEY);
+    });
 }
 
 function setDataManagementStatus(message) {

@@ -125,6 +125,12 @@ def main():
             errors.append(f"{html.relative_to(ROOT)} duplicate IDs: {', '.join(duplicates)}")
         if "tests" not in html.relative_to(ROOT).parts and 'http-equiv="Content-Security-Policy"' not in source:
             errors.append(f"{html.relative_to(ROOT)} missing Content-Security-Policy meta")
+        if "tests" not in html.relative_to(ROOT).parts and 'http-equiv="Content-Security-Policy"' in source:
+            policy = re.search(r'<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]*)"', source, re.IGNORECASE)
+            if not policy or "https://api.nal.usda.gov" not in policy.group(1):
+                errors.append(f"{html.relative_to(ROOT)} CSP must allow the optional USDA FoodData Central API")
+            if not policy or "https://search.openfoodfacts.org" not in policy.group(1):
+                errors.append(f"{html.relative_to(ROOT)} CSP must allow Open Food Facts full-text search")
         if "fonts.googleapis.com" in source or "fonts.gstatic.com" in source:
             errors.append(f"{html.relative_to(ROOT)} still loads a remote font")
         for ref in parser.refs:
@@ -159,6 +165,10 @@ def main():
             errors.append(f"manifest missing icon: {icon['src']}")
 
     service_worker = (ROOT / "service-worker.js").read_text(encoding="utf-8")
+    if '"./foods-india.js"' not in service_worker:
+        errors.append("service worker app shell must cache the offline Indian food dataset")
+    if "https://api.nal.usda.gov" not in service_worker:
+        errors.append("service worker food-search policy note must include the optional USDA API origin")
     app_shell_refs = re.findall(r'"(\./[^"?]+)"', service_worker)
     for ref in app_shell_refs:
         if ref.endswith("/"):

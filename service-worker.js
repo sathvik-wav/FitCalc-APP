@@ -1,10 +1,13 @@
 // Generated from package.json by scripts/sync-service-worker-cache.js before each build.
 // Update this value by bumping the package version and running `npm run build`.
-const CACHE_NAME = "fitcalc-app-shell-v1.1.15";
+const CACHE_NAME = "fitcalc-app-shell-v1.1.16";
+// Page CSP connect-src origins: https://world.openfoodfacts.org,
+// https://search.openfoodfacts.org, and https://api.nal.usda.gov. This worker
+// leaves external food API requests uncached.
 const APP_SHELL = [
     "./index.html", "./main.css", "./script.js", "./theme-init.js", "./calculators.js", "./constants.js", "./store.js",
     "./calculator-directory.js", "./bmi-unit-toggle.js", "./settings.js",
-    "./target.js", "./profile.js", "./nutrition.js", "./food-api.js", "./planner.js",
+    "./target.js", "./profile.js", "./foods-india.js", "./nutrition.js", "./food-api.js", "./planner.js",
     "./workout.js", "./exercise-api.js", "./progress.js", "./history.js",
     "./dashboard.js", "./adaptive.js", "./assets/icon.png", "./assets/fonts/Inter-Variable.ttf",
     "./profile/index.html", "./nutrition/index.html", "./planner/index.html", "./history/index.html", "./calculators/index.html", "./settings/index.html",

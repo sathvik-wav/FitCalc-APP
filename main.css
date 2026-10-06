@@ -1723,6 +1723,47 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   padding-top: 18px;
   border-top: 1px solid var(--line);
 }
+.food-search-controls {
+  display: grid;
+  grid-template-columns: minmax(0,1.2fr) minmax(0,1fr);
+  gap: 12px;
+  align-items: end;
+}
+.food-barcode-controls {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+.food-barcode-controls input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.food-barcode-controls button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.food-search-status:empty {
+  display: none;
+}
+.food-search-results:empty {
+  display: none;
+}
+.food-source-tag {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 2px;
+  padding: 2px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.food-search-empty {
+  margin: 0;
+  color: var(--muted);
+}
 .food-api-tools>small {
   color: var(--muted);
   line-height: 1.5;
@@ -5771,5 +5812,11 @@ body textarea {
   }
   .dashboard-aside {
     grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .food-search-controls {
+    grid-template-columns: minmax(0,1fr);
   }
 }

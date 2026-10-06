@@ -38,6 +38,13 @@
         });
         try {
           if (loads === 1) {
+            var searchInput = doc.getElementById("food-name");
+            searchInput.value = "oats";
+            searchInput.dispatchEvent(new win.Event("input", { bubbles: true }));
+            var offlineResult = doc.querySelector("#food-api-results .integration-result");
+            check("One food search immediately shows local results with a source tag", !!offlineResult && offlineResult.querySelector(".food-source-tag").textContent === "FitCalc built-in");
+            check("Separate database search controls are removed", !doc.getElementById("food-database-search") && !doc.getElementById("search-food-database"));
+
             check("Recent shortcuts are removed", !Array.from(doc.querySelectorAll(".food-shortcut-group strong")).some(function (item) { return item.textContent === "Recent"; }));
             win.toggleFoodFavorite(win.findFood("banana"));
             win.renderFoodShortcuts();

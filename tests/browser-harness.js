@@ -50,7 +50,7 @@ app.whenReady().then(async function () {
       }
       const headers = { "Content-Type": mimeTypes[path.extname(filePath)] || "application/octet-stream", "Cache-Control": "no-store" };
       if (path.extname(filePath).toLowerCase() === ".html" && !relative.startsWith("tests/")) {
-        headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.openfoodfacts.org; font-src 'self'; connect-src 'self' https://world.openfoodfacts.org https://wger.de https://api.wger.de; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self'";
+        headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.openfoodfacts.org; font-src 'self'; connect-src 'self' https://world.openfoodfacts.org https://search.openfoodfacts.org https://api.nal.usda.gov https://wger.de https://api.wger.de; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self'";
       }
       return new Response(body, { headers });
     } catch (_) {
@@ -144,7 +144,7 @@ app.whenReady().then(async function () {
       if (error) { response.writeHead(404).end("Not found"); return; }
       const headers = { "Content-Type": mimeTypes[path.extname(filePath)] || "application/octet-stream" };
       if (path.extname(filePath).toLowerCase() === ".html") {
-        headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.openfoodfacts.org; font-src 'self'; connect-src 'self' https://world.openfoodfacts.org https://wger.de https://api.wger.de; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self'";
+        headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.openfoodfacts.org; font-src 'self'; connect-src 'self' https://world.openfoodfacts.org https://search.openfoodfacts.org https://api.nal.usda.gov https://wger.de https://api.wger.de; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self'";
       }
       response.writeHead(200, headers).end(data);
     });

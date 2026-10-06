@@ -1,5 +1,13 @@
 # FitCalc
 
+## Food data sources
+
+The bundled `foods-india.js` entries use USDA FoodData Central SR Legacy reference records: plain commercially prepared chapati/roti (FDC 171844) and plain whole-milk yogurt as a curd/dahi equivalent (FDC 171284). The existing built-in list also covers cooked long-grain white rice (FDC 168878) and plain boiled lentils (FDC 172421); search aliases let users find these as “cooked rice” and “dal.” The lentils are a plain-food equivalent, not a prepared dal recipe. USDA states that FoodData Central data are public domain/CC0 and requests source attribution. [USDA FoodData Central API guide](https://fdc.nal.usda.gov/api-guide/)
+
+IFCT 2017 is maintained by ICMR–National Institute of Nutrition. Its published reuse terms encourage use and dissemination with acknowledgement and permit personal reproduction, but prohibit storing or reproducing the data electronically to create a product without NIN's prior written permission. FitCalc therefore does not bundle IFCT-derived values. [IFCT 2017, copyright and reuse terms](https://www.nin.res.in/ebooks/IFCT2017_16122024.pdf)
+
+The offline Indian list does not include paneer or multi-ingredient dishes such as idli, dosa, sambar, upma, poha, and chicken curry: no exact USDA reference entry was verified for these foods in the time available, and their recipes and nutrient values can vary. IFCT data are not included without the required permission. USDA record weights and nutrients are references, not a claim that every home recipe or portion is identical.
+
 Fitness tools made simple: 13 calculators plus a small tracking app (profile, targets, food log, planner, workouts, history). Desktop app built with Electron; the pages also work in a browser.
 
 Inspired by Arch Linux / Hyprland. Built around food technology and biotechnology.
