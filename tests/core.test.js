@@ -3630,7 +3630,7 @@ test("Mobile navigation uses one detached capsule layout with room below page co
   [
     /left:\s*50%/,
     /bottom:\s*calc\(10px \+ env\(safe-area-inset-bottom\)\)/,
-    /width:\s*min\(calc\(100% - 16px\),420px\)/,
+    /width:\s*min\(calc\(100% - 26px\),420px\)/,
     /height:\s*64px/,
     /border:\s*1px solid var\(--line\)/,
     /border-radius:\s*999px/,

@@ -3380,7 +3380,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     z-index: 50;
     left: 50%;
     bottom: calc(10px + env(safe-area-inset-bottom));
-    width: min(calc(100% - 16px),420px);
+    width: min(calc(100% - 26px),420px);
     max-width: 420px;
     height: 64px;
     display: flex;

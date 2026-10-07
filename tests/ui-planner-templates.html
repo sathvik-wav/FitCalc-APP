@@ -72,7 +72,7 @@
           await new Promise(function (resolve) { setTimeout(resolve, 0); });
           check("Remove set removes the last set after confirmation", day().workouts[0].exercises[0].sets.length === 1);
           doc.getElementById("finish-workout").click();
-          check("Finish marks workout done and shows summary", day().workouts[0].completed === true && !!doc.querySelector("#undo-finish") && doc.querySelector(".workout-session-summary").textContent.includes("1 sets"));
+          check("Finish marks workout done and shows summary", day().workouts[0].completed === true && !!doc.querySelector("#undo-finish") && /1 sets?/.test(doc.querySelector(".workout-session-summary").textContent) && doc.querySelector(".workout-session-summary").textContent.includes("total volume"));
           doc.getElementById("undo-finish").click();
           check("Undo clears completed status", day().workouts[0].completed === false);
           doc.getElementById("save-session-template").click();
