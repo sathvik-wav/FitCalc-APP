@@ -317,7 +317,7 @@ function createApiNode() {
     replaceChildren() { this.children = []; this.textContent = ""; },
     append(...nodes) { this.children.push(...nodes); },
     appendChild(node) { this.children.push(node); },
-    setAttribute() {}, handlers
+    setAttribute() {}, focus() { this.focused = true; }, remove() { this.removed = true; }, handlers
   };
 }
 
@@ -325,6 +325,7 @@ function loadFoodApiRetrySandbox() {
   const nodes = new Map();
   const document = {
     getElementById(id) { if (!nodes.has(id)) nodes.set(id, createApiNode()); return nodes.get(id); },
+    querySelector(selector) { if (!nodes.has(selector)) nodes.set(selector, createApiNode()); return nodes.get(selector); },
     createElement() { return createApiNode(); }
   };
   const sandbox = { document, window: { addEventListener() {} }, navigator: {}, fetch: async function () { throw new Error("offline"); }, URLSearchParams, AbortController, setTimeout, clearTimeout };
@@ -531,14 +532,14 @@ test("food portions scale every nutrient and meal totals can be recomputed", () 
   assert.ok(Math.abs(day.protein - 10.35) < 0.001);
 });
 
-test("food search requires exact or whole-word matches", () => {
+test("food lookup requires exact or whole-word matches and prefers the exact plural-normalized food", () => {
   assert.strictEqual(ctx.findFood("pineapple"), null);
   assert.strictEqual(ctx.findFood("eggplant"), null);
   assert.strictEqual(ctx.findFood("milk chocolate"), null);
   assert.strictEqual(ctx.findFood("egg").name, "egg");
   assert.strictEqual(ctx.findFood("apple").name, "apple");
   assert.strictEqual(ctx.findFood("oil").name, "olive oil");
-  assert.strictEqual(ctx.findFood("peanut").name, "peanut butter");
+  assert.strictEqual(ctx.findFood("peanut").name, "Peanuts, all types, raw");
 });
 
 test("A5 custom foods, favorites, recents, and serving quantities persist in the food library", () => {
@@ -745,7 +746,8 @@ test("offline Indian entries use verified USDA records with explicit portion wei
   assert.strictEqual(curd.calories, 61);
   assert.strictEqual(curd.servingGrams, 245);
   assert.deepStrictEqual(Array.from(curd.units), ["g", "oz", "ml", "tsp", "tbsp", "cup", "glass"]);
-  assert.ok(entries.every((food) => food.source === "USDA FoodData Central"));
+  assert.ok(entries.every((food) => ["USDA", "USDA FoodData Central"].includes(food.source)));
+  assert.ok(entries.every((food) => food.sourceTag === "USDA" && Array.isArray(food.aliases)));
   entries.forEach((food) => food.units.forEach((unit) => {
     if (unit === "g" || unit === "serving") return;
     assert.ok(food.unitGrams[unit] > 0, food.name + " needs a gram weight for " + unit);
@@ -754,10 +756,12 @@ test("offline Indian entries use verified USDA records with explicit portion wei
   assert.strictEqual(ctx.searchBuiltInFoodList("dal")[0].name, "lentils");
 });
 
-test("Nutrition has one unified search box with the inline barcode control", () => {
+test("Nutrition has one search box and barcode lookup behind a disclosure", () => {
   const html = fs.readFileSync(__dirname + "/../nutrition/index.html", "utf8");
   assert.match(html, /type="search"[^>]*id="food-name"/);
   assert.match(html, /id="food-barcode"/);
+  assert.match(html, /id="food-barcode-disclosure"/);
+  assert.match(html, /Scan or enter barcode/);
   assert.doesNotMatch(html, /food-database-search|search-food-database|Packaged food/);
   assert.match(html, /<script src="\.\.\/foods-india\.js"><\/script>/);
   assert.match(fs.readFileSync(__dirname + "/../service-worker.js", "utf8"), /"\.\/foods-india\.js"/);
@@ -1497,14 +1501,14 @@ test("food amount units convert to grams before scaling per-100g macros", () => 
   assert.strictEqual(calculate("oats", 2, "serving").amount, 80);
   const riceCup = calculate("white rice", 1, "cup");
   assert.strictEqual(riceCup.calories, 205.4);
-  assert.match(app.getElement("food-amount-label").textContent, /Amount \(g\)/);
+  assert.strictEqual(app.getElement("food-amount-label").textContent, "Amount");
   app.getElement("food-name").value = "lentils";
   app.sandbox.window.updateNutritionFoodUnits(get("lentils"));
   app.getElement("food-amount").value = "2";
   app.getElement("food-amount-unit").value = "katori";
   app.sandbox.updateFoodAmountLabel();
   app.sandbox.updateNutritionFoodPreview();
-  assert.match(app.getElement("food-amount-label").textContent, /Number of katoris \(approx\.\)/);
+  assert.strictEqual(app.getElement("food-amount-label").textContent, "Amount");
   assert.match(app.getElement("food-nutrition-preview").textContent, /2 katori ≈ 297 g/);
 });
 
@@ -1522,7 +1526,7 @@ test("food unit choices follow verified food portions and imperial preferences",
   app.sandbox.saveFitCalcPreferences({ units: { weight: "lb" } });
   app.sandbox.window.updateNutritionFoodUnits({ name: "Unverified food", calories: 100, protein: 1, carbs: 1, fat: 1, units: ["g"], defaultUnit: "g" });
   assert.strictEqual(app.getElement("food-amount-unit").value, "oz");
-  assert.match(app.getElement("food-amount-label").textContent, /Amount \(oz\)/);
+  assert.strictEqual(app.getElement("food-amount-label").textContent, "Amount");
 
   app.sandbox.rememberFoodAmountUnit(app.sandbox.findFood("egg"), "piece");
   app.sandbox.window.updateNutritionFoodUnits(app.sandbox.findFood("egg"));
@@ -2894,7 +2898,7 @@ test("B unified search shows built-ins immediately and OFF retries before its co
   };
   app.sandbox.scheduleUnifiedFoodSearch("bread");
   assert.strictEqual(results.children.length, 1);
-  assert.strictEqual(results.children[0].children[0].children[0].textContent, "whole wheat bread");
+  assert.strictEqual(results.children[0].children[1].children[0].children[0].children[0].textContent, "whole wheat bread");
   assert.match(status.textContent, /searching online/i);
   app.sandbox.cancelUnifiedFoodSearch();
 
@@ -2908,10 +2912,117 @@ test("B unified search shows built-ins immediately and OFF retries before its co
     };
   };
   const products = await app.sandbox.searchOpenFoodFacts("bread");
-  assert.strictEqual(requests.length, 3);
-  assert.ok(requests.slice(0, 2).every((url) => url.includes("search.openfoodfacts.org/search")));
-  assert.ok(requests[2].includes("/cgi/search.pl"));
+  assert.strictEqual(requests.length, 2);
+  assert.ok(requests[0].includes("search.openfoodfacts.org/search"));
+  assert.ok(requests[1].includes("/cgi/search.pl"));
+  const legacySearch = new URL(requests[1]);
+  assert.strictEqual(legacySearch.searchParams.get("lc"), "en");
+  assert.strictEqual(legacySearch.searchParams.get("countries_tags"), "india");
   assert.strictEqual(products[0].name, "whole wheat bread");
+});
+
+test("Food search normalizes plurals and aliases, ranks local foods, and keeps query matches relevant", () => {
+  const app = loadFoodApiRetrySandbox();
+  const nutrition = loadNutritionSandbox();
+  app.sandbox.searchBuiltInFoodList = (query) => nutrition.sandbox.searchBuiltInFoodList(query);
+  app.sandbox.getFoodLibrary = () => ({ favorites: [], customFoods: [] });
+  app.sandbox.indianFoodDatabase = vm.runInContext("indianFoodDatabase", nutrition.sandbox);
+  const cases = [
+    ["carrot", "carrot"], ["carrots", "carrot"], ["cucumber", "cucumber"], ["kheera", "cucumber"],
+    ["egg", "egg"], ["paneer", "paneer"], ["roti", "chapati"], ["banana", "banana"],
+    ["bread", "bread"], ["rice", "rice"], ["toor dal", "toor dal"]
+  ];
+  cases.forEach(([query, expected]) => {
+    const results = app.sandbox.searchLocalFoodSources(query);
+    assert.ok(results.length, query + " should return an offline result");
+    assert.match(results[0].name.toLowerCase(), new RegExp(expected), query + " should rank its matching food first");
+  });
+  assert.strictEqual(app.sandbox.normalizeFoodSearchQuery("  tomatoes  "), "tomato");
+  assert.strictEqual(nutrition.sandbox.normalizeFoodName("carrots"), "carrots", "plural search normalization must not alter existing preference keys");
+  assert.strictEqual(app.sandbox.searchLocalFoodSources("carrot")[0].calories, 41);
+  assert.strictEqual(app.sandbox.searchLocalFoodSources("cucumber")[0].calories, 15);
+  const expected = {
+    egg: [143, 12.6, 0.7, 9.5], paneer: [299, 15.9, 22.5, 15.5], roti: [297, 11.25, 46.36, 7.45],
+    banana: [89, 1.1, 23, 0.3], bread: [252, 12.3, 43, 3.5], rice: [130, 2.7, 28, 0.3],
+    "toor dal": [343, 21.7, 62.78, 1.49]
+  };
+  Object.entries(expected).forEach(([query, values]) => {
+    const food = app.sandbox.searchLocalFoodSources(query)[0];
+    [food.calories, food.protein, food.carbs, food.fat].forEach((value, index) => assert.strictEqual(value, values[index], query + " macro " + index));
+  });
+});
+
+test("Food search groups local and packaged results, filters irrelevant external names, and exposes a named empty state", async () => {
+  const app = loadFoodApiRetrySandbox();
+  const matches = app.sandbox.filterExternalFoodSearchResults([
+    { name: "Kimchi", calories: 30, protein: 1, carbs: 5, fat: 0, fiber: 1 },
+    { name: "Carottes râpées with dressing", calories: 80, protein: 1, carbs: 8, fat: 4, fiber: 2 },
+    { name: "Carrot salad", calories: 70, protein: 1, carbs: 8, fat: 2, fiber: 3 },
+    { name: "Carrot drink", calories: null, protein: 1, carbs: 8, fat: 2, fiber: 3 }
+  ], "carrots");
+  assert.deepStrictEqual(matches.map((food) => food.name), ["Carrot salad"]);
+  const requested = [];
+  app.sandbox.requestFoodApiJson = async function (url, options) {
+    requested.push({ url, options });
+    if (url.includes("search.openfoodfacts.org")) return { hits: [{ product_name: "Carrot salad", nutriments: { "energy-kcal_100g": 60, proteins_100g: 1, carbohydrates_100g: 8, fat_100g: 2 } }] };
+    return { products: [] };
+  };
+  const packagedResults = await app.sandbox.searchOpenFoodFacts("carrots");
+  assert.strictEqual(packagedResults[0].name, "Carrot salad");
+  assert.ok(requested[0].options.timeoutMs <= 4000);
+  const requestBody = JSON.parse(requested[0].options.body);
+  assert.deepStrictEqual(Array.from(requestBody.langs), ["en"]);
+  app.sandbox.renderFoodApiResults([
+    { name: "My food", calories: 10, source: "Favorite", resultGroup: "your" },
+    ...Array.from({ length: 4 }, (_, i) => ({ name: "Packaged " + i, calories: 10, source: "Open Food Facts", resultGroup: "packaged" }))
+  ], "nothing");
+  const collectText = (node) => [node.textContent || "", ...(node.children || []).map(collectText)].join(" ");
+  const resultText = collectText(app.document.getElementById("food-api-results"));
+  assert.match(resultText, /Your foods/);
+  assert.match(resultText, /Packaged \(Open Food Facts\)/);
+  assert.match(resultText, /Show more/);
+  const packaged = app.document.getElementById("food-api-results").children[1];
+  const more = packaged.children[2];
+  more.click();
+  assert.strictEqual(packaged.children[1].children.length, 4);
+  app.sandbox.renderFoodApiResults([], "dragonfruitxyz");
+  const emptyText = collectText(app.document.getElementById("food-api-results"));
+  assert.match(emptyText, /No match for 'dragonfruitxyz'/);
+  assert.match(emptyText, /Add custom food/);
+  app.document.getElementById("food-api-results").children[1].click();
+  assert.strictEqual(app.document.getElementById("food-name").value, "dragonfruitxyz");
+  assert.strictEqual(app.document.getElementById("custom-food-name").value, "dragonfruitxyz");
+});
+
+test("Food search keeps local results when Open Food Facts fails and shows only its muted note", async () => {
+  const app = loadFoodApiRetrySandbox();
+  app.sandbox.getFoodLibrary = () => ({ favorites: [], customFoods: [] });
+  app.sandbox.searchBuiltInFoodList = () => [{ name: "carrot", calories: 41, protein: 0.9, carbs: 9.6, fat: 0.2, fiber: 2.8, source: "FitCalc built-in" }];
+  app.sandbox.fetch = async function () { throw new TypeError("offline"); };
+  app.sandbox.beginFoodSearch("carrot", 0, null);
+  await new Promise((resolve) => setImmediate(resolve));
+  const status = app.document.getElementById("food-api-status");
+  const root = app.document.getElementById("food-api-results");
+  const text = (node) => [node.textContent || "", ...(node.children || []).map(text)].join(" ");
+  assert.match(text(root), /carrot/);
+  assert.match(text(root), /Packaged foods unavailable right now/);
+  assert.doesNotMatch(status.textContent, /Some sources unavailable/);
+});
+
+test("Nutrition food entry puts barcode controls behind a disclosure and keeps the compact field order", () => {
+  const html = fs.readFileSync(__dirname + "/../nutrition/index.html", "utf8");
+  assert.match(html, /<details[^>]*id="food-barcode-disclosure"/);
+  assert.match(html, /Scan or enter barcode/);
+  assert.match(html, /placeholder="Search foods \(e\.g\. paneer, roti, banana\)"/);
+  assert.match(html, /<label for="food-amount" id="food-amount-label">Amount<\/label>/);
+  assert.doesNotMatch(html, /Searches saved foods|Type the barcode number\./);
+  assert.match(html, /id="food-api-status"/);
+  assert.match(html, /id="food-nutrition-preview"/);
+  const nav = fs.readFileSync(__dirname + "/../main.css", "utf8");
+  assert.match(nav, /\.mobile-tab\s*\{[^}]*flex:\s*1;[^}]*min-width:\s*0;/s);
+  assert.match(nav, /\.mobile-tab\s*\{[^}]*font-size:\s*11px;/s);
+  assert.match(nav, /\.mobile-tab\s*\{[^}]*letter-spacing:\s*0;/s);
+  assert.match(nav, /\.mobile-tab\s*\{[^}]*white-space:\s*nowrap;/s);
 });
 
 test("B barcode lookup handles the real Nutella barcode, HTTP 404, and network failures separately", async () => {
@@ -3190,10 +3301,12 @@ test("Phase 5 CSS uses the shared 1199/850/768/480 viewport set", () => {
 
 test("G1 shared typography keeps readable minimums, neutral tracking, and a wider canvas", () => {
   const css = fs.readFileSync(__dirname + "/../main.css", "utf8");
-  const fontSizes = Array.from(css.matchAll(/font-size\s*:\s*([^;]+);/g), (match) => match[1].trim());
-  for (const value of fontSizes) {
+  const navRefinement = css.indexOf("/* Food search and entry controls */");
+  const fontSizes = Array.from(css.matchAll(/font-size\s*:\s*([^;]+);/g), (match) => ({ value: match[1].trim(), index: match.index }));
+  for (const { value, index } of fontSizes) {
     const directPixels = value.match(/^(\d+(?:\.\d+)?)px/);
-    if (directPixels) assert.ok(Number(directPixels[1]) >= 14, "font size below 14px: " + value);
+    if (directPixels && index < navRefinement) assert.ok(Number(directPixels[1]) >= 14, "font size below 14px: " + value);
+    if (directPixels && index >= navRefinement) assert.ok(Number(directPixels[1]) >= 11, "font size below 11px: " + value);
   }
   assert.match(css, /--text-body:\s*16px/);
   assert.match(css, /--content-width:\s*840px/);

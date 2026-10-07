@@ -77,18 +77,23 @@
       <div id="food-shortcuts" class="food-shortcuts" aria-label="Saved custom and favorite foods"></div>
       <div class="food-api-tools">
         <div class="food-search-controls">
-          <div class="field"><label for="food-name">Search foods</label><input type="search" id="food-name" autocomplete="off" placeholder="Search foods"></div>
-          <div class="field"><label for="food-barcode">Barcode lookup</label><div class="food-barcode-controls"><input type="text" id="food-barcode" inputmode="numeric" pattern="[0-9]*" placeholder="Barcode number" aria-label="Barcode number"><button type="button" class="secondary-btn" id="lookup-food-barcode">Look up</button><button type="button" class="secondary-btn" id="start-barcode-camera">Camera</button></div><small id="barcode-camera-hint" class="barcode-camera-hint" hidden>Type the barcode number.</small></div>
+          <div class="field"><label for="food-name">Search foods</label><input type="search" id="food-name" autocomplete="off" placeholder="Search foods (e.g. paneer, roti, banana)"></div>
         </div>
+        <details class="food-barcode-disclosure" id="food-barcode-disclosure">
+          <summary>Scan or enter barcode</summary>
+          <div class="food-barcode-controls"><input type="text" id="food-barcode" inputmode="numeric" pattern="[0-9]*" placeholder="Enter barcode digits" aria-label="Barcode number"><button type="button" class="secondary-btn" id="lookup-food-barcode">Look up</button><button type="button" class="secondary-btn" id="start-barcode-camera">Camera</button></div>
+          <small id="barcode-camera-hint" class="barcode-camera-hint" hidden>Camera scanning is not supported here.</small>
+        </details>
         <video id="barcode-camera" class="barcode-camera" playsinline hidden aria-label="Barcode camera preview"></video>
         <button type="button" class="secondary-btn" id="stop-barcode-camera" hidden>Stop camera</button>
         <p id="food-api-status" class="integration-status food-search-status" role="status" aria-live="polite"></p>
         <div id="food-api-results" class="integration-results food-search-results" aria-live="polite"></div>
-        <small>Searches saved foods, the built-in list, offline Indian foods, Open Food Facts, and USDA FoodData Central when you add your own API key in Settings.</small>
       </div>
-      <div class="form-grid">
-        <div class="field"><label for="food-amount" id="food-amount-label">Amount (g)</label><input type="number" id="food-amount" inputmode="decimal" placeholder="100" min="0.01" max="10000" step="1"></div>
+      <div class="food-entry-fields">
+        <div class="food-amount-row">
+        <div class="field"><label for="food-amount" id="food-amount-label">Amount</label><input type="number" id="food-amount" inputmode="decimal" placeholder="100" min="0.01" max="10000" step="1"></div>
         <div class="field"><label for="food-amount-unit">Amount unit</label><select id="food-amount-unit"><option value="g">g</option><option value="oz">oz</option></select></div>
+        </div>
         <div class="field"><label for="food-meal">Meal</label><select id="food-meal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select></div>
       </div>
       <p id="food-nutrition-preview" class="nutrition-food-preview" role="status" aria-live="polite">Search foods and choose a result to preview its nutrition.</p>

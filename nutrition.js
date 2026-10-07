@@ -41,9 +41,22 @@ const foodDatabase = [
 // its grams are scaled from a food's source-backed cup weight and density.
 const FOOD_VOLUME_ML = { ml: 1, tsp: 5, tbsp: 15, cup: 240, glass: 250, katori: 180 };
 const FOOD_APPROXIMATE_UNITS = ["katori", "ladle", "plate"];
+const FOOD_SEARCH_ALIASES = {
+    "chicken breast": ["chicken"], "white rice": ["cooked rice", "cooked white rice"],
+    "brown rice": ["cooked brown rice"], "whole wheat bread": ["bread", "wholemeal bread"],
+    banana: ["kela"], apple: ["seb"], orange: ["santra"], milk: ["whole milk", "doodh"],
+    "greek yogurt": ["yogurt", "plain yogurt"], lentils: ["dal", "cooked dal", "masoor dal"],
+    chickpeas: ["chana", "garbanzo beans"], potato: ["aloo"], "sweet potato": ["shakarkandi"],
+    spinach: ["palak"], almonds: ["badam"], "peanut butter": ["groundnut butter"],
+    "olive oil": ["oil"]
+};
 foodDatabase.forEach(function (food) {
     food.unitGrams = Object.assign({ oz: 28.35 }, food.unitGrams || {});
     if (!food.units.includes("oz")) food.units.splice(1, 0, "oz");
+    if (!food.source) food.source = "USDA";
+    food.sourceTag = "USDA";
+    if (!Array.isArray(food.aliases)) food.aliases = [];
+    food.aliases = Array.from(new Set(food.aliases.concat(FOOD_SEARCH_ALIASES[food.name] || [])));
 });
 
 
@@ -230,10 +243,7 @@ document.getElementById("nutrition-next-day")?.addEventListener("click", functio
 
 function findFood(name) {
 
-    const searchName =
-        String(name)
-            .toLowerCase()
-            .trim();
+    const searchName = normalizeFoodSearchName(name);
 
 
     if (!searchName) {
@@ -248,31 +258,53 @@ function findFood(name) {
         getFoodLibrary().customFoods
     );
     const exactMatch = availableFoods.find(function (food) {
-        return String(food.name).toLowerCase().trim() === searchName;
+        return [food.name].concat(Array.isArray(food.aliases) ? food.aliases : []).some(function (candidate) {
+            return normalizeFoodSearchName(candidate) === searchName;
+        });
     });
     if (exactMatch) return exactMatch;
 
     const escapedName = searchName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const wholeWordMatch = new RegExp("\\b" + escapedName + "\\b", "i");
     return availableFoods.find(function (food) {
-        return wholeWordMatch.test(String(food.name));
+        return [food.name].concat(Array.isArray(food.aliases) ? food.aliases : []).some(function (candidate) {
+            return wholeWordMatch.test(String(candidate));
+        });
     }) || null;
 }
 
 function searchBuiltInFoodList(query) {
-    const normalized = normalizeFoodName(query);
+    const normalized = normalizeFoodSearchName(query);
     if (!normalized) return [];
     const words = normalized.split(/\s+/).filter(Boolean);
-    return foodDatabase.filter(function (food) {
-        const searchableText = [food.name].concat(Array.isArray(food.aliases) ? food.aliases : []).map(normalizeFoodName).join(" ");
-        return searchableText.includes(normalized) || words.every(function (word) { return searchableText.includes(word); });
+    const matches = foodDatabase.filter(function (food) {
+        const searchableText = [food.name].concat(Array.isArray(food.aliases) ? food.aliases : []).map(normalizeFoodSearchName).join(" ");
+        return searchableText.includes(normalized) || words.every(function (word) {
+            return new RegExp("(?:^|\\s)" + word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?:$|\\s)").test(searchableText);
+        });
+    });
+    return matches.sort(function (a, b) {
+        return foodNameMatchRank(a, normalized) - foodNameMatchRank(b, normalized);
     }).slice(0, 12).map(function (food) {
-        return Object.assign({}, food, { source: "FitCalc built-in" });
+        return Object.assign({}, food, { source: "FitCalc built-in", resultGroup: "basic" });
     });
 }
 
 function normalizeFoodName(value) {
     return String(value || "").trim().replace(/\s+/g, " ").toLocaleLowerCase();
+}
+
+function normalizeFoodSearchName(value) {
+    return normalizeFoodName(value).replace(/\b([a-z]+)ies\b/g, "$1y").replace(/\b([a-z]+)oes\b/g, "$1o").replace(/\b([a-z]+)s\b/g, "$1");
+}
+
+function foodNameMatchRank(food, query) {
+    const names = [food && food.name].concat(Array.isArray(food && food.aliases) ? food.aliases : []).map(normalizeFoodSearchName);
+    if (names.includes(query)) return 0;
+    if (names.some(function (name) { return name.startsWith(query); })) return 1;
+    const queryWords = query.split(/\s+/).filter(Boolean);
+    if (names.some(function (name) { return queryWords.every(function (word) { return new RegExp("(?:^|\\s)" + word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?:$|\\s)").test(name); }); })) return 2;
+    return 3;
 }
 
 function foodDefinitionFromEntry(food) {
@@ -1013,13 +1045,7 @@ function updateFoodAmountLabel() {
     const label = document.getElementById("food-amount-label");
     const input = document.getElementById("food-amount");
     const selected = unit ? normalizeFoodAmountUnit(unit.value) : "g";
-    const labels = {
-        g: "Amount (g)", oz: "Amount (oz)", ml: "Amount (ml)", tsp: "Number of teaspoons", tbsp: "Number of tablespoons",
-        cup: "Number of cups", glass: "Number of glasses", piece: "Number of pieces", slice: "Number of slices",
-        serving: "Number of servings", katori: "Number of katoris (approx.)", ladle: "Number of ladles / kadchi (approx.)",
-        plate: "Number of plates (approx.)"
-    };
-    if (label) label.textContent = labels[selected] || labels.g;
+    if (label) label.textContent = "Amount";
     if (input) {
         input.step = selected === "g" || selected === "ml" ? "1" : (selected === "oz" ? "0.1" : "0.25");
         input.placeholder = selected === "g" || selected === "ml" ? "100" : "1";

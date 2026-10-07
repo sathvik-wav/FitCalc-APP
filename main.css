@@ -3381,8 +3381,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     width: min(calc(100% - 28px),420px);
     max-width: 420px;
     height: 64px;
-    display: grid;
-    grid-template-columns: repeat(5,minmax(0,1fr));
+    display: flex;
     gap: 2px;
     padding: 3px;
     border: 1px solid var(--line);
@@ -5818,5 +5817,101 @@ body textarea {
 @media (max-width: 768px) {
   .food-search-controls {
     grid-template-columns: minmax(0,1fr);
+  }
+}
+
+/* Food search and entry controls */
+.food-api-tools {
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+}
+.food-search-controls {
+  grid-template-columns: minmax(0,1fr);
+}
+.food-barcode-disclosure {
+  display: grid;
+  gap: 10px;
+}
+.food-barcode-disclosure summary {
+  width: fit-content;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink-soft);
+  font-size: 14px;
+  cursor: pointer;
+}
+.food-barcode-disclosure:not([open]) .food-barcode-controls,
+.food-barcode-disclosure:not([open]) .barcode-camera-hint {
+  display: none;
+}
+.food-barcode-controls {
+  align-items: center;
+}
+.food-entry-fields {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+.food-amount-row {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) minmax(92px,.55fr);
+  gap: 12px;
+}
+.food-entry-fields .field {
+  min-width: 0;
+  margin: 0;
+}
+.food-entry-fields select,
+.food-entry-fields input {
+  width: 100%;
+}
+.food-results-group {
+  display: grid;
+  gap: 8px;
+}
+.food-results-group h3 {
+  margin: 4px 0 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+.food-results-list {
+  display: grid;
+  gap: 8px;
+}
+.food-results-group .integration-result {
+  min-width: 0;
+}
+.food-results-group .integration-result>div {
+  overflow-wrap: anywhere;
+}
+.food-results-group .integration-result small {
+  line-height: 1.4;
+}
+.food-show-more {
+  justify-self: start;
+  min-height: 38px;
+}
+.food-packaged-unavailable {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .mobile-tab {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+  .mobile-tab>span:last-child {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
