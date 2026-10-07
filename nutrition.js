@@ -35,6 +35,7 @@ const foodDatabase = [
     { name: "whole wheat bread", calories: 252, protein: 12.3, carbs: 43, fat: 3.5, fiber: 6, preparation: "commercial, whole wheat", servingGrams: 28, unitGrams: { slice: 28 }, units: ["g", "slice", "serving"], defaultUnit: "slice" },
     { name: "pasta", calories: 158, protein: 5.8, carbs: 31, fat: 0.9, fiber: 1.8, preparation: "enriched pasta, cooked", servingGrams: 140, unitGrams: { cup: 140 }, units: ["g", "cup", "serving"], defaultUnit: "cup" }
 ];
+foodDatabase.forEach(function (food) { food.sourceTag = "USDA"; });
 
 // Standard kitchen measures use the volume conversions in the entry form.
 // Katori is an approximate 180 ml midpoint of the stated 150–200 ml range;
@@ -286,7 +287,7 @@ function searchBuiltInFoodList(query) {
     return matches.sort(function (a, b) {
         return foodNameMatchRank(a, normalized) - foodNameMatchRank(b, normalized);
     }).slice(0, 12).map(function (food) {
-        return Object.assign({}, food, { source: "FitCalc built-in", resultGroup: "basic" });
+        return Object.assign({}, food, { source: "FitCalc built-in", sourceTag: food.sourceTag || "USDA", resultGroup: "basic" });
     });
 }
 
@@ -295,7 +296,12 @@ function normalizeFoodName(value) {
 }
 
 function normalizeFoodSearchName(value) {
-    return normalizeFoodName(value).replace(/\b([a-z]+)ies\b/g, "$1y").replace(/\b([a-z]+)oes\b/g, "$1o").replace(/\b([a-z]+)s\b/g, "$1");
+    return normalizeFoodName(value).split(" ").map(function (word) {
+        if (word.length > 4 && /ies$/.test(word)) return word.slice(0, -3) + "y";
+        if (word.length > 4 && /oes$/.test(word)) return word.slice(0, -2);
+        if (word.length > 3 && /s$/.test(word) && !/(?:ss|us|is)$/.test(word)) return word.slice(0, -1);
+        return word;
+    }).join(" ");
 }
 
 function foodNameMatchRank(food, query) {
@@ -1114,11 +1120,11 @@ function updateNutritionFoodPreview() {
     const foodData = pending && pending.name.toLowerCase() === foodName.toLowerCase() ? pending : findFood(foodName);
     const quantity = Number(amount && amount.value);
     if (!foodData || !foodName) {
-        preview.textContent = "Choose a food from the list or food database to preview its nutrition.";
+        preview.textContent = "";
         return;
     }
     if (!Number.isFinite(quantity) || quantity <= 0) {
-        preview.textContent = "Enter an amount to preview nutrition for " + foodData.name + ".";
+        preview.textContent = foodData.name + " · enter an amount to preview macros.";
         return;
     }
     const selectedUnit = normalizeFoodAmountUnit(unit && unit.value);
@@ -1135,10 +1141,9 @@ function updateNutritionFoodPreview() {
         ? formatFoodAmount(quantity) + " " + amountName + " ≈ " + formatFoodAmount(grams) + " g"
         : formatFoodAmount(quantity) + " " + amountName;
     const weightText = !approximateAmount && selectedUnit !== "g" ? " · " + formatFoodAmount(grams) + " g used" : "";
-    const stateText = foodData.preparation ? " (" + foodData.preparation + ")" : "";
-    preview.textContent = "Preview: " + foodData.name + stateText + " · " + amountText + weightText + " · " + formatFoodNutrient(logged.calories, "kcal") +
+    preview.textContent = foodData.name + " · " + amountText + weightText + " · " + formatFoodNutrient(logged.calories, "kcal") +
         " · " + formatFoodNutrient(logged.protein, "g protein") + " · " + formatFoodNutrient(logged.carbs, "g carbs") +
-        " · " + formatFoodNutrient(logged.fat, "g fat") + ". Values update before saving.";
+        " · " + formatFoodNutrient(logged.fat, "g fat");
 }
 
 function formatFoodAmount(value) {

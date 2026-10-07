@@ -62,6 +62,7 @@ function normalizeFoodSearchResult(food, sourceOverride) {
         pieceGrams: pieceGrams,
         servingGrams: servingGrams,
         source: String(sourceOverride || food.source || "Food database"),
+        sourceTag: String(food.sourceTag || (food.source === "Open Food Facts" ? "Open Food Facts" : "")),
         barcode: String(food.barcode || food.code || ""),
         unitGrams: unitGrams,
         units: units,
@@ -109,8 +110,12 @@ function matchesFoodQuery(food, query) {
 }
 
 function normalizeFoodSearchQuery(value) {
-    return String(value || "").trim().replace(/\s+/g, " ").toLocaleLowerCase()
-        .replace(/\b([a-z]+)ies\b/g, "$1y").replace(/\b([a-z]+)oes\b/g, "$1o").replace(/\b([a-z]+)s\b/g, "$1");
+    return String(value || "").trim().replace(/\s+/g, " ").toLocaleLowerCase().split(" ").map(function (word) {
+        if (word.length > 4 && /ies$/.test(word)) return word.slice(0, -3) + "y";
+        if (word.length > 4 && /oes$/.test(word)) return word.slice(0, -2);
+        if (word.length > 3 && /s$/.test(word) && !/(?:ss|us|is)$/.test(word)) return word.slice(0, -1);
+        return word;
+    }).join(" ");
 }
 
 function escapeFoodRegex(value) {
@@ -287,7 +292,7 @@ async function searchOpenFoodFacts(query, options) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                q: search, page: 1, page_size: 12, langs: ["en"],
+                q: search, page: 1, page_size: 12, langs: ["en"], countries_tags: ["india"],
                 fields: ["product_name", "product_name_en", "brands", "code", "nutriments", "serving_size"]
             }),
         timeoutMs: 2200, retries: 0, retryDelayMs: 0, signal: signal
@@ -623,7 +628,7 @@ function beginFoodSearch(query, version, signal) {
         renderFoodApiResults(results, query, {
             packagedUnavailable: unavailable.has("off")
         });
-        if (unavailable.has("off") || (unavailable.size && !localResults.length)) setFoodApiStatus("", "");
+        if (unavailable.has("off") || (unavailable.size && localResults.length)) setFoodApiStatus("", "");
         else if (pending > 0) setFoodApiStatus("Searching online food sources…", "loading");
         else if (query.trim().length >= 2) setFoodApiStatus("Search complete.", "");
     };

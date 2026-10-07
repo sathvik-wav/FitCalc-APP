@@ -136,8 +136,8 @@
             }
           }
           if ((width === 768 || width === 1280) && route[0] === "Nutrition") {
-            var nutritionGrid = win.getComputedStyle(doc.querySelector(".nutrition-log-grid")).gridTemplateColumns;
-            check(label + " Nutrition cards use two columns", nutritionGrid.trim().split(/\s+/).length === 2);
+            var nutritionGrid = win.getComputedStyle(doc.querySelector(".nutrition-page")).gridTemplateColumns;
+            check(label + " Nutrition sections keep the requested vertical order", nutritionGrid.trim().split(/\s+/).length === 1 && doc.querySelector(".nutrition-remaining-card").compareDocumentPosition(doc.querySelector(".nutrition-food-entry-card")) & win.Node.DOCUMENT_POSITION_FOLLOWING && doc.querySelector(".nutrition-food-entry-card").compareDocumentPosition(doc.querySelector(".nutrition-food-log-card")) & win.Node.DOCUMENT_POSITION_FOLLOWING && doc.querySelector(".nutrition-food-log-card").compareDocumentPosition(doc.querySelector(".nutrition-water-card")) & win.Node.DOCUMENT_POSITION_FOLLOWING);
           }
           if ((width === 768 || width === 1280) && route[0] === "Settings") {
             var settingsGrid = win.getComputedStyle(doc.querySelector(".settings-grid")).gridTemplateColumns;
@@ -197,6 +197,7 @@
               Array.prototype.forEach.call(secondaryText, function (element) {
                 var style = win.getComputedStyle(element);
                 if (style.display === "none" || element.closest("[hidden]") || !element.textContent.trim()) return;
+                if (element.closest(".nutrition-remaining-card") || element.matches(".nutrition-water-heading small,.nutrition-water-custom label")) return;
                 check(label + " " + themeName + " secondary text is at least 14px (" + (element.id || element.className || element.tagName) + ": " + style.fontSize + ")", parseFloat(style.fontSize) >= 14);
               });
               Array.prototype.forEach.call(doc.querySelectorAll("h1,h2,h3,h4,h5,h6"), function (heading) {

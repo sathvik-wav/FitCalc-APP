@@ -2950,6 +2950,14 @@ test("Food search normalizes plurals and aliases, ranks local foods, and keeps q
     const food = app.sandbox.searchLocalFoodSources(query)[0];
     [food.calories, food.protein, food.carbs, food.fat].forEach((value, index) => assert.strictEqual(value, values[index], query + " macro " + index));
   });
+  assert.strictEqual(app.sandbox.normalizeFoodSearchQuery("glass"), "glass");
+  [["onion", 170000], ["matar", 170419], ["papita", 169926], ["moong", 174256], ["kaju", 170162]].forEach(([query, fdcId]) => {
+    const food = app.sandbox.searchLocalFoodSources(query)[0];
+    assert.ok(food, query + " should be in the offline dataset");
+    assert.strictEqual(food.fdcId, fdcId);
+    assert.strictEqual(food.sourceTag, "USDA");
+    assert.ok(food.unitGrams && Object.keys(food.unitGrams).length, query + " should retain source-backed portion weights");
+  });
 });
 
 test("Food search groups local and packaged results, filters irrelevant external names, and exposes a named empty state", async () => {

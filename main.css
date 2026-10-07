@@ -1673,13 +1673,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   overflow-wrap: anywhere;
 }
 .nutrition-food-preview {
-  margin: 12px 0;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-control);
+  margin: 0;
+  padding: 0;
+  border: 0;
   color: var(--ink-soft);
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
+.nutrition-food-preview:empty { display: none; }
 .food-data-warning {
   color: var(--orange);
 }
@@ -6038,12 +6040,11 @@ body:not(.home-screen) .nutrition-page {
 .nutrition-water-custom > summary::-webkit-details-marker {
   display: none;
 }
-.nutrition-water-menu,
 .nutrition-water-custom .inline-input-action {
   position: absolute;
   z-index: 2;
   right: 0;
-  bottom: calc(100% + 6px);
+  top: calc(100% + 6px);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -6054,12 +6055,30 @@ body:not(.home-screen) .nutrition-page {
   box-shadow: 0 8px 24px rgb(0 0 0 / 14%);
 }
 .nutrition-water-menu button {
-  min-height: 36px;
-  padding: 6px 10px;
+  min-height: 44px;
+  padding: 4px 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.nutrition-water-custom .nutrition-water-menu {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 58px);
+  right: 0;
+  justify-content: flex-end;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 .nutrition-water-custom .inline-input-action {
   width: min(300px, calc(100vw - 40px));
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
 }
+.nutrition-water-custom .inline-input-action > * { width: auto; min-width: 0; }
 .nutrition-water-custom .inline-input-action label {
   color: var(--muted);
   font-size: 12px;
@@ -6087,4 +6106,5 @@ body:not(.home-screen) .nutrition-page {
   .nutrition-water-actions { gap: 6px; }
   .nutrition-water-actions > button,
   .nutrition-water-actions > details > summary { padding-inline: 10px; }
+  .nutrition-water-custom .inline-input-action { width: min(300px, calc(100vw - 32px)); }
 }

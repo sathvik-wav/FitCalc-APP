@@ -93,10 +93,14 @@
             }()));
             check("Water quick actions are connected and preserve the remaining strip", (function () {
               var water = doc.querySelector(".nutrition-water-card");
+              var total = doc.getElementById("planner-water");
+              var before = Number(total.textContent);
               doc.getElementById("add-water").click();
-              var updated = doc.getElementById("planner-water").textContent === "0.25";
+              var updated250 = Math.abs(Number(total.textContent) - before - 0.25) < 0.001;
+              var before500 = Number(total.textContent);
               doc.getElementById("add-water-500").click();
-              return updated && doc.getElementById("planner-water").textContent === "0.75" && !!water.querySelector("#add-water-500") && !!doc.getElementById("remaining-calories");
+              var updated500 = Math.abs(Number(total.textContent) - before500 - 0.5) < 0.001;
+              return updated250 && updated500 && !!water.querySelector("#add-water-500") && !!doc.getElementById("remaining-calories");
             }()));
 
             frame.contentWindow.location.reload();
