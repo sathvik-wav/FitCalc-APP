@@ -68,7 +68,7 @@
             }));
             unit.value = "glass";
             unit.dispatchEvent(new win.Event("change", { bubbles: true }));
-            check("Unit changes update the amount label and step", doc.getElementById("food-amount-label").textContent === "Number of glasses" && amount.step === "0.25");
+            check("Unit changes preserve the Amount label and update the input step", doc.getElementById("food-amount-label").textContent === "Amount" && amount.step === "0.25");
             foodName.value = "egg";
             foodName.dispatchEvent(new win.Event("input", { bubbles: true }));
             amount.value = "1";
@@ -81,9 +81,23 @@
 
             Object.defineProperty(win, "BarcodeDetector", { configurable: true, value: undefined });
             win.updateBarcodeCameraAvailability();
-            check("Unsupported camera scanner is hidden with manual-entry hint", doc.getElementById("start-barcode-camera").hidden && !doc.getElementById("barcode-camera-hint").hidden && /Type the barcode number/.test(doc.getElementById("barcode-camera-hint").textContent));
+            check("Unsupported camera scanner stays hidden and barcode controls remain collapsed", doc.getElementById("start-barcode-camera").hidden && !doc.getElementById("barcode-camera-hint").hidden && /Camera scanning is not supported/.test(doc.getElementById("barcode-camera-hint").textContent) && !doc.getElementById("food-barcode-disclosure").open);
             check("Custom food disclosure has a visible plus indicator", win.getComputedStyle(doc.querySelector(".custom-food-details summary"), "::before").content.replace(/[\"']/g, "") === "+");
             check("Custom food form includes optional portion weights", ["custom-food-piece-grams", "custom-food-tbsp-grams", "custom-food-cup-grams", "custom-food-katori-grams"].every(function (id) { return !!doc.getElementById(id); }));
+            check("Remaining targets are a five-column strip before food entry and food log before water", (function () {
+              var remaining = doc.querySelector(".nutrition-remaining-card");
+              var entry = doc.querySelector(".nutrition-food-entry-card");
+              var log = doc.querySelector(".nutrition-food-log-card");
+              var water = doc.querySelector(".nutrition-water-card");
+              return !!remaining && !!entry && !!log && !!water && remaining.compareDocumentPosition(entry) & win.Node.DOCUMENT_POSITION_FOLLOWING && entry.compareDocumentPosition(log) & win.Node.DOCUMENT_POSITION_FOLLOWING && log.compareDocumentPosition(water) & win.Node.DOCUMENT_POSITION_FOLLOWING && remaining.querySelectorAll(".nutrition-remaining p").length === 5;
+            }()));
+            check("Water quick actions are connected and preserve the remaining strip", (function () {
+              var water = doc.querySelector(".nutrition-water-card");
+              doc.getElementById("add-water").click();
+              var updated = doc.getElementById("planner-water").textContent === "0.25";
+              doc.getElementById("add-water-500").click();
+              return updated && doc.getElementById("planner-water").textContent === "0.75" && !!water.querySelector("#add-water-500") && !!doc.getElementById("remaining-calories");
+            }()));
 
             frame.contentWindow.location.reload();
             return;

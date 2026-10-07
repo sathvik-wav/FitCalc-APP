@@ -144,7 +144,10 @@
             check(label + " Settings cards use two columns", settingsGrid.trim().split(/\s+/).length === 2);
           }
           if (width <= 768) {
-            check(label + " mobile navigation layout", win.getComputedStyle(desktopNav).display === "none" && win.getComputedStyle(bottomNav).display === "grid");
+            check(label + " mobile navigation layout", win.getComputedStyle(desktopNav).display === "none" && win.getComputedStyle(bottomNav).display === "flex");
+            check(label + " mobile navigation items share equal flex space", Array.prototype.every.call(bottomNav.querySelectorAll(".mobile-tab"), function (item) {
+              return win.getComputedStyle(item).flexGrow === "1" && item.getBoundingClientRect().width > 0;
+            }));
             var navBounds = bottomNav.getBoundingClientRect();
             var navStyle = win.getComputedStyle(bottomNav);
             var pageShell = doc.querySelector(".page-shell, main.profile, .calc-page.shell, .history-page-shell");

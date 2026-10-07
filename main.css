@@ -5915,3 +5915,176 @@ body textarea {
     white-space: nowrap;
   }
 }
+
+/* Compact Nutrition page layout */
+body:not(.home-screen) .nutrition-page {
+  gap: 16px;
+  padding-bottom: calc(112px + env(safe-area-inset-bottom));
+}
+.nutrition-remaining-card {
+  padding: 12px;
+  border-radius: var(--radius-card);
+}
+.nutrition-remaining-card > h2 {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+.nutrition-remaining-card .nutrition-remaining {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+}
+.nutrition-remaining-card .nutrition-remaining p {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 0 4px;
+  border: 0;
+  font-size: 12px;
+}
+.nutrition-remaining-card .nutrition-remaining p:first-child span {
+  color: var(--ui-chart-calories);
+}
+.nutrition-remaining-card .nutrition-remaining p:nth-child(2) span,
+.nutrition-remaining-card .nutrition-remaining p:nth-child(2) strong {
+  color: var(--feature-protein);
+}
+.nutrition-remaining-card .nutrition-remaining p:nth-child(3) span,
+.nutrition-remaining-card .nutrition-remaining p:nth-child(3) strong {
+  color: var(--feature-activity);
+}
+.nutrition-remaining-card .nutrition-remaining p:nth-child(4) span,
+.nutrition-remaining-card .nutrition-remaining p:nth-child(4) strong {
+  color: var(--feature-calories);
+}
+.nutrition-remaining-card .nutrition-remaining p:nth-child(5) span,
+.nutrition-remaining-card .nutrition-remaining p:nth-child(5) strong {
+  color: var(--feature-weight);
+}
+.nutrition-remaining-card .nutrition-remaining strong {
+  max-width: 100%;
+  color: var(--ink);
+  font-size: clamp(14px, 4.5vw, 19px);
+  line-height: 1.2;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.nutrition-water-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--radius-card);
+}
+.nutrition-water-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.nutrition-water-heading h2 {
+  margin: 0 0 2px;
+  font-size: 17px;
+}
+.nutrition-water-heading small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.nutrition-water-total {
+  flex: 0 0 auto;
+  color: var(--ui-feature-water);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.nutrition-water-card .nutrition-progress-bar {
+  height: 7px;
+  min-height: 7px;
+}
+.nutrition-water-card .nutrition-progress-bar > .nutrition-progress-fill {
+  background: var(--feature-water);
+}
+.nutrition-water-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nutrition-water-actions > button,
+.nutrition-water-actions > details > summary {
+  min-height: 38px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.nutrition-water-actions #add-water {
+  flex: 1 1 auto;
+}
+.nutrition-water-more,
+.nutrition-water-custom {
+  position: relative;
+}
+.nutrition-water-more > summary,
+.nutrition-water-custom > summary {
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  list-style: none;
+}
+.nutrition-water-more > summary::-webkit-details-marker,
+.nutrition-water-custom > summary::-webkit-details-marker {
+  display: none;
+}
+.nutrition-water-menu,
+.nutrition-water-custom .inline-input-action {
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  bottom: calc(100% + 6px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 14%);
+}
+.nutrition-water-menu button {
+  min-height: 36px;
+  padding: 6px 10px;
+}
+.nutrition-water-custom .inline-input-action {
+  width: min(300px, calc(100vw - 40px));
+}
+.nutrition-water-custom .inline-input-action label {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.nutrition-water-custom .inline-input-action input {
+  width: 90px;
+  min-width: 75px;
+  flex: 1 1 90px;
+  min-height: 44px;
+  height: 44px;
+  padding: 8px 10px;
+  font-size: 16px;
+}
+.nutrition-water-custom .inline-input-action button {
+  min-height: 44px;
+  padding: 7px 12px;
+}
+@media (max-width: 480px) {
+  .nutrition-remaining-card { padding: 11px 8px; }
+  .nutrition-remaining-card .nutrition-remaining { gap: 0; }
+  .nutrition-remaining-card .nutrition-remaining p { padding-inline: 3px; font-size: 11px; }
+  .nutrition-remaining-card .nutrition-remaining strong { font-size: clamp(13px, 4vw, 16px); }
+  .nutrition-water-card { padding: 13px; }
+  .nutrition-water-actions { gap: 6px; }
+  .nutrition-water-actions > button,
+  .nutrition-water-actions > details > summary { padding-inline: 10px; }
+}

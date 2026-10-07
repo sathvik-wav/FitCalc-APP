@@ -1511,6 +1511,10 @@ document.getElementById("add-water")?.addEventListener("click", function () {
     if (addWaterAmount(0.25)) window.fitcalcToast("250 ml added.");
 });
 
+document.getElementById("add-water-500")?.addEventListener("click", function () {
+    if (addWaterAmount(0.5)) window.fitcalcToast("500 ml added.");
+});
+
 document.getElementById("add-custom-water")?.addEventListener("click", function () {
     const input = document.getElementById("custom-water-amount");
     const amount = Number(input && input.value);
