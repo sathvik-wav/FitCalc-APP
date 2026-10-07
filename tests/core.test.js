@@ -620,6 +620,17 @@ test("workout completion requires logged actual performance", () => {
   assert.strictEqual(ctx.formatWorkoutSet({ durationMinutes: 25 }), "25 min");
 });
 
+test("workout set migration converts legacy reps-by-weight chips into metric values", () => {
+  const workouts = [{ exercises: [{ name: "Press", sets: ["8×60kg", "10 x 132.3lb", "legacy text"] }] }];
+  assert.strictEqual(ctx.migrateWorkoutSets(workouts), true);
+  const sets = JSON.parse(JSON.stringify(workouts[0].exercises[0].sets));
+  assert.deepStrictEqual(sets[0], { reps: 8, weight: 60 });
+  assert.strictEqual(sets[1].reps, 10);
+  assert.ok(Math.abs(sets[1].weight - 60) < 0.02);
+  assert.deepStrictEqual(sets[2], {});
+  assert.strictEqual(ctx.migrateWorkoutSets(workouts), false);
+});
+
 test("external food and exercise records are normalized without trusting markup", () => {
   const food = ctx.normalizeOpenFoodFactsProduct({ code: "12345678", product_name: "Example oats", nutriments: { "energy-kcal_100g": 389, proteins_100g: 16.9, carbohydrates_100g: 66, fat_100g: 6.9, fiber_100g: 10.6 } });
   assert.strictEqual(food.calories, 389);
@@ -3351,8 +3362,10 @@ test("Phase 5 Planner markup uses the shared page and card classes", () => {
   assert.match(planner, /id="planner-task-card"/);
   const templatesIndex = planner.indexOf('id="planner-templates-card"');
   assert.ok(templatesIndex > planner.indexOf('id="planner-task-card"'));
-  assert.match(planner, /id="template-workout-select"/);
-  assert.match(planner, /id="save-workout-template"/);
+  assert.match(planner, /id="new-workout"/);
+  assert.match(planner, /id="workout-session"/);
+  assert.match(planner, /id="exercise-search-sheet"/);
+  assert.doesNotMatch(planner, /Search exercise library|Search library|planner-create-row/);
   const templateCard = planner.slice(templatesIndex, planner.indexOf("</section>", templatesIndex));
   assert.doesNotMatch(templateCard, /id="(?:workout-list|task-list)"/);
   ["planner-steps", "planner-steps-goal", "planner-weight-value", "planner-weight-unit", "completed-workouts", "completed-tasks"].forEach((id) => {
@@ -3617,7 +3630,7 @@ test("Mobile navigation uses one detached capsule layout with room below page co
   [
     /left:\s*50%/,
     /bottom:\s*calc\(10px \+ env\(safe-area-inset-bottom\)\)/,
-    /width:\s*min\(calc\(100% - 28px\),420px\)/,
+    /width:\s*min\(calc\(100% - 16px\),420px\)/,
     /height:\s*64px/,
     /border:\s*1px solid var\(--line\)/,
     /border-radius:\s*999px/,
@@ -3628,6 +3641,9 @@ test("Mobile navigation uses one detached capsule layout with room below page co
   assert.match(css, /\.mobile-tab\.active\s*\{\s*color:\s*var\(--accent-strong\);\s*background:\s*color-mix\(in srgb,var\(--accent\) 16%,transparent\)/);
   assert.match(css, /padding-bottom:\s*calc\(96px \+ env\(safe-area-inset-bottom\)\)/);
   assert.doesNotMatch(mobileNav, /border-top\s*:/);
+  assert.match(mobileNav, /gap:\s*1px/);
+  assert.match(mobileNav, /padding:\s*2px/);
+  assert.match(css, /\.mobile-tab\s*\{[^}]*font-size:\s*12px[^}]*font-weight:\s*600[^}]*letter-spacing:\s*0/);
 });
 
 test("Settings exposes shared app preferences, data tools, and app information", () => {

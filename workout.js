@@ -49,6 +49,40 @@ function hasWorkoutPerformance(workout) {
     });
 }
 
+/* Converts legacy display chips back into the metric storage shape used by planner records. */
+function migrateWorkoutSets(workouts) {
+    let changed = false;
+    (Array.isArray(workouts) ? workouts : []).forEach(function (workout) {
+        (Array.isArray(workout && workout.exercises) ? workout.exercises : []).forEach(function (exercise) {
+            if (!Array.isArray(exercise.sets)) { exercise.sets = []; changed = true; return; }
+            exercise.sets = exercise.sets.map(function (set) {
+                if (set && typeof set === "object") {
+                    const chip = typeof set.value === "string" ? set.value : (typeof set.display === "string" ? set.display : "");
+                    const chipMatch = chip.trim().match(/^(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)\s*(kg|lb)?$/i);
+                    if (!chipMatch) return set;
+                    const chipUnit = String(chipMatch[3] || "kg").toLowerCase();
+                    changed = true;
+                    return { reps: Number(chipMatch[1]), weight: chipUnit === "lb" ? Number(chipMatch[2]) / 2.20462262185 : Number(chipMatch[2]) };
+                }
+                if (typeof set === "string") {
+                    const match = set.trim().match(/^(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)\s*(kg|lb)?$/i);
+                    if (match) {
+                        const rawWeight = Number(match[2]);
+                        const sourceUnit = String(match[3] || "kg").toLowerCase();
+                        changed = true;
+                        return { reps: Number(match[1]), weight: sourceUnit === "lb" ? rawWeight / 2.20462262185 : rawWeight };
+                    }
+                    changed = true;
+                    return {};
+                }
+                changed = true;
+                return {};
+            });
+        });
+    });
+    return changed;
+}
+
 function getWorkoutTemplates() {
     return readJSON(WORKOUT_TEMPLATES_KEY, []);
 }

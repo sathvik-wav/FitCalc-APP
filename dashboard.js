@@ -235,6 +235,7 @@ function updateHomeWeightCard() {
     const line = document.getElementById("home-weight-sparkline-line");
     if (line) {
         const values = records.map(function (record) { return Number(record.weight); });
+        line.style.display = values.length > 1 ? "" : "none";
         if (values.length > 1) {
             const minimum = Math.min.apply(null, values);
             const maximum = Math.max.apply(null, values);
@@ -248,7 +249,7 @@ function updateHomeWeightCard() {
             const chart = line.closest("svg");
             if (chart) chart.setAttribute("aria-label", "Weight trend from " + formatFitCalcWeight(values[0], 1) + " to " + formatFitCalcWeight(values[values.length - 1], 1) + " " + getFitCalcWeightUnit() + " over the last seven days");
         } else {
-            line.setAttribute("points", "0,35 120,35");
+            line.setAttribute("points", "");
             const chart = line.closest("svg");
             if (chart) chart.setAttribute("aria-label", "No weight trend recorded in the last seven days");
         }

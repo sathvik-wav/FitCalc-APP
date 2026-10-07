@@ -36,8 +36,10 @@
           ["steps display on first render", doc.getElementById("planner-steps").textContent === "6420"],
           ["completed workout count on first render", doc.getElementById("completed-workouts").textContent === "1"],
           ["completed task count on first render", doc.getElementById("completed-tasks").textContent === "2"],
-          ["actual set data displays on first render", doc.getElementById("workout-list").textContent.includes("8×60kg")]
+          ["workout row shows planned/done status and set count", doc.getElementById("workout-list").textContent.includes("1 exercises · 1 sets") && doc.querySelector(".workout-status").textContent === "Done"]
         ];
+        doc.querySelector(".workout-list-row").click();
+        checks.push(["session opens with the actual set values", doc.querySelector(".set-reps-input").value === "8" && doc.querySelector(".set-weight-input").value === "60"]);
         const failed = checks.filter(function (item) { return !item[1]; }).length;
         document.getElementById("results").textContent = checks.map(function (item) { return (item[1] ? "PASS " : "FAIL ") + item[0]; }).join("\n") + "\n\n" + (failed ? failed + " checks failed" : "All first-render checks passed");
         document.body.dataset.result = failed ? "fail" : "pass";

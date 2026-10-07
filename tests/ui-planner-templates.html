@@ -3,116 +3,101 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>FitCalc Planner template workflow</title>
+  <title>FitCalc Workout session workflow</title>
   <style>
     body { margin: 0; padding: 24px; color: #f2f5ff; background: #101624; font: 14px/1.5 system-ui,sans-serif; }
     h1 { margin: 0 0 12px; font-size: 24px; }
     #results { padding: 16px; white-space: pre-wrap; border: 1px solid #34415e; border-radius: 12px; background: #182238; }
-    iframe { position: fixed; top: 0; left: -2000px; width: 1366px; height: 900px; border: 0; }
+    iframe { position: fixed; top: 0; left: -2000px; width: 390px; height: 900px; border: 0; }
   </style>
   <script>window.FITCALC_TEST_MODE = true;</script>
 </head>
 <body>
-  <h1>FitCalc Planner template workflow</h1>
-  <pre id="results" role="status">Loading Planner…</pre>
+  <h1>FitCalc Workout session workflow</h1>
+  <pre id="results" role="status">Loading workout session…</pre>
   <script>
     (function () {
       "use strict";
       var output = document.getElementById("results");
       var frame = document.createElement("iframe");
-      frame.title = "Planner template workflow";
-      var runNumber = 0;
+      frame.title = "Workout session workflow";
+      var phase = 0;
       var checks = [];
       function check(label, passed) { checks.push((passed ? "PASS " : "FAIL ") + label); }
       function done() {
         var failures = checks.filter(function (line) { return line.indexOf("FAIL ") === 0; }).length;
-        output.textContent = checks.join("\n") + "\n\n" + (failures ? failures + " checks failed" : "All template workflow checks passed");
+        output.textContent = checks.join("\n") + "\n\n" + (failures ? failures + " checks failed" : "All workout session checks passed");
         document.body.dataset.result = failures ? "fail" : "pass";
-        document.title = failures ? "FAIL Planner templates" : "PASS Planner templates";
+        document.title = failures ? "FAIL Workout session" : "PASS Workout session";
       }
-      function currentDateKey() {
-        var now = new Date();
-        return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+      function dateKey() { var n = new Date(); return n.getFullYear() + "-" + String(n.getMonth() + 1).padStart(2, "0") + "-" + String(n.getDate()).padStart(2, "0"); }
+      function storeDay(workouts) {
+        var date = dateKey();
+        localStorage.setItem("test_fitcalc_planner", JSON.stringify({ [date]: { date: date, steps: 0, weight: null, workouts: workouts, tasks: [] } }));
       }
-      function tabState(doc) {
-        return ["workouts", "tasks", "templates"].filter(function (key) {
-          return !doc.getElementById("planner-" + (key === "tasks" ? "task" : key) + "-card").hidden;
-        });
-      }
+      function day() { return JSON.parse(localStorage.getItem("test_fitcalc_planner") || "{}") [dateKey()]; }
+      function inputEvent(doc, element) { element.dispatchEvent(new doc.defaultView.Event("input", { bubbles: true })); }
       async function run() {
-        var doc = frame.contentDocument;
-        if (runNumber === 0) {
-          var date = currentDateKey();
-          localStorage.setItem("test_fitcalc_planner", JSON.stringify({ [date]: { date: date, steps: 0, weight: null, workouts: [], tasks: [] } }));
-          localStorage.setItem("test_fitcalc_workout_templates", "[]");
-          runNumber = 1;
-          frame.contentWindow.location.reload();
-          return;
-        }
-
-        frame.contentWindow.fitcalcDialog.confirm = async function () { return true; };
-        check("Workouts opens alone", tabState(doc).join(",") === "workouts");
-        doc.getElementById("planner-view-tasks").click();
-        check("Daily Activity opens alone", tabState(doc).join(",") === "tasks" && doc.getElementById("planner-view-tasks").textContent.trim() === "Daily Activity");
-        doc.getElementById("planner-view-templates").click();
-        check("Templates opens alone", tabState(doc).join(",") === "templates");
-        check("Templates has no duplicate workout or task list", !doc.getElementById("planner-templates-card").querySelector("#workout-list,#task-list"));
-
-        doc.getElementById("planner-view-workouts").click();
-        var createRow = doc.querySelector(".planner-create-row");
-        var createInput = doc.getElementById("workout-name").getBoundingClientRect();
-        var createButton = doc.getElementById("create-workout").getBoundingClientRect();
-        check("Workout name and normal-height Create control share one row (input " + createInput.height + "px, button " + createButton.height + "px)", !!createRow && Math.abs(createInput.top - createButton.top) < 1 && createInput.height === 44 && createButton.height === 44 && doc.getElementById("create-workout").textContent.trim() === "Create");
-        doc.getElementById("workout-name").value = "Browser Test Routine";
-        doc.getElementById("create-workout").click();
-        var exerciseName = doc.querySelector("#workout-list .exercise-name-input");
-        var addExercise = doc.querySelector("#workout-list .add-exercise");
-        var exerciseNameBox = exerciseName.getBoundingClientRect();
-        var addExerciseBox = addExercise.getBoundingClientRect();
-        check("Exercise name and Add control use a compact one-row form (input " + exerciseNameBox.height + "px, button " + addExerciseBox.height + "px)", !!exerciseName.closest(".exercise-name-row") && Math.abs(exerciseNameBox.top - addExerciseBox.top) < 1 && exerciseNameBox.height === 44 && addExerciseBox.height === 44);
-        exerciseName.value = "Squat";
-        addExercise.click();
-        doc.getElementById("planner-view-templates").click();
-        var selector = doc.getElementById("template-workout-select");
-        selector.value = Array.prototype.find.call(selector.options, function (option) { return option.textContent === "Browser Test Routine"; }).value;
-        doc.getElementById("save-workout-template").click();
-        await new Promise(function (resolve) { setTimeout(resolve, 0); });
-        var savedTemplates = JSON.parse(localStorage.getItem("test_fitcalc_workout_templates") || "[]");
-        check("Saving a workout stores its name and exercises", savedTemplates.length === 1 && savedTemplates[0].name === "Browser Test Routine" && savedTemplates[0].exercises[0].name === "Squat");
-        check("Saved template appears once", doc.querySelectorAll("#template-list .workout-template-item").length === 1);
-
-        doc.querySelector("#template-list .load-template").click();
-        await new Promise(function (resolve) { setTimeout(resolve, 0); });
-        var day = JSON.parse(localStorage.getItem("test_fitcalc_planner") || "{}")[currentDateKey()];
-        check("Loading a template adds a workout to the selected day", day.workouts.length === 2 && day.workouts[1].name === "Browser Test Routine" && day.workouts[1].exercises[0].name === "Squat");
-        runNumber = 2;
-        frame.contentWindow.location.reload();
-      }
-
-      frame.addEventListener("load", function () {
-        if (runNumber === 2) {
-          var doc = frame.contentDocument;
-          var day = JSON.parse(localStorage.getItem("test_fitcalc_planner") || "{}")[currentDateKey()];
-          var templates = JSON.parse(localStorage.getItem("test_fitcalc_workout_templates") || "[]");
-          check("Workout and template survive reload", day.workouts.length === 2 && templates.length === 1);
+        var win = frame.contentWindow, doc = frame.contentDocument;
+        win.fitcalcDialog.confirm = async function () { return true; };
+        win.fitcalcDialog.prompt = async function () { return "Browser Test Routine"; };
+        if (phase === 0) {
+          check("Empty state offers Start empty workout and From template", !!doc.getElementById("start-empty-workout") && !!doc.getElementById("from-template"));
+          check("Separate library search and Create row are gone", !doc.querySelector(".exercise-library-query,.search-exercise-library,.planner-create-row"));
+          check("Workouts opens by default", !doc.getElementById("planner-workouts-card").hidden);
+          doc.getElementById("planner-view-tasks").click();
+          check("Daily Activity tab shows its own view", !doc.getElementById("planner-task-card").hidden && doc.getElementById("planner-workouts-card").hidden);
           doc.getElementById("planner-view-templates").click();
-          frame.contentWindow.fitcalcDialog.confirm = async function () { return true; };
-          doc.querySelector("#template-list .delete-template").click();
-          setTimeout(function () {
-            check("Deleting a template removes it from storage and the list", JSON.parse(localStorage.getItem("test_fitcalc_workout_templates") || "[]").length === 0 && doc.querySelectorAll("#template-list .workout-template-item").length === 0);
-            runNumber = 3;
-            frame.contentWindow.location.reload();
-          }, 0);
+          check("Templates tab shows its own view", !doc.getElementById("planner-templates-card").hidden && doc.getElementById("planner-task-card").hidden);
+          doc.getElementById("planner-view-workouts").click();
+          localStorage.setItem("test_fitcalc_preferences", JSON.stringify({ units: { weight: "lb" } }));
+          doc.getElementById("start-empty-workout").click();
+          doc.getElementById("session-rename").click();
+          await new Promise(function (resolve) { setTimeout(resolve, 0); });
+          check("Session primary action is visibly labeled Finish workout", doc.getElementById("finish-workout").textContent.trim() === "Finish workout");
+          doc.querySelector(".add-session-exercise").click();
+          var search = doc.getElementById("exercise-search-input"); search.value = "Squat"; inputEvent(doc, search);
+          doc.querySelector(".custom-exercise-choice").click();
+          var addSet = doc.querySelector(".add-session-set"); addSet.click();
+          var weight = doc.querySelector(".set-weight-input"); var reps = doc.querySelector(".set-reps-input");
+          check("Weight setting changes session table to lb", doc.querySelector(".workout-set-heading").textContent.includes("LB"));
+          weight.value = "132.3"; inputEvent(doc, weight); reps.value = "8"; inputEvent(doc, reps);
+          var doneBox = doc.querySelector(".set-done-input"); doneBox.checked = true; doneBox.dispatchEvent(new doc.defaultView.Event("change", { bubbles: true }));
+          var sets = day().workouts[0].exercises[0].sets;
+          check("Entering a set saves actual reps and metric weight", sets.length === 1 && sets[0].reps === 8 && Math.abs(sets[0].weight - 60) < 0.02 && sets[0].done === true);
+          doc.querySelector(".add-session-set").click();
+          check("Add set appends a blank set without fake performance", day().workouts[0].exercises[0].sets.length === 2 && !day().workouts[0].exercises[0].sets[1].reps && !day().workouts[0].exercises[0].sets[1].weight);
+          doc.querySelector(".workout-menu summary").click();
+          doc.querySelector(".remove-last-set").click();
+          await new Promise(function (resolve) { setTimeout(resolve, 0); });
+          check("Remove set removes the last set after confirmation", day().workouts[0].exercises[0].sets.length === 1);
+          doc.getElementById("finish-workout").click();
+          check("Finish marks workout done and shows summary", day().workouts[0].completed === true && !!doc.querySelector("#undo-finish") && doc.querySelector(".workout-session-summary").textContent.includes("1 sets"));
+          doc.getElementById("undo-finish").click();
+          check("Undo clears completed status", day().workouts[0].completed === false);
+          doc.getElementById("save-session-template").click();
+          check("Save as template stores workout structure", JSON.parse(localStorage.getItem("test_fitcalc_workout_templates") || "[]")[0].exercises[0].name === "Squat");
+          doc.querySelector(".session-back").click();
+          doc.getElementById("planner-view-templates").click();
+          doc.querySelector(".template-start").click();
+          var workouts = day().workouts;
+          check("Starting a template creates the same exercise with empty sets", workouts.length === 2 && workouts[1].exercises[0].name === "Squat" && workouts[1].exercises[0].sets.length === 0);
+          check("Workout rows show plan status and exercise/set counts", doc.querySelector(".workout-list-row").textContent.includes("1 exercises · 1 sets") && doc.querySelector(".workout-status").textContent === "Planned");
+          phase = 1;
+          storeDay([{ id: "legacy-chip", name: "Legacy", completed: false, exercises: [{ name: "Press", sets: ["8×60kg", "10×132.3lb"] }] }]);
+          win.location.reload();
           return;
         }
-        if (runNumber === 3) {
-          var day = JSON.parse(localStorage.getItem("test_fitcalc_planner") || "{}")[currentDateKey()];
-          check("Template deletion persists after reload", JSON.parse(localStorage.getItem("test_fitcalc_workout_templates") || "[]").length === 0 && day.workouts.length === 2);
-          done();
-          return;
-        }
-        run().catch(function (error) { check("Workflow completes without a JavaScript error: " + error.message, false); done(); });
+        var setsMigrated = day().workouts[0].exercises[0].sets;
+        check("Reload migrates legacy reps×weight chips into numeric metric records", setsMigrated[0].reps === 8 && setsMigrated[0].weight === 60 && setsMigrated[1].reps === 10 && Math.abs(setsMigrated[1].weight - 60) < 0.02);
+        done();
+      }
+      frame.addEventListener("load", function () {
+        run().catch(function (error) { check("Workflow completed without a JavaScript error: " + error.message, false); done(); });
       });
+      var initialDate = dateKey();
+      localStorage.setItem("test_fitcalc_planner", JSON.stringify({ [initialDate]: { date: initialDate, steps: 0, weight: null, workouts: [], tasks: [] } }));
+      localStorage.setItem("test_fitcalc_workout_templates", "[]");
       frame.src = "../planner/index.html";
       document.body.appendChild(frame);
     }());

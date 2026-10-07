@@ -68,13 +68,8 @@
         <div><span class="page-kicker">Training</span><h2 id="workouts-heading">Workouts</h2></div>
         <p class="planner-section-count">Completed <strong id="completed-workouts">0</strong></p>
       </div>
-      <p>Build a session, log actual sets, then mark it complete.</p>
-      <div class="planner-input-row planner-create-row">
-        <div class="field"><label for="workout-name">Workout name</label><input type="text" id="workout-name" maxlength="80" placeholder="e.g. Upper body" style="box-sizing:border-box;height:44px;min-height:44px;max-height:44px;padding-block:7px"></div>
-        <button type="button" class="primary-btn" id="create-workout">Create</button>
-      </div>
+      <div class="workout-list-heading"><span>Selected day</span><button type="button" class="text-button" id="new-workout" hidden>+ New workout</button></div>
       <div id="workout-list"><p class="empty-state"><strong>No workouts planned</strong><span>Add a workout above to start logging.</span></p></div>
-      <small>Exercise discovery is optional. Sets and performance are recorded only when you enter them.</small>
     </section>
 
     <section class="card planner-card planner-task-card" id="planner-task-card" aria-labelledby="tasks-heading">
@@ -94,14 +89,11 @@
       <div class="planner-card-heading">
         <div><span class="page-kicker">Reusable</span><h2 id="templates-heading">Workout templates</h2></div>
       </div>
-      <p>Load a saved routine into the selected day, or save one of today’s workouts for later.</p>
-      <div class="planner-input-row planner-template-save-row">
-        <div class="field"><label for="template-workout-select">Workout to save</label><select id="template-workout-select"><option value="">No workouts on this day</option></select></div>
-        <button type="button" class="primary-btn" id="save-workout-template" disabled>Save as template</button>
-      </div>
       <div id="template-list"><p class="empty-state"><strong>No templates saved</strong><span>Save a workout to reuse its structure.</span></p></div>
     </section>
   </div>
+  <section class="workout-session" id="workout-session" aria-label="Workout session" hidden></section>
+  <section class="exercise-search-sheet" id="exercise-search-sheet" aria-label="Add exercise" hidden></section>
 </main>
 <footer class="footer"><div class="footer-brand"><span class="brand-mark">+</span><strong>FitCalc</strong></div><p>Your activity and workout entries stay on this device.</p></footer>
 <script src="../constants.js"></script>
@@ -112,5 +104,6 @@
 <script src="../workout.js"></script>
 <script src="../planner.js"></script>
 <script src="../exercise-api.js"></script>
+<script src="../planner-workout-ui.js"></script>
 </body>
 </html>
