@@ -5,7 +5,7 @@
   var root = document.documentElement;
   var PRIMARY_NAV = [
     { path: "index.html", label: "Home", icon: "home" },
-    { path: "calculators/index.html", label: "Calculators", icon: "calculators" },
+    { path: "calculators/index.html", label: "Calculators", mobileLabel: "Calc", icon: "calculators" },
     { path: "planner/index.html", label: "Activity", icon: "activity" },
     { path: "history/index.html", label: "Progress", icon: "progress" },
     { path: "profile/index.html", label: "Profile", icon: "profile" }
@@ -114,7 +114,7 @@
       var active = item.label === state.primary;
       var icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[item.icon] + '</svg>';
       return '<a class="mobile-tab' + (active ? " active" : "") + '" href="' + new URL(item.path, BASE).href + '"' +
-        (active ? ' aria-current="page"' : "") + '><span class="mobile-tab-icon">' + icon + '</span><span>' + item.label + '</span></a>';
+        (active ? ' aria-current="page"' : "") + (item.mobileLabel ? ' aria-label="' + item.label + '"' : "") + '><span class="mobile-tab-icon">' + icon + '</span><span>' + (item.mobileLabel || item.label) + '</span></a>';
     }).join("");
   }
   renderNavigation();

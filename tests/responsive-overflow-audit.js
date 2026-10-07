@@ -7,7 +7,7 @@ const os = require("os");
 
 const root = path.resolve(__dirname, "..");
 const outputDir = path.join(os.tmpdir(), "fitcalc-responsive-audit");
-const widths = [375, 390, 430];
+const widths = [360, 375, 430];
 const baseHeight = 844;
 
 protocol.registerSchemesAsPrivileged([{ scheme: "fitcalc", privileges: { standard: true, secure: true, supportFetchAPI: true } }]);

@@ -692,6 +692,21 @@ test("unified food search normalizes, validates, deduplicates, and preserves sou
   const local = app.sandbox.searchLocalFoodSources("banana");
   assert.strictEqual(local.length, 1);
   assert.strictEqual(local[0].source, "Favorite");
+
+  const basic = app.sandbox.mergeLocalBasicFoodRecords([
+    { name: "  White   Rice ", aliases: ["cooked rice"], calories: 115, sourceTag: "local" },
+    { name: "white rice", aliases: ["steamed rice"], calories: 130, sourceTag: "USDA" }
+  ]);
+  assert.strictEqual(basic.length, 1);
+  assert.strictEqual(basic[0].calories, 130, "sourced nutrition values win over unsourced duplicates");
+  assert.deepStrictEqual(Array.from(basic[0].aliases).sort(), ["cooked rice", "steamed rice"]);
+
+  const ifct = app.sandbox.mergeLocalBasicFoodRecords([
+    { name: "Lentil soup", aliases: ["dal soup"], calories: 91, sourceTag: "USDA" },
+    { name: "lentil soup", aliases: ["masoor dal soup"], calories: 84, sourceTag: "IFCT 2017" }
+  ]);
+  assert.strictEqual(ifct[0].calories, 84, "IFCT values take priority over USDA duplicates");
+  assert.deepStrictEqual(Array.from(ifct[0].aliases).sort(), ["dal soup", "masoor dal soup"]);
 });
 
 test("USDA search normalization uses FoodData Central nutrient IDs and kcal units", () => {
@@ -2971,6 +2986,41 @@ test("Food search normalizes plurals and aliases, ranks local foods, and keeps q
   });
 });
 
+test("every pre-search food name and alias remains available from local search", () => {
+  const app = loadNutritionSandbox();
+  vm.runInContext(fs.readFileSync(__dirname + "/../food-api.js", "utf8"), app.sandbox);
+  const baseline = JSON.parse(fs.readFileSync(__dirname + "/fixtures/pre-search-foods-c6536d4.json", "utf8"));
+  const failures = [];
+  baseline.foods.forEach((food) => {
+    [food.name].concat(food.aliases || []).forEach((query) => {
+      const normalizedQuery = app.sandbox.normalizeFoodSearchQuery(query);
+      const matches = app.sandbox.searchLocalFoodSources(query);
+      const exactLocalMatch = matches.some((result) => [result.name].concat(result.aliases || [])
+        .some((name) => app.sandbox.normalizeFoodSearchQuery(name) === normalizedQuery));
+      if (!matches.length || !exactLocalMatch) failures.push(food.name + (query === food.name ? "" : " ← " + query));
+    });
+  });
+  if (failures.length) console.error("Legacy food search failures:", failures.join(", "));
+  assert.deepStrictEqual(failures, [], "Legacy local food searches with no exact result: " + failures.join(", "));
+});
+
+test("whole-word relevance filtering stays on external food results, not local foods", () => {
+  const app = loadNutritionSandbox();
+  vm.runInContext(fs.readFileSync(__dirname + "/../food-api.js", "utf8"), app.sandbox);
+  app.sandbox.getFoodLibrary = () => ({
+    favorites: [{ name: "Apple favorite", calories: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4 }],
+    customFoods: [{ name: "Apple custom", calories: 55, protein: 0.4, carbs: 14, fat: 0.2, fiber: 2.1 }]
+  });
+  const local = app.sandbox.searchLocalFoodSources("app");
+  assert.ok(local.some((food) => food.source === "Favorite"));
+  assert.ok(local.some((food) => food.source === "Custom food"));
+  assert.ok(local.some((food) => food.source === "FitCalc built-in"));
+  assert.ok(app.sandbox.searchLocalFoodSources("car").some((food) => food.fdcId === 170393), "offline foods remain substring-searchable");
+  assert.deepStrictEqual(app.sandbox.filterExternalFoodSearchResults([
+    { name: "Apple cereal bar", calories: 150, protein: 3, carbs: 25, fat: 4, fiber: 2 }
+  ], "app"), [], "external foods still require a whole-word match");
+});
+
 test("Food search groups local and packaged results, filters irrelevant external names, and exposes a named empty state", async () => {
   const app = loadFoodApiRetrySandbox();
   const matches = app.sandbox.filterExternalFoodSearchResults([
@@ -3440,10 +3490,11 @@ test("Phase 6 global script builds consistent navigation and keyboard mobile con
   const desktopLabels = Array.from(app.desktopNav.innerHTML.matchAll(/>(Home|Calculators|Activity|Progress|Profile)<\/a>/g), (match) => match[1]);
   const mobileLabels = Array.from(app.mobileMenu.innerHTML.matchAll(/<a class="[^"]*"[^>]*>([^<]+)<\/a>/g), (match) => match[1]);
   const bottomNav = app.appended.find((element) => element.className === "bottom-nav");
-  const bottomLabels = Array.from(bottomNav.innerHTML.matchAll(/<span>(Home|Calculators|Activity|Progress|Profile)<\/span>/g), (match) => match[1]);
+  const bottomLabels = Array.from(bottomNav.innerHTML.matchAll(/<span>(Home|Calc|Activity|Progress|Profile)<\/span>/g), (match) => match[1]);
   assert.deepStrictEqual(desktopLabels, expected);
   assert.deepStrictEqual(mobileLabels, ["Nutrition", "Planner", "History", "All calculators", "Settings", "About", "Privacy"]);
-  assert.deepStrictEqual(bottomLabels, ["Home", "Calculators", "Activity", "Progress", "Profile"]);
+  assert.deepStrictEqual(bottomLabels, ["Home", "Calc", "Activity", "Progress", "Profile"]);
+  assert.match(bottomNav.innerHTML, /aria-label="Calculators"[^>]*><span class="mobile-tab-icon">/);
   assert.doesNotMatch(app.mobileMenu.innerHTML, /Primary navigation|mobile-primary-link|mobile-tool-link/);
   assert.deepStrictEqual(Array.from(app.mobileMenu.innerHTML.matchAll(/mobile-menu-heading">([^<]+)</g), (match) => match[1]), ["Track", "Calculators", "App"]);
   const generatedLinks = Array.from(app.mobileMenu.innerHTML.matchAll(/href="([^"]+)"/g), (match) => match[1]);
@@ -3488,16 +3539,16 @@ test("Phase 6 global script builds consistent navigation and keyboard mobile con
   assert.match(settingsPage.appended.find((element) => element.className === "bottom-nav").innerHTML, /mobile-tab active[\s\S]*?<span>Profile/);
 
   [
-    ["https://fitcalc.test/", "Home"],
-    ["https://fitcalc.test/calculators/index.html", "Calculators"],
-    ["https://fitcalc.test/planner/index.html", "Activity"],
-    ["https://fitcalc.test/history/index.html", "Progress"],
-    ["https://fitcalc.test/profile/index.html", "Profile"]
-  ].forEach(([href, expectedLabel]) => {
+    ["https://fitcalc.test/", "Home", "Home"],
+    ["https://fitcalc.test/calculators/index.html", "Calculators", "Calc"],
+    ["https://fitcalc.test/planner/index.html", "Activity", "Activity"],
+    ["https://fitcalc.test/history/index.html", "Progress", "Progress"],
+    ["https://fitcalc.test/profile/index.html", "Profile", "Profile"]
+  ].forEach(([href, expectedLabel, mobileLabel]) => {
     const route = loadGlobalScriptSandbox(href);
     assert.strictEqual(route.sandbox.window.fitcalcNavigation.getState().primary, expectedLabel);
     assert.match(route.desktopNav.innerHTML, new RegExp('class="active"[^>]*aria-current="page">' + expectedLabel));
-    assert.match(route.appended.find((element) => element.className === "bottom-nav").innerHTML, new RegExp('mobile-tab active[\\s\\S]*?<span>' + expectedLabel));
+    assert.match(route.appended.find((element) => element.className === "bottom-nav").innerHTML, new RegExp('mobile-tab active[\\s\\S]*?<span>' + mobileLabel));
   });
 
   app.hamburger.click();
@@ -3639,6 +3690,10 @@ test("Mobile navigation uses one detached capsule layout with room below page co
     /backdrop-filter:\s*blur\(18px\)/
   ].forEach((rule) => assert.match(mobileNav, rule));
   assert.match(css, /\.mobile-tab\.active\s*\{\s*color:\s*var\(--accent-strong\);\s*background:\s*color-mix\(in srgb,var\(--accent\) 16%,transparent\)/);
+  const navScript = fs.readFileSync(__dirname + "/../script.js", "utf8");
+  assert.match(navScript, /label:\s*"Calculators",\s*mobileLabel:\s*"Calc"/);
+  assert.match(navScript, /item\.mobileLabel \? ' aria-label="' \+ item\.label/);
+  assert.match(navScript, /\(item\.mobileLabel \|\| item\.label\)/);
   assert.match(css, /padding-bottom:\s*calc\(96px \+ env\(safe-area-inset-bottom\)\)/);
   assert.doesNotMatch(mobileNav, /border-top\s*:/);
   assert.match(mobileNav, /gap:\s*1px/);
@@ -3782,7 +3837,7 @@ test("R8 feature icon accents are semantic in both themes while brand navigation
   const css = fs.readFileSync(__dirname + "/../main.css", "utf8");
   const darkTokens = css.match(/:root\s*\{([\s\S]*?)\n\}/)[1];
   const lightTokens = css.match(/:root\[data-theme="light"\]\s*\{([\s\S]*?)\n\}/)[1];
-  const features = ["nutrition", "activity", "progress", "calculators", "planner", "history", "water", "calories", "protein", "workout", "weight"];
+  const features = ["nutrition", "activity", "progress", "calculators", "planner", "history", "water", "calories", "protein", "carbs", "fat", "fiber", "workout", "weight"];
   features.forEach((feature) => {
     assert.match(darkTokens, new RegExp(`--feature-${feature}:\\s*#[0-9a-f]{6}`, "i"), `dark ${feature} token`);
     assert.match(lightTokens, new RegExp(`--feature-${feature}:\\s*#[0-9a-f]{6}`, "i"), `light ${feature} token`);
@@ -3795,10 +3850,12 @@ test("R8 feature icon accents are semantic in both themes while brand navigation
     [darkTokens, "--feature-calculator-calories: #6FB07A"], [darkTokens, "--feature-calculator-macro: #E8863F"],
     [darkTokens, "--feature-calculator-bmr: #E8863F"], [darkTokens, "--feature-steps-goal: #E8863F"],
     [darkTokens, "--feature-calories: #E26B4F"], [darkTokens, "--feature-protein: #E0524F"],
+    [darkTokens, "--feature-carbs: #E8863F"], [darkTokens, "--feature-fat: #E2C35D"], [darkTokens, "--feature-fiber: #6FB07A"],
     [darkTokens, "--feature-steps: #D98A99"], [darkTokens, "--feature-water: #5AA0E6"],
     [lightTokens, "--feature-nutrition: #7A8A5A"], [lightTokens, "--feature-activity: #C8553D"],
     [lightTokens, "--feature-progress: #9A5668"], [lightTokens, "--feature-calories: #D9573B"],
-    [lightTokens, "--feature-protein: #B83A3A"], [lightTokens, "--feature-steps: #D9776A"],
+    [lightTokens, "--feature-protein: #B83A3A"], [lightTokens, "--feature-carbs: #A94E0C"],
+    [lightTokens, "--feature-fat: #846300"], [lightTokens, "--feature-fiber: #397747"], [lightTokens, "--feature-steps: #D9776A"],
     [lightTokens, "--feature-water: #3F8FCB"], [lightTokens, "--feature-workout: #A8566A"],
     [lightTokens, "--feature-steps-goal: #F2A66B"], [lightTokens, "--feature-walk: #4C9BE0"],
     [lightTokens, "--feature-mobility: #7E9A6A"]
@@ -3809,6 +3866,10 @@ test("R8 feature icon accents are semantic in both themes while brand navigation
   assert.match(css, /\.progress-chart\[aria-label\^="Weight trend"\]\s*\{\s*--chart-accent:\s*var\(--ui-chart-weight\)/);
   assert.match(css, /\.home-metric-card:has\(#terminal-protein\)\s*\{\s*--metric-accent:\s*var\(--feature-protein\)/);
   assert.match(css, /\.calculator-directory-row\[href\$="\/protein\/index\.html"\] \.calculator-row-icon\s*\{\s*--calculator-icon-accent:\s*var\(--feature-protein\)/);
+  assert.match(css, /\.calculator-directory-row\[href\$="\/macro\/index\.html"\] \.calculator-row-icon\s*\{\s*--calculator-icon-accent:\s*var\(--feature-carbs\)/);
+  assert.match(css, /\.calculator-directory-row\[href\$="\/water\/index\.html"\] \.calculator-row-icon\s*\{\s*--calculator-icon-accent:\s*var\(--feature-water\)/);
+  assert.match(css, /\.nutrition-remaining-card \.nutrition-remaining\s*\{\s*display:\s*grid;\s*grid-template-columns:\s*repeat\(5,\s*minmax\(0,\s*1fr\)\);\s*gap:\s*8px/s);
+  assert.match(css, /\.nutrition-remaining-card \.nutrition-remaining strong\s*\{[^}]*font-size:\s*17px;[^}]*white-space:\s*nowrap;/s);
   assert.match(css, /\.home-quick-tool\[href\$="protein\/index\.html"\] > span\s*\{[^}]*color:\s*var\(--feature-protein\)[^}]*background:\s*color-mix\(in srgb,var\(--feature-protein\) 15%,var\(--surface\)\)/);
   assert.match(css, /\.nutrition-page \.nutrition-progress-row:has\(#protein-progress\) \.nutrition-progress-fill\s*\{\s*background:\s*var\(--feature-protein\)/);
   assert.match(css, /\.nutrition-page \.nutrition-total-card:has\(#total-protein\) span/);

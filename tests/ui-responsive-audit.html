@@ -47,7 +47,7 @@
         ["Settings", "../settings/index.html", "#settings-theme"]
       ];
       var expectedNav = "Home|Calculators|Activity|Progress|Profile";
-      var expectedMobileNav = "Home|Calculators|Activity|Progress|Profile";
+      var expectedMobileNav = "Home|Calc|Activity|Progress|Profile";
       var checks = [];
       var pending = routes.length * widths.length;
       var done = false;
@@ -100,7 +100,7 @@
           }
           var currentBottom = doc.querySelector(".bottom-nav .mobile-tab[aria-current=\"page\"]");
           check(label + " bottom active item matches shared route state", navigationState.primary
-            ? !!currentBottom && currentBottom.textContent.indexOf(navigationState.primary) !== -1
+            ? !!currentBottom && (currentBottom.getAttribute("aria-label") || currentBottom.textContent).indexOf(navigationState.primary) !== -1
             : !currentBottom);
           var currentTracking = doc.querySelector(".mobile-menu .mobile-track-link[aria-current=\"page\"]");
           check(label + " tracking active item matches shared route state", navigationState.tracking

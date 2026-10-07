@@ -725,7 +725,7 @@ function updateNutritionRemaining(
             if (element) {
 
                 element.textContent =
-                    `${item.value === null ? "—" : Math.round(item.value) + " " + item.unit}`;
+                    `${item.value === null ? "—" : Math.round(item.value)}`;
 
             }
 
@@ -790,10 +790,11 @@ function updateFoodList() {
                 ${food.preparation ? '<p class="food-preparation">' + escapeHTML(food.preparation) + '</p>' : ""}
                 <div class="food-entry-meta"><span>${escapeHTML(formatLoggedFoodAmount(food))}</span><span class="food-entry-meal">${escapeHTML(food.meal || "Snack")}</span></div>
                 <p class="food-entry-macros">
-                    ${formatFoodNutrient(food.calories, "kcal")} ·
-                    ${formatFoodNutrient(food.protein, "g protein")} ·
-                    ${formatFoodNutrient(food.carbs, "g carbs")} ·
-                    ${formatFoodNutrient(food.fat, "g fat")}
+                    <span class="macro-kcal">${formatFoodNutrient(food.calories, "kcal")}</span> ·
+                    <span class="macro-protein">${formatFoodNutrient(food.protein, "g protein")}</span> ·
+                    <span class="macro-carbs">${formatFoodNutrient(food.carbs, "g carbs")}</span> ·
+                    <span class="macro-fat">${formatFoodNutrient(food.fat, "g fat")}</span> ·
+                    <span class="macro-fiber">${formatFoodNutrient(food.fiber, "g fiber")}</span>
                 </p>
                 ${Array.isArray(food.missingNutrients) && food.missingNutrients.length ? '<p class="food-data-warning">Some values are unavailable in the source data.</p>' : ""}
             </div>

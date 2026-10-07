@@ -88,6 +88,9 @@
   --feature-workout: #c88e74;
   --feature-weight: #b4b68b;
   --feature-protein: #E0524F;
+  --feature-carbs: #E8863F;
+  --feature-fat: #E2C35D;
+  --feature-fiber: #6FB07A;
   --feature-steps: #D98A99;
   --feature-steps-goal: #E8863F;
   --feature-walk: var(--feature-planner);
@@ -152,6 +155,9 @@
   --feature-workout: #A8566A;
   --feature-weight: #68713e;
   --feature-protein: #B83A3A;
+  --feature-carbs: #A94E0C;
+  --feature-fat: #846300;
+  --feature-fiber: #397747;
   --feature-steps: #D9776A;
   --feature-steps-goal: #F2A66B;
   --feature-walk: #4C9BE0;
@@ -5580,6 +5586,19 @@ body.settings-screen { scroll-behavior: smooth; }
 .calculator-directory-row[href$="/macro/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-calculator-macro); }
 .calculator-directory-row[href$="/calories/index.html"][data-category="nutrition"] .calculator-row-icon { --calculator-icon-accent: var(--feature-calculator-calories); }
 .calculator-directory-row[href$="/calories/index.html"][data-category="activity"] .calculator-row-icon { --calculator-icon-accent: var(--feature-calculator-tdee); }
+.calculator-directory-row[href$="/bmi/index.html"] .calculator-row-icon,
+.calculator-directory-row[href$="/idealweight/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-weight); }
+.calculator-directory-row[href$="/bmr/index.html"] .calculator-row-icon,
+.calculator-directory-row[href$="/calories/index.html"][data-category="nutrition"] .calculator-row-icon { --calculator-icon-accent: var(--feature-calories); }
+.calculator-directory-row[href$="/calories/index.html"][data-category="activity"] .calculator-row-icon,
+.calculator-directory-row[href$="/exercisecalories/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-activity); }
+.calculator-directory-row[href$="/macro/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-carbs); }
+.calculator-directory-row[href$="/bodyfat/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-progress); }
+.calculator-directory-row[href$="/maxhr/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-protein); }
+.calculator-directory-row[href$="/sleep/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-history); }
+.calculator-directory-row[href$="/water/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-water); }
+.calculator-directory-row[href$="/steptocalories/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-steps); }
+.calculator-directory-row[href$="/resttimer/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-workout); }
 .calculator-row-icon {
   color: var(--calculator-icon-accent);
   border-color: color-mix(in srgb,var(--calculator-icon-accent) 25%,var(--line));
@@ -5614,15 +5633,47 @@ body.settings-screen { scroll-behavior: smooth; }
 .nutrition-page .nutrition-remaining p:has(#remaining-protein) span,
 .nutrition-page .nutrition-remaining p:has(#remaining-protein) strong { color: var(--feature-protein); }
 .nutrition-page .nutrition-progress-row:has(#protein-progress) .nutrition-progress-fill { background: var(--feature-protein); }
+.nutrition-page .nutrition-total-card:has(#total-carbs) span,
+.nutrition-page .nutrition-total-card:has(#total-carbs) strong,
+.nutrition-page .nutrition-progress-row:has(#carbs-progress) .nutrition-progress-header { color: var(--feature-carbs); }
+.nutrition-page .nutrition-progress-row:has(#carbs-progress) .nutrition-progress-fill { background: var(--feature-carbs); }
+.nutrition-page .nutrition-total-card:has(#total-fat) span,
+.nutrition-page .nutrition-total-card:has(#total-fat) strong,
+.nutrition-page .nutrition-progress-row:has(#fat-progress) .nutrition-progress-header { color: var(--feature-fat); }
+.nutrition-page .nutrition-progress-row:has(#fat-progress) .nutrition-progress-fill { background: var(--feature-fat); }
+.nutrition-page .nutrition-total-card:has(#total-fiber) span,
+.nutrition-page .nutrition-total-card:has(#total-fiber) strong,
+.nutrition-page .nutrition-progress-row:has(#fiber-progress) .nutrition-progress-header { color: var(--feature-fiber); }
+.nutrition-page .nutrition-progress-row:has(#fiber-progress) .nutrition-progress-fill { background: var(--feature-fiber); }
 .nutrition-page #water-progress { background: var(--feature-water); }
 .nutrition-page .nutrition-secondary-grid p > strong { color: var(--ui-feature-water); }
 .nutrition-page .section-heading:has(#water-heading) .section-kicker { color: var(--ui-feature-water); }
 .nutrition-page .section-heading:has(#food-entry-heading) .section-kicker,
 .nutrition-page .section-heading:has(#food-log-heading) .section-kicker { color: var(--ui-feature-nutrition); }
+.nutrition-page .nutrition-total-card:first-child strong { color: var(--ink); }
+
+.macro-kcal { color: var(--ink); }
+.macro-protein { color: var(--feature-protein); }
+.macro-carbs { color: var(--feature-carbs); }
+.macro-fat { color: var(--feature-fat); }
+.macro-fiber { color: var(--feature-fiber); }
+.macro-separator,
+.macro-per-unit { color: var(--muted); }
+
+.home-metric-card:has(#terminal-calories) .home-metric-copy strong { color: var(--ink); }
+.home-metric-card:has(#terminal-protein) .home-metric-label,
+.home-metric-card:has(#terminal-protein) .home-metric-copy strong,
+.home-metric-card:has(#terminal-protein) .home-metric-copy strong small { color: var(--feature-protein); }
 
 body[data-calc="protein"] .result-headline strong,
 body[data-calc="protein"] .result-tag.ok,
 body[data-calc="protein"] .result-rows .row b { color: var(--feature-protein); }
+body[data-calc="macro"] .result-bar-wrap:nth-child(1) .row span:first-child,
+body[data-calc="macro"] .result-bar-wrap:nth-child(1) .row b { color: var(--feature-protein); }
+body[data-calc="macro"] .result-bar-wrap:nth-child(2) .row span:first-child,
+body[data-calc="macro"] .result-bar-wrap:nth-child(2) .row b { color: var(--feature-carbs); }
+body[data-calc="macro"] .result-bar-wrap:nth-child(3) .row span:first-child,
+body[data-calc="macro"] .result-bar-wrap:nth-child(3) .row b { color: var(--feature-fat); }
 
 .planner-page .page-heading .page-kicker { color: var(--ui-feature-planner); }
 .planner-steps-card h2::before,
@@ -5872,7 +5923,7 @@ body textarea {
 }
 .food-results-group {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 .food-results-group h3 {
   margin: 4px 0 0;
@@ -5881,16 +5932,39 @@ body textarea {
 }
 .food-results-list {
   display: grid;
-  gap: 8px;
+  gap: 0;
 }
 .food-results-group .integration-result {
   min-width: 0;
+  align-items: center;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
+.food-results-group .integration-result:last-child { border-bottom: 0; }
 .food-results-group .integration-result>div {
   overflow-wrap: anywhere;
 }
+.food-results-group .integration-result strong { color: var(--ink); font-size: 16px; }
 .food-results-group .integration-result small {
+  display: block;
   line-height: 1.4;
+  font-size: 14px;
+  white-space: normal;
+}
+.food-results-group .food-search-result-macros .macro-kcal { color: var(--ink); }
+.food-results-group .food-search-result-macros .macro-protein { color: var(--feature-protein); }
+.food-results-group .food-search-result-macros .macro-carbs { color: var(--feature-carbs); }
+.food-results-group .food-search-result-macros .macro-fat { color: var(--feature-fat); }
+.food-results-group .food-search-result-macros .macro-per-unit,
+.food-results-group .food-search-result-macros .macro-separator { color: var(--muted); }
+.food-results-group .food-search-use {
+  min-height: 40px;
+  flex: 0 0 auto;
+  padding-inline: 12px;
 }
 .food-show-more {
   justify-self: start;
@@ -6096,41 +6170,38 @@ body:not(.home-screen) .nutrition-page {
 .nutrition-remaining-card .nutrition-remaining {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 4px;
+  gap: 8px;
 }
 .nutrition-remaining-card .nutrition-remaining p {
   display: flex;
   min-width: 0;
   flex-direction: column;
   align-items: flex-start;
-  gap: 3px;
-  padding: 0 4px;
+  gap: 2px;
+  padding: 0;
   border: 0;
-  font-size: 12px;
+  font-size: 11px;
 }
-.nutrition-remaining-card .nutrition-remaining p:first-child span {
-  color: var(--ui-chart-calories);
+.nutrition-remaining-card .nutrition-remaining p > span {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.2;
 }
-.nutrition-remaining-card .nutrition-remaining p:nth-child(2) span,
-.nutrition-remaining-card .nutrition-remaining p:nth-child(2) strong {
-  color: var(--feature-protein);
-}
-.nutrition-remaining-card .nutrition-remaining p:nth-child(3) span,
-.nutrition-remaining-card .nutrition-remaining p:nth-child(3) strong {
-  color: var(--feature-activity);
-}
-.nutrition-remaining-card .nutrition-remaining p:nth-child(4) span,
-.nutrition-remaining-card .nutrition-remaining p:nth-child(4) strong {
-  color: var(--feature-calories);
-}
-.nutrition-remaining-card .nutrition-remaining p:nth-child(5) span,
-.nutrition-remaining-card .nutrition-remaining p:nth-child(5) strong {
-  color: var(--feature-weight);
-}
+.nutrition-remaining-card .nutrition-remaining p.macro-protein,
+.nutrition-remaining-card .nutrition-remaining p.macro-protein > span { color: var(--feature-protein); }
+.nutrition-remaining-card .nutrition-remaining p.macro-carbs,
+.nutrition-remaining-card .nutrition-remaining p.macro-carbs > span { color: var(--feature-carbs); }
+.nutrition-remaining-card .nutrition-remaining p.macro-fat,
+.nutrition-remaining-card .nutrition-remaining p.macro-fat > span { color: var(--feature-fat); }
+.nutrition-remaining-card .nutrition-remaining p.macro-fiber,
+.nutrition-remaining-card .nutrition-remaining p.macro-fiber > span { color: var(--feature-fiber); }
+.nutrition-remaining-card .nutrition-remaining p.remaining-kcal > strong { color: var(--ink); }
 .nutrition-remaining-card .nutrition-remaining strong {
+  min-width: 0;
   max-width: 100%;
-  color: var(--ink);
-  font-size: clamp(14px, 4.5vw, 19px);
+  color: inherit;
+  font-size: 17px;
   line-height: 1.2;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -6261,7 +6332,6 @@ body:not(.home-screen) .nutrition-page {
   .nutrition-remaining-card { padding: 11px 8px; }
   .nutrition-remaining-card .nutrition-remaining { gap: 0; }
   .nutrition-remaining-card .nutrition-remaining p { padding-inline: 3px; font-size: 11px; }
-  .nutrition-remaining-card .nutrition-remaining strong { font-size: clamp(13px, 4vw, 16px); }
   .nutrition-water-card { padding: 13px; }
   .nutrition-water-actions { gap: 6px; }
   .nutrition-water-actions > button,

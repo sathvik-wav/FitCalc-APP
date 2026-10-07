@@ -463,8 +463,8 @@
           headline(Math.round(cal), "kcal / day", ({ balanced: "balanced", highprotein: "high protein", lowcarb: "low carb", keto: "keto" })[goal] || goal, "ok") +
           '<div class="result-rows">' +
             bar(s[1] * 100, "var(--feature-protein)", "protein", proteinG + " g") +
-            bar(s[0] * 100, "var(--blue)", "carbs", carbG + " g") +
-            bar(s[2] * 100, "var(--orange)", "fat", fatG + " g") +
+            bar(s[0] * 100, "var(--feature-carbs)", "carbs", carbG + " g") +
+            bar(s[2] * 100, "var(--feature-fat)", "fat", fatG + " g") +
           "</div>" + useTargetValuesLink({ calories: cal, protein: proteinG, carbs: carbG, fat: fatG })
         );
       });

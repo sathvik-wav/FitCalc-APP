@@ -149,6 +149,37 @@ function filterExternalFoodSearchResults(foods, query) {
     }).slice(0, 8);
 }
 
+function localFoodNameKey(food) {
+    return String(food && food.name || "").trim().replace(/\s+/g, " ").toLocaleLowerCase();
+}
+
+function localFoodSourceQuality(food) {
+    const source = String(food && (food.sourceTag || food.source) || "");
+    if (/\bIFCT\b/i.test(source)) return 2;
+    if (/\bUSDA\b/i.test(source)) return 1;
+    return 0;
+}
+
+function mergeLocalBasicFoodRecords(foods) {
+    const byName = new Map();
+    (Array.isArray(foods) ? foods : []).forEach(function (food) {
+        if (!food || !String(food.name || "").trim()) return;
+        const candidate = Object.assign({}, food, { aliases: Array.isArray(food.aliases) ? food.aliases.slice() : [] });
+        const key = localFoodNameKey(candidate);
+        const previous = byName.get(key);
+        if (!previous) {
+            byName.set(key, candidate);
+            return;
+        }
+        const preferred = localFoodSourceQuality(candidate) > localFoodSourceQuality(previous) ? candidate : previous;
+        const other = preferred === candidate ? previous : candidate;
+        preferred.aliases = Array.from(new Set(preferred.aliases.concat(other.aliases)));
+        if (!preferred.sourceTag && other.sourceTag) preferred.sourceTag = other.sourceTag;
+        byName.set(key, preferred);
+    });
+    return Array.from(byName.values());
+}
+
 function searchLocalFoodSources(query) {
     if (!String(query || "").trim()) return [];
     let library = { customFoods: [], favorites: [] };
@@ -159,14 +190,20 @@ function searchLocalFoodSources(query) {
         .map(function (food) { return Object.assign({}, food, { source: "Favorite", resultGroup: "your" }); });
     const customFoods = (Array.isArray(library.customFoods) ? library.customFoods : []).filter(function (food) { return matchesFoodQuery(food, query); })
         .map(function (food) { return Object.assign({}, food, { source: "Custom food", resultGroup: "your" }); });
-    const builtIns = (typeof searchBuiltInFoodList === "function" ? searchBuiltInFoodList(query) : [])
+    let basicRecords = [];
+    if (typeof foodDatabase !== "undefined" && Array.isArray(foodDatabase)) {
+        basicRecords = basicRecords.concat(foodDatabase.map(function (food) {
+            return Object.assign({}, food, { source: "FitCalc built-in" });
+        }));
+    } else if (typeof searchBuiltInFoodList === "function") {
+        basicRecords = basicRecords.concat(searchBuiltInFoodList(query));
+    }
+    if (typeof indianFoodDatabase !== "undefined" && Array.isArray(indianFoodDatabase)) {
+        basicRecords = basicRecords.concat(indianFoodDatabase);
+    }
+    const basicFoods = mergeLocalBasicFoodRecords(basicRecords).filter(function (food) { return matchesFoodQuery(food, query); })
         .map(function (food) { return Object.assign({}, food, { resultGroup: "basic" }); });
-    const india = typeof indianFoodDatabase !== "undefined" && Array.isArray(indianFoodDatabase)
-        ? indianFoodDatabase.filter(function (food) { return matchesFoodQuery(food, query); }).map(function (food) {
-            return Object.assign({}, food, { resultGroup: "basic" });
-        })
-        : [];
-    return mergeFoodSearchResults([favorites, customFoods, india, builtIns]).sort(function (a, b) {
+    return mergeFoodSearchResults([favorites, customFoods, basicFoods]).sort(function (a, b) {
         return foodSearchRank(a, query) - foodSearchRank(b, query) || foodSearchSourceRank(a) - foodSearchSourceRank(b);
     });
 }
@@ -488,6 +525,60 @@ function chooseFoodFromApi(food) {
     document.getElementById("food-amount")?.focus();
 }
 
+function foodSearchSummaryValue(value) {
+    return value === null || value === undefined || !Number.isFinite(Number(value))
+        ? "—"
+        : String(Math.round(Number(value) * 10) / 10);
+}
+
+function createFoodSearchResultRow(food) {
+    const row = document.createElement("div");
+    row.className = "integration-result food-search-result-row";
+    const info = document.createElement("div");
+    info.className = "food-search-result-copy";
+    const title = document.createElement("strong");
+    title.textContent = food.name;
+    const details = document.createElement("small");
+    details.className = "food-search-result-macros";
+    const parts = [
+        [foodSearchSummaryValue(food.calories) + " kcal", "macro-kcal"],
+        [foodSearchSummaryValue(food.protein) + " P", "macro-protein"],
+        [foodSearchSummaryValue(food.carbs) + " C", "macro-carbs"],
+        [foodSearchSummaryValue(food.fat) + " F", "macro-fat"],
+        ["per 100 g", "macro-per-unit"]
+    ];
+    parts.forEach(function (part, index) {
+        if (index) {
+            const separator = document.createElement("span");
+            separator.className = "macro-separator";
+            separator.textContent = " · ";
+            details.appendChild(separator);
+        }
+        const value = document.createElement("span");
+        value.className = "food-search-macro-value " + part[1];
+        value.textContent = part[0];
+        details.appendChild(value);
+    });
+    info.append(title, details);
+    const select = document.createElement("button");
+    select.type = "button";
+    select.className = "secondary-btn food-search-use";
+    select.textContent = "Use";
+    select.addEventListener("click", function () { chooseFoodFromApi(food); });
+    row.append(info, select);
+    return row;
+}
+
+function revealFoodSearchResults(root, query) {
+    if (!String(query || "").trim()) {
+        if (root.dataset) delete root.dataset.resultsRevealed;
+        return;
+    }
+    if (root.dataset && root.dataset.resultsRevealed === "true") return;
+    if (root.dataset) root.dataset.resultsRevealed = "true";
+    if (typeof root.scrollIntoView === "function") root.scrollIntoView({ block: "nearest" });
+}
+
 function renderFoodApiResults(foods, query, options) {
     const root = document.getElementById("food-api-results");
     if (!root) return;
@@ -513,6 +604,7 @@ function renderFoodApiResults(foods, query, options) {
             root.append(empty, addCustom);
         }
         if (options && options.packagedUnavailable) appendPackagedUnavailable(root);
+        revealFoodSearchResults(root, query);
         return;
     }
 
@@ -539,26 +631,7 @@ function renderFoodApiResults(foods, query, options) {
         const hiddenPackaged = group.key === "packaged" && groupFoods.length > 3;
         if (hiddenPackaged) groupFoods = groupFoods.slice(0, 3);
         groupFoods.forEach(function (food) {
-        const card = document.createElement("div");
-        card.className = "integration-result";
-        const info = document.createElement("div");
-        const title = document.createElement("strong");
-        title.textContent = food.name;
-        const details = document.createElement("small");
-        const value = function (number, unit) { return number === null ? "—" : (Math.round(number * 10) / 10) + unit; };
-        details.textContent = (food.brand ? food.brand + " · " : "") + value(food.calories, " kcal") + " · " +
-            value(food.protein, "g protein") + " · " + value(food.carbs, "g carbs") + " · " + value(food.fat, "g fat") + " per 100 g";
-        const source = document.createElement("span");
-        source.className = "food-source-tag";
-        source.textContent = food.source;
-        info.append(title, details, source);
-        const select = document.createElement("button");
-        select.type = "button";
-        select.className = "secondary-btn";
-        select.textContent = "Use";
-        select.addEventListener("click", function () { chooseFoodFromApi(food); });
-        card.append(info, select);
-        list.appendChild(card);
+            list.appendChild(createFoodSearchResultRow(food));
         });
         section.appendChild(list);
         if (hiddenPackaged) {
@@ -569,27 +642,7 @@ function renderFoodApiResults(foods, query, options) {
             more.addEventListener("click", function () {
                 more.remove();
                 allPackaged.slice(3).forEach(function (food) {
-                    const item = document.createElement("div");
-                    item.className = "integration-result";
-                    const info = document.createElement("div");
-                    const title = document.createElement("strong");
-                    title.textContent = food.name;
-                    const details = document.createElement("small");
-                    const value = function (number, unit) { return number === null ? "—" : (Math.round(number * 10) / 10) + unit; };
-                    details.textContent = (food.brand ? food.brand + " · " : "") + value(food.calories, " kcal") + " · " +
-                        value(food.protein, "g protein") + " · " + value(food.carbs, "g carbs") + " · " + value(food.fat, "g fat") + " per 100 g";
-                    info.append(title, details);
-                    const source = document.createElement("span");
-                    source.className = "food-source-tag";
-                    source.textContent = food.source;
-                    info.appendChild(source);
-                    const select = document.createElement("button");
-                    select.type = "button";
-                    select.className = "secondary-btn";
-                    select.textContent = "Use";
-                    select.addEventListener("click", function () { chooseFoodFromApi(food); });
-                    item.append(info, select);
-                    list.appendChild(item);
+                    list.appendChild(createFoodSearchResultRow(food));
                 });
             });
             section.appendChild(more);
@@ -597,6 +650,7 @@ function renderFoodApiResults(foods, query, options) {
         root.appendChild(section);
     });
     if (options && options.packagedUnavailable) appendPackagedUnavailable(root);
+    revealFoodSearchResults(root, query);
 }
 
 function appendPackagedUnavailable(root) {

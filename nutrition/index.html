@@ -35,11 +35,11 @@
   <section class="card nutrition-remaining-card" aria-labelledby="remaining-heading">
     <h2 id="remaining-heading">Remaining today</h2>
     <div class="nutrition-remaining">
-      <p><span>kcal</span><strong id="remaining-calories">0 kcal</strong></p>
-      <p><span>Protein</span><strong id="remaining-protein">0 g</strong></p>
-      <p><span>Carbs</span><strong id="remaining-carbs">0 g</strong></p>
-      <p><span>Fat</span><strong id="remaining-fat">0 g</strong></p>
-      <p><span>Fiber</span><strong id="remaining-fiber">0 g</strong></p>
+      <p class="remaining-kcal"><span>kcal</span><strong id="remaining-calories">0</strong></p>
+      <p class="remaining-protein macro-protein"><span>Protein g</span><strong id="remaining-protein">0</strong></p>
+      <p class="remaining-carbs macro-carbs"><span>Carbs g</span><strong id="remaining-carbs">0</strong></p>
+      <p class="remaining-fat macro-fat"><span>Fat g</span><strong id="remaining-fat">0</strong></p>
+      <p class="remaining-fiber macro-fiber"><span>Fiber g</span><strong id="remaining-fiber">0</strong></p>
     </div>
   </section>
 
@@ -50,6 +50,7 @@
         <div class="food-search-controls">
           <div class="field"><label for="food-name">Search foods</label><input type="search" id="food-name" autocomplete="off" placeholder="Search foods (e.g. paneer, roti, banana)"></div>
         </div>
+        <div id="food-api-results" class="integration-results food-search-results" aria-live="polite"></div>
         <details class="food-barcode-disclosure" id="food-barcode-disclosure">
           <summary>Scan or enter barcode</summary>
           <div class="food-barcode-controls"><input type="text" id="food-barcode" inputmode="numeric" pattern="[0-9]*" placeholder="Enter barcode digits" aria-label="Barcode number"><button type="button" class="secondary-btn" id="lookup-food-barcode">Look up</button><button type="button" class="secondary-btn" id="start-barcode-camera">Camera</button></div>
@@ -58,7 +59,6 @@
         <video id="barcode-camera" class="barcode-camera" playsinline hidden aria-label="Barcode camera preview"></video>
         <button type="button" class="secondary-btn" id="stop-barcode-camera" hidden>Stop camera</button>
         <p id="food-api-status" class="integration-status food-search-status" role="status" aria-live="polite"></p>
-        <div id="food-api-results" class="integration-results food-search-results" aria-live="polite"></div>
       </div>
       <div class="food-entry-fields">
         <div class="food-amount-row">

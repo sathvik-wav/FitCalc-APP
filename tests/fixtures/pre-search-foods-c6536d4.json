@@ -1,0 +1,287 @@
+{
+  "baselineCommit": "c6536d4",
+  "foods": [
+    {
+      "name": "chicken breast",
+      "aliases": [
+        "chicken"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "white rice",
+      "aliases": [
+        "cooked rice",
+        "cooked white rice"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "brown rice",
+      "aliases": [
+        "cooked brown rice"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "banana",
+      "aliases": [
+        "kela"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "apple",
+      "aliases": [
+        "seb"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "orange",
+      "aliases": [
+        "santra"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "egg",
+      "aliases": [],
+      "dataset": "built-in"
+    },
+    {
+      "name": "oats",
+      "aliases": [],
+      "dataset": "built-in"
+    },
+    {
+      "name": "salmon",
+      "aliases": [],
+      "dataset": "built-in"
+    },
+    {
+      "name": "tuna",
+      "aliases": [],
+      "dataset": "built-in"
+    },
+    {
+      "name": "lean beef",
+      "aliases": [],
+      "dataset": "built-in"
+    },
+    {
+      "name": "tofu",
+      "aliases": [],
+      "dataset": "built-in"
+    },
+    {
+      "name": "milk",
+      "aliases": [
+        "whole milk",
+        "doodh"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "greek yogurt",
+      "aliases": [
+        "yogurt",
+        "plain yogurt"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "cottage cheese",
+      "aliases": [],
+      "dataset": "built-in"
+    },
+    {
+      "name": "cheddar cheese",
+      "aliases": [],
+      "dataset": "built-in"
+    },
+    {
+      "name": "lentils",
+      "aliases": [
+        "dal",
+        "cooked dal",
+        "masoor dal"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "chickpeas",
+      "aliases": [
+        "chana",
+        "garbanzo beans"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "potato",
+      "aliases": [
+        "aloo"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "sweet potato",
+      "aliases": [
+        "shakarkandi"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "broccoli",
+      "aliases": [],
+      "dataset": "built-in"
+    },
+    {
+      "name": "spinach",
+      "aliases": [
+        "palak"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "avocado",
+      "aliases": [],
+      "dataset": "built-in"
+    },
+    {
+      "name": "almonds",
+      "aliases": [
+        "badam"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "peanut butter",
+      "aliases": [
+        "groundnut butter"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "olive oil",
+      "aliases": [
+        "oil"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "whole wheat bread",
+      "aliases": [
+        "bread",
+        "wholemeal bread"
+      ],
+      "dataset": "built-in"
+    },
+    {
+      "name": "pasta",
+      "aliases": [],
+      "dataset": "built-in"
+    },
+    {
+      "name": "Chapati or roti, plain (commercially prepared)",
+      "aliases": [
+        "roti",
+        "chapati",
+        "atta roti"
+      ],
+      "dataset": "Indian offline"
+    },
+    {
+      "name": "Curd or dahi, plain whole-milk (yogurt equivalent)",
+      "aliases": [
+        "curd",
+        "dahi",
+        "plain yogurt"
+      ],
+      "dataset": "Indian offline"
+    },
+    {
+      "name": "Carrot, raw",
+      "aliases": [
+        "carrot",
+        "carrots",
+        "gajar"
+      ],
+      "dataset": "Indian offline"
+    },
+    {
+      "name": "Cucumber, with peel, raw",
+      "aliases": [
+        "cucumber",
+        "cucumbers",
+        "kheera",
+        "khira"
+      ],
+      "dataset": "Indian offline"
+    },
+    {
+      "name": "Tomato, red, ripe, raw",
+      "aliases": [
+        "tomato",
+        "tomatoes",
+        "tamatar"
+      ],
+      "dataset": "Indian offline"
+    },
+    {
+      "name": "Pigeon peas (toor dal), mature seeds, raw",
+      "aliases": [
+        "toor dal",
+        "toor",
+        "arhar dal",
+        "pigeon pea",
+        "red gram"
+      ],
+      "dataset": "Indian offline"
+    },
+    {
+      "name": "Cheese, paneer",
+      "aliases": [
+        "paneer",
+        "indian cottage cheese"
+      ],
+      "dataset": "Indian offline"
+    },
+    {
+      "name": "Wheat flour, whole-grain",
+      "aliases": [
+        "whole wheat flour",
+        "atta",
+        "wholemeal flour"
+      ],
+      "dataset": "Indian offline"
+    },
+    {
+      "name": "Mango, raw",
+      "aliases": [
+        "mango",
+        "mangoes",
+        "aam"
+      ],
+      "dataset": "Indian offline"
+    },
+    {
+      "name": "Peanuts, all types, raw",
+      "aliases": [
+        "peanut",
+        "groundnuts",
+        "moongphali"
+      ],
+      "dataset": "Indian offline"
+    },
+    {
+      "name": "Seeds, chia seeds, dried",
+      "aliases": [
+        "chia",
+        "chia seed",
+        "chia seeds"
+      ],
+      "dataset": "Indian offline"
+    }
+  ]
+}
