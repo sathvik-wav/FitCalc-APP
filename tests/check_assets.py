@@ -183,8 +183,9 @@ def main():
         errors.append("Electron build allowlist must exclude tests/")
     if '"tests"' not in (ROOT / "main.js").read_text(encoding="utf-8"):
         errors.append("Electron protocol handler must reject tests/")
-    if 'win.loadURL("fitcalc://app/index.html")' not in (ROOT / "main.js").read_text(encoding="utf-8"):
-        errors.append("Electron entry point must load an explicit index.html path")
+    electron_main = (ROOT / "main.js").read_text(encoding="utf-8")
+    if 'win.loadURL("fitcalc://app/index.html")' not in electron_main or 'protocol.handle("fitcalc"' not in electron_main:
+        errors.append("Electron entry point must preserve the existing storage origin and load index.html explicitly")
     if "?test=1" in (ROOT / "store.js").read_text(encoding="utf-8"):
         errors.append("production storage still recognizes the test query flag")
     if "test" not in package.get("scripts", {}).get("test", ""):
@@ -200,6 +201,8 @@ def main():
         if not icon.is_file():
             errors.append(f"Linux application icon is missing: {icon.relative_to(ROOT)}")
     build_config = package.get("build", {})
+    if build_config.get("appId") != "com.vikx.macrobay" or build_config.get("productName") != "MACROBAY":
+        errors.append("Electron app identity must match the permanent MACROBAY identity")
     if not build_config.get("mac", {}).get("extendInfo", {}).get("NSCameraUsageDescription"):
         errors.append("macOS camera permission description is missing")
     if not build_config.get("win", {}).get("target") or not build_config.get("linux", {}).get("target"):
@@ -210,9 +213,9 @@ def main():
         errors.append("Linux build must use the standard-size icon set")
     if not build_config.get("linux", {}).get("maintainer") or not package.get("homepage"):
         errors.append("Linux package homepage and maintainer metadata are required")
-    if package.get("desktopName") != "FitCalc" or not build_config.get("linux", {}).get("syncDesktopName"):
+    if package.get("desktopName") != "MACROBAY" or not build_config.get("linux", {}).get("syncDesktopName"):
         errors.append("Linux desktop name must match the application id")
-    expected_cache = f'const CACHE_NAME = "fitcalc-app-shell-v{package["version"]}";'
+    expected_cache = f'const CACHE_NAME = "macrobay-app-shell-v{package["version"]}";'
     if expected_cache not in service_worker:
         errors.append("service-worker cache version does not match package.json; run npm run build")
 

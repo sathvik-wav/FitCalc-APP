@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FitCalc UI preview</title>
+<title>MACROBAY UI preview</title>
 <style>
 html,body{width:100%;height:100%;margin:0;background:#0b1020;overflow:hidden}.preview-frame{display:block;border:0;background:#0b1020}
 </style>
-<script>window.FITCALC_TEST_MODE = true;</script>
+<script>window.MACROBAY_TEST_MODE = true;</script>
 </head>
 <body>
-<iframe class="preview-frame" id="preview" title="FitCalc preview"></iframe>
+<iframe class="preview-frame" id="preview" title="MACROBAY preview"></iframe>
 <script>
 (function () {
   const params = new URLSearchParams(location.search);
@@ -51,14 +51,14 @@ html,body{width:100%;height:100%;margin:0;background:#0b1020;overflow:hidden}.pr
       nutritionDays[dateKey] = Object.assign({}, dailyNutrition, { calories: totals.calories + modifier * 4, protein: totals.protein + modifier / 3, water: Math.min(3.1, 1.4 + (6 - offset) * 0.12), foods: offset === 0 ? foods : foods.slice(0, 3) });
       plannerDays[dateKey] = Object.assign({}, dailyPlanner, { date: dateKey, steps: 5100 + (6 - offset) * 380, weight: 73.1 - (6 - offset) * 0.1, workouts: offset % 2 === 0 ? [workout] : [], tasks: dailyPlanner.tasks });
     }
-    localStorage.setItem("test_fitcalc_profile", JSON.stringify(profile));
-    localStorage.setItem("test_fitcalc_targets", JSON.stringify(targets));
-    localStorage.setItem("test_fitcalc_nutrition", JSON.stringify(nutritionDays));
-    localStorage.setItem("test_fitcalc_planner", JSON.stringify(plannerDays));
-    localStorage.setItem("test_fitcalc_workout_templates", JSON.stringify([{ name: "Upper body A", exercises: [{ name: "Bench press", sets: [] }, { name: "Dumbbell row", sets: [] }] }]));
+    localStorage.setItem("test_macrobay_profile", JSON.stringify(profile));
+    localStorage.setItem("test_macrobay_targets", JSON.stringify(targets));
+    localStorage.setItem("test_macrobay_nutrition", JSON.stringify(nutritionDays));
+    localStorage.setItem("test_macrobay_planner", JSON.stringify(plannerDays));
+    localStorage.setItem("test_macrobay_workout_templates", JSON.stringify([{ name: "Upper body A", exercises: [{ name: "Bench press", sets: [] }, { name: "Dumbbell row", sets: [] }] }]));
   }
-  if (params.get("theme") === "light") localStorage.setItem("test_fitcalc_preferences", JSON.stringify({ theme: "light" }));
-  else if (params.get("theme") === "dark") localStorage.setItem("test_fitcalc_preferences", JSON.stringify({ theme: "dark" }));
+  if (params.get("theme") === "light") localStorage.setItem("test_macrobay_preferences", JSON.stringify({ theme: "light" }));
+  else if (params.get("theme") === "dark") localStorage.setItem("test_macrobay_preferences", JSON.stringify({ theme: "dark" }));
   const destination = new URL("../" + route.replace(/^\//, ""), location.href);
   if (!/\.html$/i.test(destination.pathname)) {
     destination.pathname = destination.pathname.replace(/\/?$/, "/") + "index.html";

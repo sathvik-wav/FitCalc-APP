@@ -1,9 +1,9 @@
 {
-  "name": "fitcalc",
-  "version": "1.1.18",
-  "description": "FitCalc - Fitness tools, Made simple",
+  "name": "macrobay",
+  "version": "1.1.19",
+  "description": "MACROBAY - Fitness tools, Made simple",
   "homepage": "https://github.com/sathvik-labs/cccccc",
-  "desktopName": "FitCalc",
+  "desktopName": "MACROBAY",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -31,15 +31,15 @@
     "electron-builder": "^26.15.3"
   },
   "build": {
-    "appId": "com.fitcalc.app",
-    "productName": "FitCalc",
+    "appId": "com.vikx.macrobay",
+    "productName": "MACROBAY",
     "icon": "build/icon.icns",
     "mac": {
       "target": [
         "dmg"
       ],
       "extendInfo": {
-        "NSCameraUsageDescription": "FitCalc uses the camera only when you choose to scan a food barcode."
+        "NSCameraUsageDescription": "MACROBAY uses the camera only when you choose to scan a food barcode."
       }
     },
     "win": {

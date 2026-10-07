@@ -664,13 +664,13 @@ function backfillProgressFromActivity() {
  */
 
 if (typeof window !== "undefined") {
-    window.addEventListener("fitcalc:data-change", function (event) {
+    window.addEventListener("macrobay:data-change", function (event) {
         const dateKey = event.detail && event.detail.date;
         if (dateKey) saveProgressRecord(dateKey);
     });
 
     window.addEventListener("storage", function (event) {
-        if (event.key !== fitcalcStorageKey(NUTRITION_KEY) && event.key !== fitcalcStorageKey(PLANNER_KEY)) return;
+        if (event.key !== macrobayStorageKey(NUTRITION_KEY) && event.key !== macrobayStorageKey(PLANNER_KEY)) return;
         try {
             const changedDays = event.newValue ? JSON.parse(event.newValue) : {};
             const previousDays = event.oldValue ? JSON.parse(event.oldValue) : {};

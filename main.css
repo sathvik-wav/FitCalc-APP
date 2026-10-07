@@ -3264,7 +3264,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   color: var(--muted);
   font-size: 14px;
 }
-.storage-notice,.fitcalc-toast {
+.storage-notice,.macrobay-toast {
   position: fixed;
   z-index: 1000;
   right: 20px;
@@ -3281,7 +3281,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .storage-notice {
   border-color: var(--red);
 }
-.fitcalc-dialog {
+.macrobay-dialog {
   width: min(480px,calc(100vw - 28px));
   max-height: min(90vh,760px);
   padding: 0;
@@ -3291,35 +3291,35 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   background: var(--surface);
   box-shadow: var(--shadow-raised);
 }
-.fitcalc-dialog::backdrop {
+.macrobay-dialog::backdrop {
   background: rgba(0,0,0,.58);
   backdrop-filter: blur(4px);
 }
-.fitcalc-dialog-content {
+.macrobay-dialog-content {
   display: grid;
   gap: 10px;
   padding: 18px;
 }
-.fitcalc-dialog h2 {
+.macrobay-dialog h2 {
   margin: 0;
   font-size: 20px;
 }
-.fitcalc-dialog p {
+.macrobay-dialog p {
   margin: 0;
   color: var(--ink-soft);
   font-size: 14px;
 }
-.fitcalc-dialog-actions {
+.macrobay-dialog-actions {
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 6px;
 }
-.fitcalc-toast[data-kind="error"] {
+.macrobay-toast[data-kind="error"] {
   border-color: var(--red);
 }
-.fitcalc-toast[data-kind="success"] {
+.macrobay-toast[data-kind="success"] {
   border-color: var(--green);
 }
 
@@ -3327,7 +3327,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   color: var(--accent-strong);
 }
 
-.fitcalc-toast,.storage-notice {
+.macrobay-toast,.storage-notice {
   border-radius: 13px;
   box-shadow: var(--shadow-raised);
 }
@@ -3430,7 +3430,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     width: min(390px,calc(100vw - 20px));
     max-height: calc(100dvh - 180px);
   }
-  .storage-notice,.fitcalc-toast {
+  .storage-notice,.macrobay-toast {
     right: 12px;
     bottom: calc(82px + env(safe-area-inset-bottom));
     left: 12px;
@@ -3728,11 +3728,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .button-row > button {
     flex: 1 1 auto;
   }
-  .fitcalc-dialog {
+  .macrobay-dialog {
     max-height: calc(100dvh - 32px);
     overflow-y: auto;
   }
-  .fitcalc-dialog-actions > button {
+  .macrobay-dialog-actions > button {
     flex: 1 1 120px;
   }
   .terminal-section-heading {
@@ -3756,7 +3756,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   }
 }
 @media (max-width: 768px) {
-/* Shared phone-width layout for the rest of FitCalc */
+/* Shared phone-width layout for the rest of MACROBAY */
 body:not(.home-screen) {
   width: min(100%,480px);
   min-height: 100vh;

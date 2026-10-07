@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>FitCalc responsive UI audit</title>
+  <title>MACROBAY responsive UI audit</title>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; padding: 24px; color: #f2f5ff; background: #0b1020; font: 14px/1.5 system-ui,sans-serif; }
@@ -14,10 +14,10 @@
     [data-result="pass"] { color: #9d83ff; }
     [data-result="fail"] { color: #ff8d8d; }
   </style>
-<script>window.FITCALC_TEST_MODE = true;</script>
+<script>window.MACROBAY_TEST_MODE = true;</script>
 </head>
 <body>
-  <h1>FitCalc responsive UI audit</h1>
+  <h1>MACROBAY responsive UI audit</h1>
   <p>All routes at 1440, 1280, 1024, 768, 430, 390, 375, and 320 CSS pixels; typography and layout are checked at 390, 768, and 1280 in light and dark themes.</p>
   <pre id="results" role="status" aria-live="polite">Loading responsive route matrix…</pre>
   <script>
@@ -61,7 +61,7 @@
         var failures = checks.filter(function (line) { return line.indexOf("FAIL ") === 0; }).length;
         output.textContent = (failures ? failures + " checks failed" : "All responsive UI checks passed") + " · " + checks.length + " assertions\n\n" + checks.join("\n");
         output.dataset.result = failures ? "fail" : "pass";
-        document.title = failures ? "FAIL FitCalc responsive audit" : "PASS FitCalc responsive audit";
+        document.title = failures ? "FAIL MACROBAY responsive audit" : "PASS MACROBAY responsive audit";
       }
       function inspect(route, width, frame) {
         var label = route[0] + " @ " + width;
@@ -90,7 +90,7 @@
             return bounds.right > width + 2 ? (element.id || element.className || element.tagName) + "[" + Math.round(bounds.left) + "+" + Math.round(bounds.width) + ",min=" + style.minWidth + ",scroll=" + element.scrollWidth + "]@" + Math.round(bounds.right) : "";
           }).filter(Boolean).slice(-5).join(", ") : "";
           check(label + " no horizontal overflow" + (overflowItems ? " (" + overflowItems + ")" : ""), overflowWidth <= width + 2);
-          var navigationState = win.fitcalcNavigation.getState();
+          var navigationState = win.macrobayNavigation.getState();
           var expectedPrimary = {
             "Home": "Home", "Calculators": "Calculators", "Nutrition": null,
             "Planner": "Activity", "History": "Progress", "Profile": "Profile", "Settings": null
@@ -179,7 +179,7 @@
               weightSelect.value = "lb";
               heightSelect.value = "ft-in";
               doc.getElementById("unit-preferences-form").dispatchEvent(new win.Event("submit", { bubbles: true, cancelable: true }));
-              var preferenceJson = win.localStorage.getItem("test_fitcalc_preferences") || win.localStorage.getItem("fitcalc_preferences") || "{}";
+              var preferenceJson = win.localStorage.getItem("test_macrobay_preferences") || win.localStorage.getItem("macrobay_preferences") || "{}";
               var preferences = JSON.parse(preferenceJson);
               check(label + " Settings saves shared unit preferences", preferences.units && preferences.units.weight === "lb" && preferences.units.height === "ft-in");
             }

@@ -2,8 +2,17 @@ const { app, BrowserWindow, protocol } = require("electron");
 const path = require("path");
 const fs = require("fs");
 
+// Keep Electron's original storage directory so its existing localStorage
+// origin remains available to the one-time key migration in theme-init.js.
+if (!process.argv.some((argument) => argument === "--user-data-dir" || argument.startsWith("--user-data-dir="))) {
+    const legacyUserData = path.join(app.getPath("appData"), "FitCalc");
+    app.setPath("userData", legacyUserData);
+    app.setPath("sessionData", legacyUserData);
+}
+
 protocol.registerSchemesAsPrivileged([
     {
+        // Chromium localStorage belongs to an origin; preserve the old desktop origin for migration.
         scheme: "fitcalc",
         privileges: {
             standard: true,
@@ -20,7 +29,7 @@ function createWindow() {
         height: 800,
         minWidth: 900,
         minHeight: 600,
-        title: "FitCalc",
+        title: "MACROBAY",
         webPreferences: {
             contextIsolation: true
         }

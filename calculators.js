@@ -1,4 +1,4 @@
-// FitCalc — calculator logic
+// MACROBAY — calculator logic
 // Each page sets <body data-calc="slug">; this file wires up that page's form.
 
 (function () {
@@ -7,7 +7,7 @@
   function $(id) { return document.getElementById(id); }
   function num(id) { var el = $(id); if (!el) return NaN; return parseFloat(el.value); }
   function units() {
-    if (typeof getFitCalcUnits === "function") return getFitCalcUnits();
+    if (typeof getMacroBayUnits === "function") return getMacroBayUnits();
     return { weight: "kg", height: "cm" };
   }
   function weightInKg(value) {
@@ -592,12 +592,12 @@
     if (slug && calculators[slug]) calculators[slug]();
   });
   if (typeof window.addEventListener === "function") {
-    var preferencesKey = typeof PREFERENCES_KEY === "undefined" ? "fitcalc_preferences" : PREFERENCES_KEY;
-    window.addEventListener("fitcalc:data-change", function (event) {
+    var preferencesKey = typeof PREFERENCES_KEY === "undefined" ? "macrobay_preferences" : PREFERENCES_KEY;
+    window.addEventListener("macrobay:data-change", function (event) {
       if (!event.detail || !event.detail.key || event.detail.key === preferencesKey) syncCalculatorUnits();
     });
     window.addEventListener("storage", function (event) {
-      if (typeof fitcalcStorageKey === "function" && event.key === fitcalcStorageKey(preferencesKey)) syncCalculatorUnits();
+      if (typeof macrobayStorageKey === "function" && event.key === macrobayStorageKey(preferencesKey)) syncCalculatorUnits();
     });
   }
 })();

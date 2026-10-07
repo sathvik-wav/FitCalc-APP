@@ -1,5 +1,5 @@
 /*
- * FITCALC HISTORY
+ * MACROBAY HISTORY
  *
  * Progress / History page UI
  */
@@ -223,7 +223,7 @@ function createHistorySummaryHTML(records) {
             ${createSummaryCard(
                 "WEIGHT CHANGE",
                 weightChange === null ? "—" : formatHistoryDecimal(kilogramsToDisplayWeight(weightChange)),
-                `${getFitCalcWeightUnit()} / ${historyRange} days`
+                `${getMacroBayWeightUnit()} / ${historyRange} days`
             )}
 
             ${createSummaryCard(
@@ -667,7 +667,7 @@ function createProgressChartsHTML() {
                 ${createLineChartHTML(
                     "Weight",
                     "weight",
-                    getFitCalcWeightUnit(),
+                    getMacroBayWeightUnit(),
                     weightRecords
                 )}
 
@@ -717,7 +717,7 @@ function formatHistorySetText(set) {
     if (!set || typeof set !== "object") return "Performance not recorded";
     const parts = [];
     if (Number(set.reps) > 0) parts.push(Number(set.reps) + " reps");
-    if (Number(set.weight) > 0) parts.push(formatHistoryDecimal(kilogramsToDisplayWeight(set.weight)) + " " + getFitCalcWeightUnit());
+    if (Number(set.weight) > 0) parts.push(formatHistoryDecimal(kilogramsToDisplayWeight(set.weight)) + " " + getMacroBayWeightUnit());
     if (Number(set.durationMinutes) > 0) parts.push(Number(set.durationMinutes) + " min");
     if (set.notes) parts.push(String(set.notes));
     return parts.join(" · ") || "Performance not recorded";
@@ -754,7 +754,7 @@ function createHistoryRecordHTML(record) {
     return `<details class="history-record history-record-details" data-history-date="${escapeHTML(record.date)}">
         <summary class="history-record-summary">
         <div class="history-record-header"><div><span class="history-record-date">${formatHistoryDate(record.date)}</span></div>
-        ${record.weight !== null ? `<span class="history-weight">${formatHistoryDecimal(kilogramsToDisplayWeight(record.weight))} ${getFitCalcWeightUnit()}</span>` : ""}</div>
+        ${record.weight !== null ? `<span class="history-weight">${formatHistoryDecimal(kilogramsToDisplayWeight(record.weight))} ${getMacroBayWeightUnit()}</span>` : ""}</div>
         <div class="history-stats">
             <div class="history-stat"><span>Calories</span><strong>${formatHistoryNumber(record.calories)} <small>kcal</small></strong></div>
             <div class="history-stat"><span>Water</span><strong>${formatHistoryDecimal(record.water, 2)} <small>L</small></strong></div>
@@ -849,7 +849,7 @@ function csvCell(value) {
 }
 
 function createHistoryCSV(records) {
-    const columns = ["Date", "Weight (" + getFitCalcWeightUnit() + ")", "Calories", "Protein", "Carbohydrates", "Fat", "Fiber", "Water (L)", "Steps", "Completed workouts", "Planned workouts", "Completed tasks", "Planned tasks", "Foods", "Workout details"];
+    const columns = ["Date", "Weight (" + getMacroBayWeightUnit() + ")", "Calories", "Protein", "Carbohydrates", "Fat", "Fiber", "Water (L)", "Steps", "Completed workouts", "Planned workouts", "Completed tasks", "Planned tasks", "Foods", "Workout details"];
     const rows = [columns.map(csvCell).join(",")];
     records.forEach(function (record) {
         const workouts = Array.isArray(record.workouts) ? record.workouts.filter(function (item) { return item && typeof item === "object"; }) : [];
@@ -882,19 +882,19 @@ function downloadHistoryCSV() {
     const records = getVisibleHistoryRecords(historyRange);
     if (!records.length) return false;
     if (typeof Blob !== "function" || typeof URL === "undefined" || typeof URL.createObjectURL !== "function") {
-        if (typeof window.fitcalcToast === "function") window.fitcalcToast("CSV export is unavailable in this environment.", "error");
+        if (typeof window.macrobayToast === "function") window.macrobayToast("CSV export is unavailable in this environment.", "error");
         return false;
     }
     const blob = new Blob(["\ufeff" + createHistoryCSV(records)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "fitcalc-history-" + historyRange + "d-" + getDateKey(new Date()) + ".csv";
+    link.download = "macrobay-history-" + historyRange + "d-" + getDateKey(new Date()) + ".csv";
     document.body.appendChild(link);
     link.click();
     link.remove();
     window.setTimeout(function () { URL.revokeObjectURL(url); }, 0);
-    if (typeof window.fitcalcToast === "function") window.fitcalcToast("History CSV downloaded.");
+    if (typeof window.macrobayToast === "function") window.macrobayToast("History CSV downloaded.");
     return true;
 }
 
@@ -934,13 +934,13 @@ function attachHistoryEvents() {
     (typeof document.querySelectorAll === "function" ? document.querySelectorAll("[data-delete-history-date]") : []).forEach(function (button) {
         button.addEventListener("click", function () {
             const date = button.dataset.deleteHistoryDate;
-            if (!date || (typeof window.confirm === "function" && !window.confirm("Delete all FitCalc entries for " + date + "? This removes that day's food, water, planner activity, and history record."))) return;
-            if (!deleteFitCalcDay(date)) {
-                if (typeof window.fitcalcToast === "function") window.fitcalcToast("That day could not be deleted. Check device storage and try again.", "error");
+            if (!date || (typeof window.confirm === "function" && !window.confirm("Delete all MACROBAY entries for " + date + "? This removes that day's food, water, planner activity, and history record."))) return;
+            if (!deleteMacroBayDay(date)) {
+                if (typeof window.macrobayToast === "function") window.macrobayToast("That day could not be deleted. Check device storage and try again.", "error");
                 return;
             }
             renderHistory();
-            if (typeof window.fitcalcToast === "function") window.fitcalcToast("Day removed from FitCalc history.");
+            if (typeof window.macrobayToast === "function") window.macrobayToast("Day removed from MACROBAY history.");
         });
     });
 }
@@ -995,7 +995,7 @@ function getVisibleHistoryRecords(days) {
 }
 
 if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
-    window.addEventListener("fitcalc:data-change", function (event) {
+    window.addEventListener("macrobay:data-change", function (event) {
         const key = event.detail && event.detail.key;
         if (key && [NUTRITION_KEY, PLANNER_KEY, HISTORY_KEY, PROFILE_KEY, TARGETS_KEY, PREFERENCES_KEY].indexOf(key) === -1) return;
         renderHistory();
@@ -1003,7 +1003,7 @@ if (typeof window !== "undefined" && typeof window.addEventListener === "functio
 
     window.addEventListener("storage", function (event) {
         const relevantKeys = [NUTRITION_KEY, PLANNER_KEY, HISTORY_KEY, PROFILE_KEY, TARGETS_KEY, PREFERENCES_KEY];
-        if (relevantKeys.some(function (key) { return event.key === fitcalcStorageKey(key); })) {
+        if (relevantKeys.some(function (key) { return event.key === macrobayStorageKey(key); })) {
             renderHistory();
         }
     });

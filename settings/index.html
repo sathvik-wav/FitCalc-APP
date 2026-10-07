@@ -4,32 +4,32 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.openfoodfacts.org; font-src 'self'; connect-src 'self' https://world.openfoodfacts.org https://search.openfoodfacts.org https://api.nal.usda.gov https://wger.de https://api.wger.de; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Manage FitCalc appearance, unit preferences, and local data backups.">
-<title>Settings — FitCalc</title>
+<meta name="description" content="Manage MACROBAY appearance, unit preferences, and local data backups.">
+<title>Settings — MACROBAY</title>
 <link rel="stylesheet" href="../main.css">
 <script src="../theme-init.js"></script>
 </head>
 <body class="settings-screen">
 <header class="topbar">
-  <a class="brand" href="../index.html" aria-label="FitCalc home"><span class="brand-mark" aria-hidden="true">+</span><span>FitCalc™</span></a>
+  <a class="brand" href="../index.html" aria-label="MACROBAY home"><span class="brand-mark" aria-hidden="true">+</span><span>MACROBAY™</span></a>
   <nav class="desktop-nav" aria-label="Main navigation"></nav>
   <div class="topbar-right"><button class="menu-toggle" id="hamburger-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button></div>
 </header>
 <nav class="mobile-menu" id="mobile-menu" aria-label="More navigation" hidden></nav>
 <main class="page-shell settings-page">
   <header class="page-heading">
-    <div><span class="page-kicker">App preferences</span><h1>Settings</h1><p>Adjust how FitCalc looks and displays your measurements, and manage data saved on this device.</p></div>
+    <div><span class="page-kicker">App preferences</span><h1>Settings</h1><p>Adjust how MACROBAY looks and displays your measurements, and manage data saved on this device.</p></div>
   </header>
   <div class="settings-grid">
     <section class="settings-card" aria-labelledby="settings-appearance-title">
       <span class="section-kicker">Display</span><h2 id="settings-appearance-title">Appearance</h2>
-      <p>Choose a theme for the FitCalc app.</p>
+      <p>Choose a theme for the MACROBAY app.</p>
       <div class="field"><label for="settings-theme">Theme</label><select id="settings-theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
       <p class="profile-status" id="settings-theme-status" role="status" aria-live="polite"></p>
     </section>
     <section class="settings-card" aria-labelledby="settings-units-title">
       <span class="section-kicker">Measurement display</span><h2 id="settings-units-title">Units</h2>
-      <p>Values are converted for display; FitCalc keeps measurements in metric units internally.</p>
+      <p>Values are converted for display; MACROBAY keeps measurements in metric units internally.</p>
       <form id="unit-preferences-form">
         <div class="field"><label for="unit-weight">Weight</label><select id="unit-weight"><option value="kg">Kilograms (kg)</option><option value="lb">Pounds (lb)</option></select></div>
         <div class="field"><label for="unit-height">Height</label><select id="unit-height"><option value="cm">Centimeters (cm)</option><option value="ft-in">Feet and inches (ft/in)</option></select></div>
@@ -48,16 +48,16 @@
     </section>
     <section class="settings-card settings-data-card" id="settings-data" aria-labelledby="settings-data-title">
       <span class="section-kicker">On this device</span><h2 id="settings-data-title">Data</h2>
-      <p>Back up or restore your FitCalc profile, targets, nutrition, planner, workouts, history, saved foods, and preferences.</p>
+      <p>Back up or restore your MACROBAY profile, targets, nutrition, planner, workouts, history, saved foods, and preferences.</p>
       <div class="settings-data-actions"><button type="button" class="secondary-btn" id="export-data">Export data</button></div>
-      <div class="field"><label for="import-data-file">Import a FitCalc JSON backup</label><input type="file" id="import-data-file" accept="application/json,.json"></div>
+      <div class="field"><label for="import-data-file">Import a MACROBAY JSON backup</label><input type="file" id="import-data-file" accept="application/json,.json"></div>
       <button type="button" class="ghost-btn" id="reset-data">Reset app data</button>
       <small>Import replaces saved data on this device. Reset permanently deletes it.</small>
       <p class="profile-status" id="data-management-status" role="status" aria-live="polite"></p>
     </section>
     <section class="settings-card" id="settings-about" aria-labelledby="settings-about-title">
-      <span class="section-kicker">FitCalc™</span><h2 id="settings-about-title">About FitCalc™</h2>
-      <p>Track, calculate, and improve with FitCalc.</p>
+      <span class="section-kicker">MACROBAY™</span><h2 id="settings-about-title">About MACROBAY™</h2>
+      <p>Track, calculate, and improve with MACROBAY.</p>
       <p class="settings-version">App version <strong id="settings-app-version">v1.1.16</strong></p>
     </section>
     <section class="settings-card" id="settings-privacy" aria-labelledby="settings-privacy-title">
@@ -67,7 +67,7 @@
     </section>
   </div>
 </main>
-<footer class="footer"><div class="footer-brand"><span class="brand-mark">+</span><strong>FitCalc</strong></div><p>App preferences and data controls.</p></footer>
+<footer class="footer"><div class="footer-brand"><span class="brand-mark">+</span><strong>MACROBAY</strong></div><p>App preferences and data controls.</p></footer>
 <script src="../constants.js"></script>
 <script src="../store.js"></script>
 <script src="../script.js"></script>

@@ -60,12 +60,12 @@ function submitStandaloneCalculator(slug, values, selectedUnits, overrides = {})
     calculateBMR: ctx.calculateBMR,
     calculateTDEE: ctx.calculateTDEE,
     calculateCalorieTarget: ctx.calculateCalorieTarget,
-    getFitCalcUnits() { return calculatorUnits; },
+    getMacroBayUnits() { return calculatorUnits; },
     feetInchesToCentimeters(feet, inches) { return (Number(feet) * 12 + Number(inches)) * 2.54; },
     centimetersToFeetInches(centimeters) { return ctx.centimetersToFeetInches(centimeters); },
     kilogramsToDisplayWeight(kilograms) { return calculatorUnits.weight === "lb" ? kilograms * 2.20462262185 : kilograms; },
     displayWeightToKilograms(weight) { return calculatorUnits.weight === "lb" ? weight / 2.20462262185 : weight; },
-    formatFitCalcHeight(centimeters) { return calculatorUnits.height === "cm" ? centimeters + " cm" : "5 ft 11 in"; }
+    formatMacroBayHeight(centimeters) { return calculatorUnits.height === "cm" ? centimeters + " cm" : "5 ft 11 in"; }
   };
   Object.assign(sandbox, overrides);
   vm.createContext(sandbox);
@@ -167,8 +167,8 @@ function loadPlannerSandbox(options = {}) {
   };
   const window = {
     location: { search: options.search || "" },
-    fitcalcToast(message, type) { toasts.push({ message, type }); },
-    fitcalcDialog: { confirm() { return Promise.resolve(true); } },
+    macrobayToast(message, type) { toasts.push({ message, type }); },
+    macrobayDialog: { confirm() { return Promise.resolve(true); } },
     addEventListener(type, handler) { (listeners.window[type] || (listeners.window[type] = [])).push(handler); },
     dispatchEvent(event) {
       dispatchedEvents.push(event);
@@ -234,7 +234,7 @@ function loadNutritionSandbox(search = "", options = {}) {
   };
   const window = {
     location: { search },
-    fitcalcToast(message, type) { toasts.push({ message, type }); },
+    macrobayToast(message, type) { toasts.push({ message, type }); },
     confirm() { return false; },
     addEventListener(type, handler) {
       (listeners.window[type] || (listeners.window[type] = [])).push(handler);
@@ -291,7 +291,7 @@ function loadProfileSandbox(search = "") {
   };
   const window = {
     location: { search },
-    fitcalcToast(message, type) { toasts.push({ message, type }); },
+    macrobayToast(message, type) { toasts.push({ message, type }); },
     confirm() { return true; },
     addEventListener(type, handler) { listeners.window[type] = handler; },
     dispatchEvent(event) { (listeners.window[event.type] || []).forEach((handler) => handler(event)); }
@@ -344,7 +344,7 @@ function loadExerciseApiRetrySandbox() {
   return { sandbox, results };
 }
 
-function loadGlobalScriptSandbox(href = "https://fitcalc.test/profile/", options = {}) {
+function loadGlobalScriptSandbox(href = "https://macrobay.test/profile/", options = {}) {
   const documentListeners = {};
   const windowListeners = {};
   const appended = [];
@@ -391,7 +391,7 @@ function loadGlobalScriptSandbox(href = "https://fitcalc.test/profile/", options
     appendChild(child) { appended.push(child); }
   };
   const document = {
-    currentScript: { src: "https://fitcalc.test/script.js" },
+    currentScript: { src: "https://macrobay.test/script.js" },
     documentElement: rootElement,
     body,
     querySelector(selector) { return selector === ".desktop-nav" ? desktopNav : null; },
@@ -399,7 +399,7 @@ function loadGlobalScriptSandbox(href = "https://fitcalc.test/profile/", options
     getElementById(id) {
       if (id === "mobile-menu") return mobileMenu;
       if (id === "hamburger-btn") return hamburger;
-      if (id === "fitcalc-splash") return splashScreen;
+      if (id === "macrobay-splash") return splashScreen;
       if (id === "splash-start") return splashStart;
       return null;
     },
@@ -446,14 +446,14 @@ function loadGlobalScriptSandbox(href = "https://fitcalc.test/profile/", options
     ["constants.js", "store.js"].forEach((file) => vm.runInContext(fs.readFileSync(__dirname + "/../" + file, "utf8"), sandbox));
   } else {
     const preferences = options.preferences || {};
-    sandbox.getFitCalcPreferences = () => preferences;
-    sandbox.hasCompletedFitCalcOnboarding = () => {
+    sandbox.getMacroBayPreferences = () => preferences;
+    sandbox.hasCompletedMacroBayOnboarding = () => {
       if (preferences.onboardingComplete === true) return true;
       if (!options.legacyUserData) return false;
       preferences.onboardingComplete = true;
       return true;
     };
-    sandbox.completeFitCalcOnboarding = () => {
+    sandbox.completeMacroBayOnboarding = () => {
       if (options.failOnboardingSave) throw new Error("storage unavailable");
       preferences.onboardingComplete = true;
       return true;
@@ -495,21 +495,21 @@ test("test-mode storage writes only to the test namespace", () => {
   values.clear();
   const previousLocation = ctx.window.location;
   ctx.window.location = { pathname: "/tests/core.test.js" };
-  ctx.window.FITCALC_TEST_MODE = true;
+  ctx.window.MACROBAY_TEST_MODE = true;
   ctx.writeJSON("test_sentinel", { isolated: true });
   assert.strictEqual(values.get("test_test_sentinel"), JSON.stringify({ isolated: true }));
   ctx.window.location = { pathname: "/index.html" };
-  ctx.window.FITCALC_TEST_MODE = false;
+  ctx.window.MACROBAY_TEST_MODE = false;
   assert.strictEqual(ctx.readJSON("test_sentinel", null), null);
   assert.strictEqual(values.get("test_test_sentinel"), JSON.stringify({ isolated: true }));
   ctx.window.location = previousLocation;
 });
 
 test("date reads do not create empty source records", () => {
-  localStorage.removeItem("fitcalc_nutrition");
-  const before = localStorage.getItem("fitcalc_nutrition");
+  localStorage.removeItem("macrobay_nutrition");
+  const before = localStorage.getItem("macrobay_nutrition");
   assert.strictEqual(ctx.getNutritionFor("2026-09-28").water, 0);
-  assert.strictEqual(localStorage.getItem("fitcalc_nutrition"), before);
+  assert.strictEqual(localStorage.getItem("macrobay_nutrition"), before);
   assert.strictEqual(ctx.getProgressRecord("2026-09-28"), null);
 });
 
@@ -559,7 +559,7 @@ test("A5 custom foods, favorites, recents, and serving quantities persist in the
   assert.strictEqual(library.customFoods.length, 1);
   assert.strictEqual(library.favorites[0].name, "Homemade granola");
   assert.strictEqual(library.recents[0].name, "Homemade granola");
-  assert.ok(values.has("fitcalc_food_library"));
+  assert.ok(values.has("macrobay_food_library"));
 });
 
 test("A5 copy previous day transfers logged foods and water without creating an empty day", () => {
@@ -686,7 +686,7 @@ test("unified food search normalizes, validates, deduplicates, and preserves sou
     return { favorites: [{ name: "banana", calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6 }], customFoods: [] };
   };
   app.sandbox.searchBuiltInFoodList = function () {
-    return [{ name: "banana", calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6, source: "FitCalc built-in" }];
+    return [{ name: "banana", calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6, source: "MACROBAY built-in" }];
   };
   app.sandbox.indianFoodDatabase = [{ name: "Banana", calories: 80, protein: 1, carbs: 20, fat: 0.2, fiber: 2, source: "USDA FoodData Central" }];
   const local = app.sandbox.searchLocalFoodSources("banana");
@@ -795,7 +795,7 @@ test("Nutrition has one search box and barcode lookup behind a disclosure", () =
 
 test("dashboard progress is finite and bounded using saved daily state", () => {
   const today = ctx.getDateKey(new Date());
-  ctx.writeJSON("fitcalc_targets", { calories: 2000, protein: 100, carbs: 200, fat: 70, fiber: 25 });
+  ctx.writeJSON("macrobay_targets", { calories: 2000, protein: 100, carbs: 200, fat: 70, fiber: 25 });
   ctx.saveNutritionFor(today, { calories: 1000, protein: 50, carbs: 100, fat: 35, fiber: 12, water: 2, foods: [] });
   ctx.savePlannerFor(today, { steps: 5000, workouts: [], tasks: [] });
   const progress = ctx.getDashboardDailyProgress();
@@ -930,7 +930,7 @@ test("R6-1 History range summary and consistency use only logged days in the sel
     };
   });
   history[dateAtOffset(3)] = { date: dateAtOffset(3), calories: 0, weight: null, foods: [], workouts: [], tasks: [] };
-  ctx.writeJSON("fitcalc_history", history);
+  ctx.writeJSON("macrobay_history", history);
   vm.runInContext("historyRange = 7", ctx);
 
   const visible = ctx.getVisibleHistoryRecords(7);
@@ -1137,7 +1137,7 @@ test("R5-4 progression insight uses each history key when a record has no date",
   const results = [false, true].map((includeDate) => {
     const history = {};
     keys.forEach((date) => { history[date] = makeRecord(date, includeDate); });
-    ctx.writeJSON("fitcalc_history", history);
+    ctx.writeJSON("macrobay_history", history);
     return ctx.getWorkoutProgressionInsights();
   });
   assert.deepStrictEqual(results[0], results[1]);
@@ -1147,7 +1147,7 @@ test("R5-4 progression insight uses each history key when a record has no date",
 test("R5-5 null exercises, sets, and legacy templates are safe to read", () => {
   values.clear();
   const today = ctx.getDateKey(new Date());
-  ctx.writeJSON("fitcalc_history", {
+  ctx.writeJSON("macrobay_history", {
     [today]: {
       workouts: [{
         name: "Legacy workout", completed: true,
@@ -1166,7 +1166,7 @@ test("R5-5 null exercises, sets, and legacy templates are safe to read", () => {
 
   assert.doesNotThrow(() => loadPlannerSandbox({
     initialStorage: {
-      fitcalc_planner: {
+      macrobay_planner: {
         "2026-01-15": {
           date: "2026-01-15", workouts: [{
             id: "malformed", name: "Legacy workout", completed: true,
@@ -1190,30 +1190,30 @@ test("Workout templates tolerate corrupt storage and replace names ignoring case
   planner.sandbox.saveWorkoutTemplates({ invalid: true });
   const first = planner.sandbox.createWorkoutTemplate("  Upper   Body ", [{ name: "Press" }]);
   assert.ok(first);
-  assert.deepStrictEqual(JSON.parse(planner.storage.get("fitcalc_workout_templates")), [
+  assert.deepStrictEqual(JSON.parse(planner.storage.get("macrobay_workout_templates")), [
     { name: "Upper   Body", exercises: [{ name: "Press" }] }
   ]);
 
   const replacement = planner.sandbox.createWorkoutTemplate("upper body", [{ name: "Row" }]);
   assert.ok(replacement);
-  const saved = JSON.parse(planner.storage.get("fitcalc_workout_templates"));
+  const saved = JSON.parse(planner.storage.get("macrobay_workout_templates"));
   assert.strictEqual(saved.length, 1);
   assert.deepStrictEqual(saved[0].exercises, [{ name: "Row" }]);
 });
 
 test("Saving an existing workout template asks before overwriting", async () => {
   const planner = loadPlannerSandbox({ initialStorage: {
-    fitcalc_planner: { "2026-01-15": { date: "2026-01-15", workouts: [
+    macrobay_planner: { "2026-01-15": { date: "2026-01-15", workouts: [
       { id: "w1", name: "Upper Body", exercises: [{ name: "Press", sets: [] }] }
     ], tasks: [] } },
-    fitcalc_workout_templates: [{ name: " upper   body ", exercises: [{ name: "Old" }] }]
+    macrobay_workout_templates: [{ name: " upper   body ", exercises: [{ name: "Old" }] }]
   } });
   let confirmed = 0;
-  planner.sandbox.window.fitcalcDialog.confirm = async () => { confirmed++; return false; };
+  planner.sandbox.window.macrobayDialog.confirm = async () => { confirmed++; return false; };
   planner.getElement("template-workout-select").value = "w1";
   await planner.getElement("save-workout-template").click();
   assert.strictEqual(confirmed, 1);
-  assert.deepStrictEqual(JSON.parse(planner.storage.get("fitcalc_workout_templates")), [
+  assert.deepStrictEqual(JSON.parse(planner.storage.get("macrobay_workout_templates")), [
     { name: " upper   body ", exercises: [{ name: "Old" }] }
   ]);
 });
@@ -1231,13 +1231,13 @@ test("Templates tab loads a saved template into the selected day and deletes it"
 
   const deleteButton = templateList.querySelectorAll(".delete-template")[0];
   await deleteButton.click();
-  assert.deepStrictEqual(JSON.parse(planner.storage.get("fitcalc_workout_templates")), []);
+  assert.deepStrictEqual(JSON.parse(planner.storage.get("macrobay_workout_templates")), []);
 });
 
 test("R5-6 Settings reset and import refresh shared units without changing Profile measurements", async () => {
   const reset = loadProfileSandbox();
   reset.sandbox.saveProfile(male);
-  reset.sandbox.saveFitCalcPreferences({ units: { weight: "lb", height: "ft-in" } });
+  reset.sandbox.saveMacroBayPreferences({ units: { weight: "lb", height: "ft-in" } });
   reset.sandbox.populateProfileForm(male);
   reset.sandbox.populateUnitPreferences();
   assert.strictEqual(reset.getElement("unit-weight").value, "lb");
@@ -1251,11 +1251,11 @@ test("R5-6 Settings reset and import refresh shared units without changing Profi
 
   const source = loadProfileSandbox();
   source.sandbox.saveProfile(male);
-  source.sandbox.saveFitCalcPreferences({ units: { weight: "kg", height: "cm" } });
-  const backup = source.sandbox.exportFitCalcData();
+  source.sandbox.saveMacroBayPreferences({ units: { weight: "kg", height: "cm" } });
+  const backup = source.sandbox.exportMacroBayData();
   const imported = loadProfileSandbox();
   imported.sandbox.saveProfile(male);
-  imported.sandbox.saveFitCalcPreferences({ units: { weight: "lb", height: "ft-in" } });
+  imported.sandbox.saveMacroBayPreferences({ units: { weight: "lb", height: "ft-in" } });
   imported.sandbox.populateProfileForm(male);
   imported.sandbox.populateUnitPreferences();
   const fileInput = imported.getElement("import-data-file");
@@ -1448,7 +1448,7 @@ test("R5-10 food amount limit applies after serving conversion and matches the i
   add.click();
   assert.strictEqual(app.sandbox.getNutrition().foods[0].amount, 10000);
 
-  app.sandbox.window.fitcalcPendingFood = {
+  app.sandbox.window.macrobayPendingFood = {
     name: "oats", calories: 389, protein: 16.9, carbs: 66, fat: 6.9, fiber: 10.6,
     servingGrams: 10001, source: "test"
   };
@@ -1549,7 +1549,7 @@ test("food unit choices follow verified food portions and imperial preferences",
   assert.deepStrictEqual(units("curd or dahi, plain whole-milk (yogurt equivalent)"), ["g", "oz", "ml", "tsp", "tbsp", "cup", "glass"]);
   assert.deepStrictEqual(Array.from(app.sandbox.supportedFoodUnits({ name: "Unverified food", units: ["g"] })), ["g", "oz"]);
 
-  app.sandbox.saveFitCalcPreferences({ units: { weight: "lb" } });
+  app.sandbox.saveMacroBayPreferences({ units: { weight: "lb" } });
   app.sandbox.window.updateNutritionFoodUnits({ name: "Unverified food", calories: 100, protein: 1, carbs: 1, fat: 1, units: ["g"], defaultUnit: "g" });
   assert.strictEqual(app.getElement("food-amount-unit").value, "oz");
   assert.strictEqual(app.getElement("food-amount-label").textContent, "Amount");
@@ -1557,7 +1557,7 @@ test("food unit choices follow verified food portions and imperial preferences",
   app.sandbox.rememberFoodAmountUnit(app.sandbox.findFood("egg"), "piece");
   app.sandbox.window.updateNutritionFoodUnits(app.sandbox.findFood("egg"));
   assert.strictEqual(app.getElement("food-amount-unit").value, "piece");
-  assert.strictEqual(app.sandbox.getFitCalcPreferences().foodAmountUnits["egg\u0000"], "piece");
+  assert.strictEqual(app.sandbox.getMacroBayPreferences().foodAmountUnits["egg\u0000"], "piece");
 });
 
 test("custom food portion weights enable only their measured units", () => {
@@ -1591,7 +1591,7 @@ test("legacy food logs migrate to the grams-based amount format without changing
   assert.strictEqual(migrated.amountUnit, "g");
   assert.strictEqual(migrated.gramsPerUnit, 1);
   assert.strictEqual(migrated.calories, 71.5);
-  const stored = JSON.parse(app.storage.get("fitcalc_nutrition"))[today].foods[0];
+  const stored = JSON.parse(app.storage.get("macrobay_nutrition"))[today].foods[0];
   assert.strictEqual(stored.amountGrams, 50);
   assert.strictEqual(stored.calories, 71.5);
 
@@ -1678,7 +1678,7 @@ test("loading target.js on a standalone calculator does not write app targets", 
     setItem(key, value) { writes += 1; isolated.set(key, String(value)); },
     removeItem(key) { isolated.delete(key); }
   };
-  localStorage.setItem("fitcalc_profile", JSON.stringify(male));
+  localStorage.setItem("macrobay_profile", JSON.stringify(male));
   writes = 0;
   const sandbox = {
     localStorage,
@@ -1690,7 +1690,7 @@ test("loading target.js on a standalone calculator does not write app targets", 
     vm.runInContext(fs.readFileSync(__dirname + "/../" + file, "utf8"), sandbox);
   });
   assert.strictEqual(writes, 0);
-  assert.strictEqual(isolated.has("fitcalc_targets"), false);
+  assert.strictEqual(isolated.has("macrobay_targets"), false);
 });
 
 test("B1 history range controls remain available when the selected range is empty", () => {
@@ -1726,7 +1726,7 @@ test("B1 history range controls remain available when the selected range is empt
     getWeightChange: ctx.getWeightChange,
     isProgressMetricLogged: ctx.isProgressMetricLogged,
     escapeHTML: ctx.escapeHTML,
-    getFitCalcWeightUnit: ctx.getFitCalcWeightUnit,
+    getMacroBayWeightUnit: ctx.getMacroBayWeightUnit,
     kilogramsToDisplayWeight: ctx.kilogramsToDisplayWeight
   };
   vm.createContext(page);
@@ -1768,7 +1768,7 @@ test("B2 averages and charts ignore days where the metric was not logged", () =>
 test("B3 adaptive calorie guidance distinguishes over-target from near-target", () => {
   values.clear();
   const today = ctx.getDateKey(new Date());
-  ctx.writeJSON("fitcalc_targets", { calories: 2000, protein: 100 });
+  ctx.writeJSON("macrobay_targets", { calories: 2000, protein: 100 });
   ctx.saveNutritionFor(today, { calories: 3200, foods: [{ name: "Meal" }] });
   let suggestions = ctx.getAdaptivePlan();
   assert.ok(suggestions.some((item) => item.includes("1200 kcal over")));
@@ -1791,10 +1791,10 @@ test("B4 activity backfill runs once and records eligible days", () => {
   ctx.saveNutritionFor(key, { calories: 500, foods: [{ name: "Meal" }] });
   ctx.backfillProgressFromActivity();
   assert.strictEqual(ctx.getProgressRecord(key).calories, 500);
-  assert.strictEqual(values.get("fitcalc_progress_backfill_v2"), "true");
-  const savedHistory = values.get("fitcalc_history");
+  assert.strictEqual(values.get("macrobay_progress_backfill_v2"), "true");
+  const savedHistory = values.get("macrobay_history");
   ctx.backfillProgressFromActivity();
-  assert.strictEqual(values.get("fitcalc_history"), savedHistory);
+  assert.strictEqual(values.get("macrobay_history"), savedHistory);
 });
 
 test("B19 Netlify staging excludes tests, scripts, and package manifests", () => {
@@ -1823,11 +1823,14 @@ test("B19 Netlify staging excludes tests, scripts, and package manifests", () =>
   assert.doesNotMatch(publishedFiles.join("\n"), /(^|\/)(android|ios)\//);
 });
 
-test("Capacitor config, Android identity, camera permission, and app icons match FitCalc", () => {
+test("Capacitor config, Android identity, camera permission, and app icons match MACROBAY", () => {
   const root = __dirname + "/..";
   const config = JSON.parse(fs.readFileSync(root + "/capacitor.config.json", "utf8"));
   const packageInfo = JSON.parse(fs.readFileSync(root + "/package.json", "utf8"));
-  assert.deepStrictEqual(config, { appId: "com.vikx.fitcalc", appName: "FitCalc", webDir: "netlify-dist" });
+  assert.deepStrictEqual(config, { appId: "com.vikx.macrobay", appName: "MACROBAY", webDir: "netlify-dist" });
+  assert.strictEqual(packageInfo.name, "macrobay");
+  assert.strictEqual(packageInfo.build.appId, config.appId);
+  assert.strictEqual(packageInfo.build.productName, "MACROBAY");
   ["@capacitor/core", "@capacitor/cli", "@capacitor/android", "@capacitor/ios"].forEach((name) => {
     const version = packageInfo.dependencies?.[name] || packageInfo.devDependencies?.[name];
     assert.match(version || "", /^\^8\./, `${name} should stay on Capacitor 8`);
@@ -1836,11 +1839,22 @@ test("Capacitor config, Android identity, camera permission, and app icons match
   const strings = fs.readFileSync(root + "/android/app/src/main/res/values/strings.xml", "utf8");
   assert.match(manifest, /android\.permission\.CAMERA/);
   assert.match(manifest, /android:required="false"/);
-  assert.match(strings, /<string name="app_name">FitCalc<\/string>/);
-  assert.match(fs.readFileSync(root + "/android/app/build.gradle", "utf8"), /applicationId "com\.vikx\.fitcalc"/);
+  assert.match(strings, /<string name="app_name">MACROBAY<\/string>/);
+  const androidGradle = fs.readFileSync(root + "/android/app/build.gradle", "utf8");
+  assert.match(androidGradle, /namespace = "com\.vikx\.macrobay"/);
+  assert.match(androidGradle, /applicationId "com\.vikx\.macrobay"/);
+  assert.match(fs.readFileSync(root + "/android/app/src/main/java/com/vikx/macrobay/MainActivity.java", "utf8"), /package com\.vikx\.macrobay;/);
   ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"].forEach((density) => {
     assert.ok(fs.existsSync(root + `/android/app/src/main/res/mipmap-${density}/ic_launcher.png`));
   });
+});
+
+test("Electron keeps the old storage directory and origin for existing desktop data", () => {
+  const main = fs.readFileSync(__dirname + "/../main.js", "utf8");
+  assert.match(main, /path\.join\(app\.getPath\("appData"\), "FitCalc"\)/);
+  assert.match(main, /scheme: "fitcalc"/);
+  assert.match(main, /protocol\.handle\("fitcalc"/);
+  assert.match(main, /win\.loadURL\("fitcalc:\/\/app\/index\.html"\)/);
 });
 
 test("B4 failed history writes leave activity backfill eligible for retry", () => {
@@ -1849,19 +1863,19 @@ test("B4 failed history writes leave activity backfill eligible for retry", () =
   ctx.saveNutritionFor(date, { calories: 450, foods: [{ name: "Dinner" }] });
   const originalSetItem = localStorage.setItem;
   localStorage.setItem = function (key, value) {
-    if (key === ctx.fitcalcStorageKey("fitcalc_history")) throw new Error("QuotaExceededError");
+    if (key === ctx.macrobayStorageKey("macrobay_history")) throw new Error("QuotaExceededError");
     originalSetItem.call(localStorage, key, value);
   };
 
   try {
     ctx.backfillProgressFromActivity();
-    assert.strictEqual(values.has("fitcalc_progress_backfill_v2"), false);
+    assert.strictEqual(values.has("macrobay_progress_backfill_v2"), false);
   } finally {
     localStorage.setItem = originalSetItem;
   }
 
   ctx.backfillProgressFromActivity();
-  assert.strictEqual(values.get("fitcalc_progress_backfill_v2"), "true");
+  assert.strictEqual(values.get("macrobay_progress_backfill_v2"), "true");
   assert.strictEqual(ctx.getProgressRecord(date).calories, 450);
 });
 
@@ -1909,9 +1923,9 @@ test("T4 history rendering, averages, and backfill handle 365 logged days within
       completedTasks: 0
     };
   }
-  values.set("fitcalc_nutrition", JSON.stringify(nutritionDays));
-  values.set("fitcalc_planner", JSON.stringify(plannerDays));
-  values.set("fitcalc_history", JSON.stringify(historyDays));
+  values.set("macrobay_nutrition", JSON.stringify(nutritionDays));
+  values.set("macrobay_planner", JSON.stringify(plannerDays));
+  values.set("macrobay_history", JSON.stringify(historyDays));
 
   const historyList = { innerHTML: "" };
   const page = {
@@ -1925,7 +1939,7 @@ test("T4 history rendering, averages, and backfill handle 365 logged days within
     getWeightChange: ctx.getWeightChange,
     isProgressMetricLogged: ctx.isProgressMetricLogged,
     escapeHTML: ctx.escapeHTML,
-    getFitCalcWeightUnit: ctx.getFitCalcWeightUnit,
+    getMacroBayWeightUnit: ctx.getMacroBayWeightUnit,
     kilogramsToDisplayWeight: ctx.kilogramsToDisplayWeight
   };
   vm.createContext(page);
@@ -2009,13 +2023,13 @@ test("R5-1 first weigh-in without a complete profile succeeds and saves planner 
   assert.strictEqual(app.sandbox.getPlannerFor(today).weight, 70);
   assert.ok(app.toasts.some((toast) => toast.message === "Weight check-in saved."));
   assert.ok(!app.toasts.some((toast) => toast.type === "error"));
-  assert.ok(app.dispatchedEvents.some((event) => event.detail && event.detail.key === "fitcalc_profile"));
+  assert.ok(app.dispatchedEvents.some((event) => event.detail && event.detail.key === "macrobay_profile"));
 });
 
 test("R5-2 pound weight limits accept exactly the displayed bounds in Profile and Planner", () => {
   function submitProfileWeight(weight) {
     const app = loadProfileSandbox();
-    app.sandbox.saveFitCalcPreferences({ units: { weight: "lb", height: "cm" } });
+    app.sandbox.saveMacroBayPreferences({ units: { weight: "lb", height: "cm" } });
     app.sandbox.populateProfileForm(male);
     app.getElement("profile-age").value = "30";
     app.getElement("profile-sex").value = "female";
@@ -2040,7 +2054,7 @@ test("R5-2 pound weight limits accept exactly the displayed bounds in Profile an
 
   [66.1, 661.4, 150].forEach((weight) => {
     const planner = loadPlannerSandbox();
-    planner.sandbox.saveFitCalcPreferences({ units: { weight: "lb" } });
+    planner.sandbox.saveMacroBayPreferences({ units: { weight: "lb" } });
     planner.sandbox.updateWeightDisplay();
     planner.getElement("planner-weight-input").value = String(weight);
     planner.sandbox.saveWeight();
@@ -2050,7 +2064,7 @@ test("R5-2 pound weight limits accept exactly the displayed bounds in Profile an
   });
   [66.0, 661.5].forEach((weight) => {
     const planner = loadPlannerSandbox();
-    planner.sandbox.saveFitCalcPreferences({ units: { weight: "lb" } });
+    planner.sandbox.saveMacroBayPreferences({ units: { weight: "lb" } });
     planner.getElement("planner-weight-input").value = String(weight);
     planner.sandbox.saveWeight();
     assert.ok(planner.toasts.some((toast) => toast.message.includes("66.1 to 661.4 lb") && toast.type === "error"));
@@ -2114,24 +2128,24 @@ test("R2-2 planner reads assign deterministic legacy IDs without changing planne
     search: "?date=" + date,
     includeProgress: true,
     initialStorage: {
-      fitcalc_planner: plannerBytes,
-      fitcalc_history: historyBytes,
-      fitcalc_progress_backfill_v2: "true"
+      macrobay_planner: plannerBytes,
+      macrobay_history: historyBytes,
+      macrobay_progress_backfill_v2: "true"
     }
   });
 
   const read = app.sandbox.getPlanner();
   assert.strictEqual(read.workouts[0].id, "legacy-2026-01-14-0");
-  assert.strictEqual(app.storage.get("fitcalc_planner"), plannerBytes);
-  assert.strictEqual(app.storage.get("fitcalc_history"), historyBytes);
-  assert.strictEqual(app.dispatchedEvents.filter((event) => event.type === "fitcalc:data-change").length, 0);
+  assert.strictEqual(app.storage.get("macrobay_planner"), plannerBytes);
+  assert.strictEqual(app.storage.get("macrobay_history"), historyBytes);
+  assert.strictEqual(app.dispatchedEvents.filter((event) => event.type === "macrobay:data-change").length, 0);
 });
 
 test("R2-2 legacy workout IDs stay stable across reads when storage writes fail and duplicate IDs are repaired", () => {
   const date = "2026-01-15";
   const app = loadPlannerSandbox({
     initialStorage: {
-      fitcalc_planner: JSON.stringify({
+      macrobay_planner: JSON.stringify({
         [date]: {
           date, steps: 0, weight: null,
           workouts: [
@@ -2160,7 +2174,7 @@ test("R2-2 clicking the real Delete button keeps the following collapsed workout
   const date = "2026-01-15";
   const app = loadPlannerSandbox({
     initialStorage: {
-      fitcalc_planner: JSON.stringify({
+      macrobay_planner: JSON.stringify({
         [date]: {
           date, steps: 0, weight: null,
           workouts: [
@@ -2205,9 +2219,9 @@ test("B15 workout IDs remain compatible with history, backup import, and CSV", (
   ctx.savePlannerFor(date, { date, workouts: [workout], tasks: [] });
   const history = ctx.createProgressRecord(date);
   assert.strictEqual(history.workouts[0].id, workout.id);
-  const backup = ctx.exportFitCalcData();
-  const importedData = ctx.validateFitCalcBackup(backup);
-  assert.strictEqual(importedData.fitcalc_planner[date].workouts[0].id, workout.id);
+  const backup = ctx.exportMacroBayData();
+  const importedData = ctx.validateMacroBayBackup(backup);
+  assert.strictEqual(importedData.macrobay_planner[date].workouts[0].id, workout.id);
   assert.match(ctx.createHistoryCSV([history]), /Push/);
 });
 
@@ -2217,13 +2231,13 @@ test("B8 empty and zero step entries are rejected without storing planner data",
   app.sandbox.saveSteps();
   app.getElement("steps-input").value = "0";
   app.sandbox.saveSteps();
-  assert.strictEqual(app.storage.has("fitcalc_planner"), false);
+  assert.strictEqual(app.storage.has("macrobay_planner"), false);
   assert.strictEqual(app.toasts.length, 2);
   assert.ok(app.toasts.every((toast) => toast.type === "error"));
 
   app.getElement("steps-input").value = "1";
   app.sandbox.saveSteps();
-  assert.strictEqual(app.storage.has("fitcalc_planner"), true);
+  assert.strictEqual(app.storage.has("macrobay_planner"), true);
 });
 
 test("Steps accept bounded whole-number entries and enforce the daily total cap", () => {
@@ -2231,7 +2245,7 @@ test("Steps accept bounded whole-number entries and enforce the daily total cap"
     const app = loadPlannerSandbox();
     app.getElement("steps-input").value = value;
     app.getElement("save-steps").click();
-    assert.strictEqual(app.storage.has("fitcalc_planner"), false, `${value} must not be saved`);
+    assert.strictEqual(app.storage.has("macrobay_planner"), false, `${value} must not be saved`);
     assert.strictEqual(app.toasts.at(-1).type, "error");
     assert.match(app.toasts.at(-1).message, /whole step count.*100,000.*200,000/i);
   }
@@ -2243,7 +2257,7 @@ test("Steps accept bounded whole-number entries and enforce the daily total cap"
   assert.strictEqual(valid.sandbox.getPlannerFor(validDate).steps, 8000);
 
   const atDailyLimit = loadPlannerSandbox({ initialStorage: {
-    fitcalc_planner: { "2026-01-15": { date: "2026-01-15", steps: 196000, workouts: [], tasks: [] } }
+    macrobay_planner: { "2026-01-15": { date: "2026-01-15", steps: 196000, workouts: [], tasks: [] } }
   } });
   atDailyLimit.getElement("steps-input").value = "5000";
   atDailyLimit.getElement("save-steps").click();
@@ -2258,11 +2272,11 @@ test("B9 Nutrition refreshes from same-tab events and another tab's storage even
   assert.strictEqual(app.getElement("planner-water").textContent, "0.50");
   assert.match(app.getElement("food-list").children.at(-1).innerHTML, /Snack/);
 
-  const before = app.storage.get("fitcalc_nutrition");
+  const before = app.storage.get("macrobay_nutrition");
   const updated = JSON.stringify({ [today]: { water: 1.25, calories: 300, foods: [{ name: "Lunch" }] } });
-  app.storage.set("fitcalc_nutrition", updated);
+  app.storage.set("macrobay_nutrition", updated);
   app.listeners.window.storage.forEach((handler) => handler({
-    key: "fitcalc_nutrition", oldValue: before, newValue: updated
+    key: "macrobay_nutrition", oldValue: before, newValue: updated
   }));
 
   assert.strictEqual(app.getElement("planner-water").textContent, "1.25");
@@ -2281,7 +2295,7 @@ test("N1 Nutrition rolls today forward at midnight but keeps an explicitly selec
   assert.strictEqual(app.sandbox.getNutritionDateKey(), today);
   app.sandbox.addFoodToSelectedDay({ name: "apple", calories: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4 }, 100, "Snack", "grams");
   app.sandbox.addWaterAmount(0.25);
-  const nutritionDays = JSON.parse(app.storage.get("fitcalc_nutrition"));
+  const nutritionDays = JSON.parse(app.storage.get("macrobay_nutrition"));
   assert.strictEqual(nutritionDays[oldToday], undefined);
   assert.strictEqual(nutritionDays[today].foods[0].name, "apple");
   assert.strictEqual(nutritionDays[today].water, 0.25);
@@ -2292,13 +2306,13 @@ test("N1 Nutrition rolls today forward at midnight but keeps an explicitly selec
   past.listeners.document.visibilitychange();
   assert.strictEqual(past.sandbox.getNutritionDateKey(), pastKey);
   past.sandbox.addFoodToSelectedDay({ name: "egg", calories: 143, protein: 12.6, carbs: 0.7, fat: 9.5, fiber: 0 }, 50, "Breakfast", "grams");
-  const pastDays = JSON.parse(past.storage.get("fitcalc_nutrition"));
+  const pastDays = JSON.parse(past.storage.get("macrobay_nutrition"));
   assert.strictEqual(pastDays[pastKey].foods[0].name, "egg");
 
   const saveTime = loadNutritionSandbox("", { now: start });
   saveTime.setNow(nextDay);
   saveTime.sandbox.addWaterAmount(0.5);
-  const saveTimeDays = JSON.parse(saveTime.storage.get("fitcalc_nutrition"));
+  const saveTimeDays = JSON.parse(saveTime.storage.get("macrobay_nutrition"));
   assert.strictEqual(saveTimeDays[saveTime.sandbox.getDateKey(new saveTime.sandbox.Date())].water, 0.5);
 });
 
@@ -2309,10 +2323,10 @@ test("B9 Planner refreshes from same-tab and storage events", () => {
   assert.strictEqual(app.getElement("planner-steps").textContent, 3200);
   assert.strictEqual(app.getElement("planner-weight-value").textContent, "72.5");
 
-  app.storage.set("fitcalc_planner", JSON.stringify({
+  app.storage.set("macrobay_planner", JSON.stringify({
     [today]: { date: today, steps: 6100, weight: 71.8, workouts: [], tasks: [] }
   }));
-  app.listeners.window.storage.forEach((handler) => handler({ key: "fitcalc_planner" }));
+  app.listeners.window.storage.forEach((handler) => handler({ key: "macrobay_planner" }));
   assert.strictEqual(app.getElement("planner-steps").textContent, 6100);
   assert.strictEqual(app.getElement("planner-weight-value").textContent, "71.8");
 });
@@ -2343,7 +2357,7 @@ test("N3 Nutrition keeps a food edit intact after an unrelated storage event", (
   app.sandbox.editFood(0);
   app.getElement("food-name").value = "apple, sliced";
   app.getElement("food-amount").value = "175";
-  app.listeners.window.storage.forEach((handler) => handler({ key: "fitcalc_profile" }));
+  app.listeners.window.storage.forEach((handler) => handler({ key: "macrobay_profile" }));
 
   assert.strictEqual(app.getElement("food-name").value, "apple, sliced");
   assert.strictEqual(app.getElement("food-amount").value, "175");
@@ -2363,16 +2377,16 @@ test("B10 History refreshes when source or history data changes", () => {
       querySelectorAll() { return []; }
     },
     window: { addEventListener(type, handler) { listeners[type] = handler; } },
-    NUTRITION_KEY: "fitcalc_nutrition", PLANNER_KEY: "fitcalc_planner", HISTORY_KEY: "fitcalc_history",
-    PROFILE_KEY: "fitcalc_profile", TARGETS_KEY: "fitcalc_targets", PREFERENCES_KEY: "fitcalc_preferences",
-    fitcalcStorageKey: ctx.fitcalcStorageKey,
+    NUTRITION_KEY: "macrobay_nutrition", PLANNER_KEY: "macrobay_planner", HISTORY_KEY: "macrobay_history",
+    PROFILE_KEY: "macrobay_profile", TARGETS_KEY: "macrobay_targets", PREFERENCES_KEY: "macrobay_preferences",
+    macrobayStorageKey: ctx.macrobayStorageKey,
     getVisibleHistoryRecords: ctx.getVisibleHistoryRecords,
     getProgressRecordsForDays: ctx.getProgressRecordsForDays,
     getProgressAverage: ctx.getProgressAverage,
     getWeightChange: ctx.getWeightChange,
     isProgressMetricLogged: ctx.isProgressMetricLogged,
     escapeHTML: ctx.escapeHTML,
-    getFitCalcWeightUnit: ctx.getFitCalcWeightUnit,
+    getMacroBayWeightUnit: ctx.getMacroBayWeightUnit,
     kilogramsToDisplayWeight: ctx.kilogramsToDisplayWeight
   };
   vm.createContext(page);
@@ -2380,20 +2394,20 @@ test("B10 History refreshes when source or history data changes", () => {
 
   ctx.savePlannerFor(date, { date, steps: 4200, workouts: [], tasks: [] });
   ctx.saveProgressRecord(date);
-  listeners["fitcalc:data-change"]({ detail: { date, key: "fitcalc_planner" } });
+  listeners["macrobay:data-change"]({ detail: { date, key: "macrobay_planner" } });
   assert.match(historyList.innerHTML, /4,200/);
 
-  const previousHistory = values.get("fitcalc_history");
+  const previousHistory = values.get("macrobay_history");
   ctx.saveNutritionFor(date, { calories: 510, foods: [{ name: "Meal" }] });
   ctx.saveProgressRecord(date);
-  listeners.storage({ key: "fitcalc_history", oldValue: previousHistory, newValue: values.get("fitcalc_history") });
+  listeners.storage({ key: "macrobay_history", oldValue: previousHistory, newValue: values.get("macrobay_history") });
   assert.match(historyList.innerHTML, /510/);
 });
 
 test("B11 history retains planned and completed workouts and tasks", () => {
   values.clear();
   const date = "2026-09-30";
-  ctx.writeJSON("fitcalc_progress_backfill_v1", true);
+  ctx.writeJSON("macrobay_progress_backfill_v1", true);
   ctx.savePlannerFor(date, {
     date,
     workouts: [
@@ -2404,7 +2418,7 @@ test("B11 history retains planned and completed workouts and tasks", () => {
   });
   ctx.backfillProgressFromActivity();
   const record = ctx.getProgressRecord(date);
-  assert.strictEqual(values.get("fitcalc_progress_backfill_v2"), "true");
+  assert.strictEqual(values.get("macrobay_progress_backfill_v2"), "true");
   assert.strictEqual(record.workouts.length, 2);
   assert.strictEqual(record.completedWorkouts, 1);
   assert.strictEqual(record.tasks.length, 2);
@@ -2461,9 +2475,9 @@ test("A7 deleting a history day removes only that date's owned source and summar
   ctx.saveNutritionFor(date, { calories: 320, foods: [{ name: "Meal", calories: 320 }] });
   ctx.savePlannerFor(date, { date, steps: 1500, workouts: [], tasks: [] });
   ctx.saveProgressRecord(date);
-  assert.strictEqual(ctx.deleteFitCalcDay(date), true);
-  assert.strictEqual(Object.prototype.hasOwnProperty.call(ctx.readJSON("fitcalc_nutrition", {}), date), false);
-  assert.strictEqual(Object.prototype.hasOwnProperty.call(ctx.readJSON("fitcalc_planner", {}), date), false);
+  assert.strictEqual(ctx.deleteMacroBayDay(date), true);
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(ctx.readJSON("macrobay_nutrition", {}), date), false);
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(ctx.readJSON("macrobay_planner", {}), date), false);
   assert.strictEqual(ctx.getProgressRecord(date), null);
 });
 
@@ -2482,7 +2496,7 @@ test("B14 failed nutrition and planner writes do not show success or update stal
   assert.strictEqual(nutrition.sandbox.saveNutrition({ water: 0.25 }), false);
   nutrition.getElement("add-water").click();
   assert.strictEqual(nutrition.getElement("planner-water").textContent, "0.00");
-  assert.strictEqual(nutrition.storage.has("fitcalc_nutrition"), false);
+  assert.strictEqual(nutrition.storage.has("macrobay_nutrition"), false);
 
   const planner = loadPlannerSandbox();
   planner.sandbox.localStorage.setItem = function () { throw new Error("QuotaExceededError"); };
@@ -2503,146 +2517,146 @@ test("B14 failed nutrition and planner writes do not show success or update stal
 test("A1 JSON export includes all owned data with a schema version", () => {
   values.clear();
   ctx.saveProfile(male);
-  ctx.writeJSON("fitcalc_targets", { calories: 2300, protein: 130 });
+  ctx.writeJSON("macrobay_targets", { calories: 2300, protein: 130 });
   ctx.saveNutritionFor("2026-10-01", { calories: 500, foods: [{ name: "Lunch" }] });
   ctx.savePlannerFor("2026-10-01", { date: "2026-10-01", steps: 3200, workouts: [], tasks: [] });
   ctx.saveProgressRecord("2026-10-01");
   ctx.persistWorkoutTemplates([{ name: "Push" }]);
-  ctx.writeJSON("fitcalc_preferences", { theme: "light" });
-  ctx.writeJSON("fitcalc_unowned_key", { keep: true });
+  ctx.writeJSON("macrobay_preferences", { theme: "light" });
+  ctx.writeJSON("macrobay_unowned_key", { keep: true });
 
-  const backup = JSON.parse(JSON.stringify(ctx.exportFitCalcData()));
-  assert.strictEqual(backup.format, "fitcalc-backup");
+  const backup = JSON.parse(JSON.stringify(ctx.exportMacroBayData()));
+  assert.strictEqual(backup.format, "macrobay-backup");
   assert.strictEqual(backup.schemaVersion, CURRENT_SCHEMA_VERSION);
   assert.ok(backup.exportedAt);
   assert.deepStrictEqual(Object.keys(backup.data).sort(), [
-    "fitcalc_food_library", "fitcalc_history", "fitcalc_nutrition", "fitcalc_planner",
-    "fitcalc_preferences", "fitcalc_profile", "fitcalc_targets", "fitcalc_workout_templates"
+    "macrobay_food_library", "macrobay_history", "macrobay_nutrition", "macrobay_planner",
+    "macrobay_preferences", "macrobay_profile", "macrobay_targets", "macrobay_workout_templates"
   ]);
-  assert.strictEqual(backup.data.fitcalc_profile.weight, male.weight);
-  assert.strictEqual(Object.prototype.hasOwnProperty.call(backup.data, "fitcalc_unowned_key"), false);
+  assert.strictEqual(backup.data.macrobay_profile.weight, male.weight);
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(backup.data, "macrobay_unowned_key"), false);
 });
 
 test("A1 import restores a backup and rejects malformed data without partial writes", () => {
   values.clear();
   ctx.saveProfile(male);
-  ctx.writeJSON("fitcalc_targets", { calories: 2300 });
-  const backup = JSON.parse(JSON.stringify(ctx.exportFitCalcData()));
+  ctx.writeJSON("macrobay_targets", { calories: 2300 });
+  const backup = JSON.parse(JSON.stringify(ctx.exportMacroBayData()));
 
   ctx.saveProfile({ ...male, weight: 99 });
-  ctx.writeJSON("fitcalc_targets", { calories: 1000 });
-  ctx.importFitCalcData(backup);
+  ctx.writeJSON("macrobay_targets", { calories: 1000 });
+  ctx.importMacroBayData(backup);
   assert.strictEqual(ctx.getProfile().weight, male.weight);
   assert.strictEqual(ctx.getTargets().calories, 2300);
 
-  const beforeProfile = values.get("fitcalc_profile");
-  const beforeTargets = values.get("fitcalc_targets");
+  const beforeProfile = values.get("macrobay_profile");
+  const beforeTargets = values.get("macrobay_targets");
   const invalid = JSON.parse(JSON.stringify(backup));
-  invalid.data.fitcalc_nutrition = [];
-  assert.throws(() => ctx.importFitCalcData(invalid), /nutrition section.*invalid/i);
-  assert.strictEqual(values.get("fitcalc_profile"), beforeProfile);
-  assert.strictEqual(values.get("fitcalc_targets"), beforeTargets);
+  invalid.data.macrobay_nutrition = [];
+  assert.throws(() => ctx.importMacroBayData(invalid), /nutrition section.*invalid/i);
+  assert.strictEqual(values.get("macrobay_profile"), beforeProfile);
+  assert.strictEqual(values.get("macrobay_targets"), beforeTargets);
 
   const originalSetItem = localStorage.setItem;
   let failNutritionWrite = true;
   localStorage.setItem = function (key, value) {
-    if (key === "fitcalc_nutrition" && failNutritionWrite) {
+    if (key === "macrobay_nutrition" && failNutritionWrite) {
       failNutritionWrite = false;
       throw new Error("simulated storage limit");
     }
     originalSetItem.call(localStorage, key, value);
   };
-  assert.throws(() => ctx.importFitCalcData(backup), /simulated storage limit/);
+  assert.throws(() => ctx.importMacroBayData(backup), /simulated storage limit/);
   localStorage.setItem = originalSetItem;
-  assert.strictEqual(values.get("fitcalc_profile"), beforeProfile);
-  assert.strictEqual(values.get("fitcalc_targets"), beforeTargets);
+  assert.strictEqual(values.get("macrobay_profile"), beforeProfile);
+  assert.strictEqual(values.get("macrobay_targets"), beforeTargets);
 
   const future = JSON.parse(JSON.stringify(backup));
   future.schemaVersion = CURRENT_SCHEMA_VERSION + 1;
-  assert.throws(() => ctx.importFitCalcData(future), /newer FitCalc version/i);
-  assert.strictEqual(values.get("fitcalc_profile"), beforeProfile);
+  assert.throws(() => ctx.importMacroBayData(future), /newer MACROBAY version/i);
+  assert.strictEqual(values.get("macrobay_profile"), beforeProfile);
 
   const legacyBackup = JSON.parse(JSON.stringify(backup));
   legacyBackup.schemaVersion = 0;
-  assert.strictEqual(ctx.importFitCalcData(legacyBackup), true);
-  assert.strictEqual(ctx.readJSON("fitcalc_schema_version", null), CURRENT_SCHEMA_VERSION);
+  assert.strictEqual(ctx.importMacroBayData(legacyBackup), true);
+  assert.strictEqual(ctx.readJSON("macrobay_schema_version", null), CURRENT_SCHEMA_VERSION);
 });
 
-test("A1 reset clears FitCalc-owned data but preserves schema and unrelated storage", () => {
+test("A1 reset clears MACROBAY-owned data but preserves schema and unrelated storage", () => {
   values.clear();
   ctx.saveProfile(male);
-  ctx.writeJSON("fitcalc_targets", { calories: 2300 });
+  ctx.writeJSON("macrobay_targets", { calories: 2300 });
   ctx.saveNutritionFor("2026-10-01", { calories: 500, foods: [{ name: "Lunch" }] });
   ctx.savePlannerFor("2026-10-01", { date: "2026-10-01", steps: 3200, workouts: [], tasks: [] });
-  ctx.writeJSON("fitcalc_history", { "2026-10-01": { calories: 500 } });
+  ctx.writeJSON("macrobay_history", { "2026-10-01": { calories: 500 } });
   ctx.persistWorkoutTemplates([{ name: "Push" }]);
-  ctx.writeJSON("fitcalc_preferences", { theme: "light" });
-  ctx.writeJSON("fitcalc_progress_backfill_v1", true);
-  ctx.writeJSON("fitcalc_progress_backfill_v2", true);
-  ctx.writeJSON("fitcalc_unowned_key", { keep: true });
-  ctx.initializeFitCalcStorageSchema();
+  ctx.writeJSON("macrobay_preferences", { theme: "light" });
+  ctx.writeJSON("macrobay_progress_backfill_v1", true);
+  ctx.writeJSON("macrobay_progress_backfill_v2", true);
+  ctx.writeJSON("macrobay_unowned_key", { keep: true });
+  ctx.initializeMacroBayStorageSchema();
 
-  ctx.resetFitCalcData();
+  ctx.resetMacroBayData();
 
-  ["fitcalc_profile", "fitcalc_targets", "fitcalc_nutrition", "fitcalc_planner", "fitcalc_history",
-    "fitcalc_workout_templates", "fitcalc_preferences", "fitcalc_food_library", "fitcalc_progress_backfill_v1",
-    "fitcalc_progress_backfill_v2"].forEach((key) => {
+  ["macrobay_profile", "macrobay_targets", "macrobay_nutrition", "macrobay_planner", "macrobay_history",
+    "macrobay_workout_templates", "macrobay_preferences", "macrobay_food_library", "macrobay_progress_backfill_v1",
+    "macrobay_progress_backfill_v2"].forEach((key) => {
     assert.strictEqual(values.has(key), false, key + " should be cleared");
   });
-  assert.strictEqual(ctx.readJSON("fitcalc_schema_version", null), CURRENT_SCHEMA_VERSION);
-  assert.deepStrictEqual(JSON.parse(values.get("fitcalc_unowned_key")), { keep: true });
+  assert.strictEqual(ctx.readJSON("macrobay_schema_version", null), CURRENT_SCHEMA_VERSION);
+  assert.deepStrictEqual(JSON.parse(values.get("macrobay_unowned_key")), { keep: true });
 });
 
 test("A2 migration stamps existing unversioned records without rewriting them", () => {
   values.clear();
   const existingProfile = JSON.stringify(male);
   const existingNutrition = JSON.stringify({ "2026-10-01": { calories: 500, foods: [{ name: "Lunch" }] } });
-  localStorage.setItem("fitcalc_profile", existingProfile);
-  localStorage.setItem("fitcalc_nutrition", existingNutrition);
+  localStorage.setItem("macrobay_profile", existingProfile);
+  localStorage.setItem("macrobay_nutrition", existingNutrition);
 
-  assert.strictEqual(ctx.initializeFitCalcStorageSchema(), true);
-  assert.strictEqual(values.get("fitcalc_profile"), existingProfile);
-  assert.strictEqual(values.get("fitcalc_nutrition"), existingNutrition);
-  assert.strictEqual(ctx.readJSON("fitcalc_schema_version", null), CURRENT_SCHEMA_VERSION);
-  assert.strictEqual(ctx.initializeFitCalcStorageSchema(), true);
-  assert.strictEqual(values.get("fitcalc_profile"), existingProfile);
+  assert.strictEqual(ctx.initializeMacroBayStorageSchema(), true);
+  assert.strictEqual(values.get("macrobay_profile"), existingProfile);
+  assert.strictEqual(values.get("macrobay_nutrition"), existingNutrition);
+  assert.strictEqual(ctx.readJSON("macrobay_schema_version", null), CURRENT_SCHEMA_VERSION);
+  assert.strictEqual(ctx.initializeMacroBayStorageSchema(), true);
+  assert.strictEqual(values.get("macrobay_profile"), existingProfile);
 });
 
 test("A5 migrates schema v1 backups to an empty owned food library", () => {
   const legacyData = {
-    fitcalc_profile: {}, fitcalc_targets: {}, fitcalc_nutrition: {}, fitcalc_planner: {},
-    fitcalc_history: {}, fitcalc_workout_templates: [], fitcalc_preferences: {}
+    macrobay_profile: {}, macrobay_targets: {}, macrobay_nutrition: {}, macrobay_planner: {},
+    macrobay_history: {}, macrobay_workout_templates: [], macrobay_preferences: {}
   };
-  ctx.importFitCalcData({ format: "fitcalc-backup", schemaVersion: 1, data: legacyData });
+  ctx.importMacroBayData({ format: "macrobay-backup", schemaVersion: 1, data: legacyData });
   assert.deepStrictEqual(JSON.parse(JSON.stringify(ctx.getFoodLibrary())), { customFoods: [], favorites: [], recents: [] });
-  assert.strictEqual(ctx.readJSON("fitcalc_schema_version", null), CURRENT_SCHEMA_VERSION);
+  assert.strictEqual(ctx.readJSON("macrobay_schema_version", null), CURRENT_SCHEMA_VERSION);
 
-  legacyData.fitcalc_food_library = {
+  legacyData.macrobay_food_library = {
     customFoods: [{ name: "Saved meal", calories: 200 }], favorites: [], recents: []
   };
-  ctx.importFitCalcData({ format: "fitcalc-backup", schemaVersion: 0, data: legacyData });
+  ctx.importMacroBayData({ format: "macrobay-backup", schemaVersion: 0, data: legacyData });
   assert.strictEqual(ctx.getFoodLibrary().customFoods[0].name, "Saved meal");
 });
 
 test("A5 local schema migration stores a new empty food library without rewriting saved profile bytes", () => {
   values.clear();
   const profileJson = JSON.stringify(male);
-  localStorage.setItem("fitcalc_schema_version", "1");
-  localStorage.setItem("fitcalc_profile", profileJson);
-  assert.strictEqual(ctx.initializeFitCalcStorageSchema(), true);
-  assert.strictEqual(values.get("fitcalc_profile"), profileJson);
-  assert.deepStrictEqual(JSON.parse(values.get("fitcalc_food_library")), { customFoods: [], favorites: [], recents: [] });
-  assert.strictEqual(ctx.readJSON("fitcalc_schema_version", null), CURRENT_SCHEMA_VERSION);
+  localStorage.setItem("macrobay_schema_version", "1");
+  localStorage.setItem("macrobay_profile", profileJson);
+  assert.strictEqual(ctx.initializeMacroBayStorageSchema(), true);
+  assert.strictEqual(values.get("macrobay_profile"), profileJson);
+  assert.deepStrictEqual(JSON.parse(values.get("macrobay_food_library")), { customFoods: [], favorites: [], recents: [] });
+  assert.strictEqual(ctx.readJSON("macrobay_schema_version", null), CURRENT_SCHEMA_VERSION);
 });
 
 test("A2 leaves a newer local schema untouched and skips standalone calculators", () => {
   values.clear();
-  ctx.writeJSON("fitcalc_schema_version", CURRENT_SCHEMA_VERSION + 1);
+  ctx.writeJSON("macrobay_schema_version", CURRENT_SCHEMA_VERSION + 1);
   ctx.saveProfile(male);
-  const before = values.get("fitcalc_profile");
-  assert.strictEqual(ctx.initializeFitCalcStorageSchema(), false);
-  assert.strictEqual(values.get("fitcalc_schema_version"), JSON.stringify(CURRENT_SCHEMA_VERSION + 1));
-  assert.strictEqual(values.get("fitcalc_profile"), before);
+  const before = values.get("macrobay_profile");
+  assert.strictEqual(ctx.initializeMacroBayStorageSchema(), false);
+  assert.strictEqual(values.get("macrobay_schema_version"), JSON.stringify(CURRENT_SCHEMA_VERSION + 1));
+  assert.strictEqual(values.get("macrobay_profile"), before);
 
   const isolated = new Map();
   const sandbox = {
@@ -2658,16 +2672,16 @@ test("A2 leaves a newer local schema untouched and skips standalone calculators"
   ["constants.js", "store.js"].forEach((file) => {
     vm.runInContext(fs.readFileSync(__dirname + "/../" + file, "utf8"), sandbox);
   });
-  assert.strictEqual(isolated.has("fitcalc_schema_version"), false);
+  assert.strictEqual(isolated.has("macrobay_schema_version"), false);
 });
 
 test("A2 does not stamp a schema over corrupt legacy data", () => {
   values.clear();
   const corrupt = "{";
-  localStorage.setItem("fitcalc_nutrition", corrupt);
-  assert.throws(() => ctx.initializeFitCalcStorageSchema(), /not valid JSON/i);
-  assert.strictEqual(values.get("fitcalc_nutrition"), corrupt);
-  assert.strictEqual(values.has("fitcalc_schema_version"), false);
+  localStorage.setItem("macrobay_nutrition", corrupt);
+  assert.throws(() => ctx.initializeMacroBayStorageSchema(), /not valid JSON/i);
+  assert.strictEqual(values.get("macrobay_nutrition"), corrupt);
+  assert.strictEqual(values.has("macrobay_schema_version"), false);
 });
 
 test("A3 editable targets persist through profile refresh and can reset to estimates", () => {
@@ -2715,9 +2729,9 @@ test("A3/A4 Settings units convert Profile fields while profile targets remain e
 
   get("settings-theme").value = "system";
   get("settings-theme").handlers.change({});
-  assert.strictEqual(app.sandbox.getFitCalcPreferences().theme, "system");
-  assert.strictEqual(app.sandbox.getFitCalcPreferences().units.weight, "lb");
-  assert.strictEqual(app.sandbox.getFitCalcPreferences().units.height, "ft-in");
+  assert.strictEqual(app.sandbox.getMacroBayPreferences().theme, "system");
+  assert.strictEqual(app.sandbox.getMacroBayPreferences().units.weight, "lb");
+  assert.strictEqual(app.sandbox.getMacroBayPreferences().units.height, "ft-in");
 
   const editedTargets = { calories: 2450, protein: 170, carbs: 300, fat: 75, fiber: 35 };
   get("profile-target-edit").click();
@@ -2763,8 +2777,8 @@ test("Profile saves an optional trimmed name in the existing record and renders 
   const savedProfile = app.sandbox.getProfile();
   assert.strictEqual(savedProfile.name, "<b>Rin</b>");
   assert.strictEqual(savedProfile.migrationMarker, "preserved");
-  assert.ok(app.storage.has("fitcalc_profile"));
-  assert.ok(!app.storage.has("fitcalc_profile_name"));
+  assert.ok(app.storage.has("macrobay_profile"));
+  assert.ok(!app.storage.has("macrobay_profile_name"));
   assert.strictEqual(get("profile-card-name").textContent, "<b>Rin</b>");
   assert.strictEqual(get("profile-card-name").innerHTML, undefined);
   assert.strictEqual(get("profile-card-details").textContent, "25 years old | 165.0 cm | 62.5 kg");
@@ -2781,7 +2795,7 @@ test("Profile saves an optional trimmed name in the existing record and renders 
   get("profile-cancel").click();
   assert.strictEqual(get("profile-details-card").hidden, true);
 
-  const previousProfileJson = values.get("fitcalc_profile");
+  const previousProfileJson = values.get("macrobay_profile");
   const originalGetElementById = ctx.document.getElementById;
   const homeName = { textContent: "" };
   ctx.document.getElementById = (id) => id === "home-user-name" ? homeName : null;
@@ -2792,8 +2806,8 @@ test("Profile saves an optional trimmed name in the existing record and renders 
     assert.strictEqual(homeName.innerHTML, undefined);
   } finally {
     ctx.document.getElementById = originalGetElementById;
-    if (previousProfileJson === undefined) values.delete("fitcalc_profile");
-    else values.set("fitcalc_profile", previousProfileJson);
+    if (previousProfileJson === undefined) values.delete("macrobay_profile");
+    else values.set("macrobay_profile", previousProfileJson);
   }
 
   get("profile-edit").click();
@@ -2814,7 +2828,7 @@ test("Home greeting follows local time boundaries and uses the saved profile nam
   const name = { textContent: "" };
   const icon = { dataset: {} };
   const periods = new Map([[4, "night"], [5, "morning"], [11, "morning"], [12, "afternoon"], [16, "afternoon"], [17, "evening"], [20, "evening"], [21, "night"]]);
-  const previous = values.get("fitcalc_profile");
+  const previous = values.get("macrobay_profile");
   ctx.document.getElementById = (id) => id === "home-greeting-label" ? greeting : (id === "home-user-name" ? name : (id === "home-greeting-icon" ? icon : null));
   try {
     ctx.saveProfile({ name: "Nia" });
@@ -2830,8 +2844,8 @@ test("Home greeting follows local time boundaries and uses the saved profile nam
     });
   } finally {
     ctx.document.getElementById = originalGetElementById;
-    if (previous === undefined) values.delete("fitcalc_profile");
-    else values.set("fitcalc_profile", previous);
+    if (previous === undefined) values.delete("macrobay_profile");
+    else values.set("macrobay_profile", previous);
   }
 });
 
@@ -2887,7 +2901,7 @@ test("Profile page contains personal and fitness information without Settings-on
     "export-data", "import-data-file", "reset-data", "profile-app-version"].forEach((id) => {
     assert.doesNotMatch(html, new RegExp(`id="${id}"`));
   });
-  ["Appearance", "Data management", "Export backup", "Restore from a FitCalc JSON backup", "Reset FitCalc data"]
+  ["Appearance", "Data management", "Export backup", "Restore from a MACROBAY JSON backup", "Reset MACROBAY data"]
     .forEach((label) => assert.ok(!html.includes(label), `${label} should live in Settings`));
 
   const topbar = html.match(/<header class="topbar">[\s\S]*?<\/header>/)[0];
@@ -2920,7 +2934,7 @@ test("B unified search shows built-ins immediately and OFF retries before its co
   const results = app.document.getElementById("food-api-results");
   app.sandbox.searchBuiltInFoodList = function (query) {
     assert.strictEqual(query, "bread");
-    return [{ name: "whole wheat bread", calories: 252, protein: 12.3, carbs: 43, fat: 3.5, fiber: 6, source: "FitCalc built-in" }];
+    return [{ name: "whole wheat bread", calories: 252, protein: 12.3, carbs: 43, fat: 3.5, fiber: 6, source: "MACROBAY built-in" }];
   };
   app.sandbox.scheduleUnifiedFoodSearch("bread");
   assert.strictEqual(results.children.length, 1);
@@ -3014,7 +3028,7 @@ test("whole-word relevance filtering stays on external food results, not local f
   const local = app.sandbox.searchLocalFoodSources("app");
   assert.ok(local.some((food) => food.source === "Favorite"));
   assert.ok(local.some((food) => food.source === "Custom food"));
-  assert.ok(local.some((food) => food.source === "FitCalc built-in"));
+  assert.ok(local.some((food) => food.source === "MACROBAY built-in"));
   assert.ok(app.sandbox.searchLocalFoodSources("car").some((food) => food.fdcId === 170393), "offline foods remain substring-searchable");
   assert.deepStrictEqual(app.sandbox.filterExternalFoodSearchResults([
     { name: "Apple cereal bar", calories: 150, protein: 3, carbs: 25, fat: 4, fiber: 2 }
@@ -3066,7 +3080,7 @@ test("Food search groups local and packaged results, filters irrelevant external
 test("Food search keeps local results when Open Food Facts fails and shows only its muted note", async () => {
   const app = loadFoodApiRetrySandbox();
   app.sandbox.getFoodLibrary = () => ({ favorites: [], customFoods: [] });
-  app.sandbox.searchBuiltInFoodList = () => [{ name: "carrot", calories: 41, protein: 0.9, carbs: 9.6, fat: 0.2, fiber: 2.8, source: "FitCalc built-in" }];
+  app.sandbox.searchBuiltInFoodList = () => [{ name: "carrot", calories: 41, protein: 0.9, carbs: 9.6, fat: 0.2, fiber: 2.8, source: "MACROBAY built-in" }];
   app.sandbox.fetch = async function () { throw new TypeError("offline"); };
   app.sandbox.beginFoodSearch("carrot", 0, null);
   await new Promise((resolve) => setImmediate(resolve));
@@ -3291,11 +3305,11 @@ test("A4 unit preferences convert display values while stored measurements stay 
   values.clear();
   ctx.saveProfile(male);
   assert.strictEqual(ctx.formatWorkoutSet({ reps: 8, weight: 60 }), "8×60kg");
-  ctx.saveFitCalcPreferences({ theme: "light" });
-  ctx.saveFitCalcPreferences({ units: { weight: "lb", height: "ft-in" } });
-  assert.strictEqual(ctx.getFitCalcWeightUnit(), "lb");
+  ctx.saveMacroBayPreferences({ theme: "light" });
+  ctx.saveMacroBayPreferences({ units: { weight: "lb", height: "ft-in" } });
+  assert.strictEqual(ctx.getMacroBayWeightUnit(), "lb");
   assert.strictEqual(ctx.formatWorkoutSet({ reps: 8, weight: 60 }), "8×132.3lb");
-  assert.strictEqual(ctx.getFitCalcPreferences().theme, "light");
+  assert.strictEqual(ctx.getMacroBayPreferences().theme, "light");
   assert.ok(Math.abs(ctx.kilogramsToDisplayWeight(80) - 176.37) < 0.02);
   assert.ok(Math.abs(ctx.displayWeightToKilograms(176.37) - 80) < 0.02);
   const imperialHeight = ctx.centimetersToFeetInches(180);
@@ -3309,8 +3323,8 @@ test("A4 planner displays and saves weigh-ins in the selected unit without chang
   const app = loadPlannerSandbox({ profile: male });
   const today = app.sandbox.getDateKey(new app.sandbox.Date());
   app.sandbox.savePlannerFor(today, { date: today, weight: 80, workouts: [], tasks: [] });
-  app.sandbox.saveFitCalcPreferences({ units: { weight: "lb" } });
-  app.sandbox.announceDataChange(today, "fitcalc_preferences");
+  app.sandbox.saveMacroBayPreferences({ units: { weight: "lb" } });
+  app.sandbox.announceDataChange(today, "macrobay_preferences");
 
   assert.strictEqual(app.getElement("planner-weight-value").textContent, "176.4");
   assert.strictEqual(app.getElement("planner-weight-unit").textContent, "lb");
@@ -3331,7 +3345,7 @@ test("C6 water target uses profile weight and recorded exercise duration", () =>
 test("A8 adaptive insights use actual weight, protein, step, and activity history", () => {
   values.clear();
   ctx.saveProfile({ ...male, goal: "lose" });
-  ctx.writeJSON("fitcalc_targets", { calories: 2000, protein: 150 });
+  ctx.writeJSON("macrobay_targets", { calories: 2000, protein: 150 });
   const dateAtOffset = (offset) => {
     const date = new Date();
     date.setDate(date.getDate() - offset);
@@ -3500,53 +3514,53 @@ test("Phase 6 global script builds consistent navigation and keyboard mobile con
   const generatedLinks = Array.from(app.mobileMenu.innerHTML.matchAll(/href="([^"]+)"/g), (match) => match[1]);
   assert.strictEqual(generatedLinks.length, 7);
   generatedLinks.forEach((href) => {
-    const destination = new URL(href, "https://fitcalc.test/");
+    const destination = new URL(href, "https://macrobay.test/");
     assert.match(destination.pathname, /\/index\.html$/, `${href} should target an explicit page file`);
     const localFile = __dirname + "/../" + destination.pathname.replace(/^\/+/, "");
     assert.ok(fs.existsSync(localFile), `${href} should resolve to an existing app page`);
   });
-  const calculatorsPage = loadGlobalScriptSandbox("https://fitcalc.test/calculators/");
+  const calculatorsPage = loadGlobalScriptSandbox("https://macrobay.test/calculators/");
   const calculatorsBottomNav = calculatorsPage.appended.find((element) => element.className === "bottom-nav");
-  assert.match(calculatorsBottomNav.innerHTML, /class="mobile-tab active" href="https:\/\/fitcalc\.test\/calculators\/index\.html"/);
-  assert.match(calculatorsPage.mobileMenu.innerHTML, /class="mobile-calculators-link active"[^>]*href="https:\/\/fitcalc\.test\/calculators\/index\.html" aria-current="page">All calculators<\/a>/);
+  assert.match(calculatorsBottomNav.innerHTML, /class="mobile-tab active" href="https:\/\/macrobay\.test\/calculators\/index\.html"/);
+  assert.match(calculatorsPage.mobileMenu.innerHTML, /class="mobile-calculators-link active"[^>]*href="https:\/\/macrobay\.test\/calculators\/index\.html" aria-current="page">All calculators<\/a>/);
   assert.strictEqual(app.rootElement.dataset.theme, "dark");
 
-  const calculatorPage = loadGlobalScriptSandbox("https://fitcalc.test/bmi/index.html");
-  const calculatorState = calculatorPage.sandbox.window.fitcalcNavigation.getState();
+  const calculatorPage = loadGlobalScriptSandbox("https://macrobay.test/bmi/index.html");
+  const calculatorState = calculatorPage.sandbox.window.macrobayNavigation.getState();
   assert.strictEqual(calculatorState.primary, "Calculators");
   assert.strictEqual(calculatorState.tool, "BMI");
   assert.match(calculatorPage.mobileMenu.innerHTML, /class="mobile-calculators-link active"[^>]*>All calculators<\/a>/);
 
-  const nutritionPage = loadGlobalScriptSandbox("https://fitcalc.test/nutrition/index.html");
-  assert.strictEqual(nutritionPage.sandbox.window.fitcalcNavigation.getState().primary, null);
-  assert.strictEqual(nutritionPage.sandbox.window.fitcalcNavigation.getState().tracking, "Nutrition");
+  const nutritionPage = loadGlobalScriptSandbox("https://macrobay.test/nutrition/index.html");
+  assert.strictEqual(nutritionPage.sandbox.window.macrobayNavigation.getState().primary, null);
+  assert.strictEqual(nutritionPage.sandbox.window.macrobayNavigation.getState().tracking, "Nutrition");
   assert.doesNotMatch(nutritionPage.appended.find((element) => element.className === "bottom-nav").innerHTML, /mobile-tab active/);
   assert.match(nutritionPage.mobileMenu.innerHTML, /mobile-track-link active[^>]*>Nutrition<\/a>/);
 
-  const settingsPage = loadGlobalScriptSandbox("https://fitcalc.test/settings/index.html");
-  const settingsState = settingsPage.sandbox.window.fitcalcNavigation.getState();
+  const settingsPage = loadGlobalScriptSandbox("https://macrobay.test/settings/index.html");
+  const settingsState = settingsPage.sandbox.window.macrobayNavigation.getState();
   assert.strictEqual(settingsState.primary, null);
   assert.strictEqual(settingsState.app, "Settings");
   assert.doesNotMatch(settingsPage.appended.find((element) => element.className === "bottom-nav").innerHTML, /mobile-tab active/);
   assert.match(settingsPage.mobileMenu.innerHTML, /mobile-app-link active[^>]*>Settings<\/a>/);
-  settingsPage.sandbox.window.location.href = "https://fitcalc.test/settings/index.html#settings-about";
+  settingsPage.sandbox.window.location.href = "https://macrobay.test/settings/index.html#settings-about";
   settingsPage.windowListeners.hashchange.forEach((handler) => handler());
-  assert.strictEqual(settingsPage.sandbox.window.fitcalcNavigation.getState().app, "About");
+  assert.strictEqual(settingsPage.sandbox.window.macrobayNavigation.getState().app, "About");
   assert.match(settingsPage.mobileMenu.innerHTML, /mobile-app-link active[^>]*>About<\/a>/);
-  settingsPage.sandbox.window.location.href = "https://fitcalc.test/profile/index.html";
+  settingsPage.sandbox.window.location.href = "https://macrobay.test/profile/index.html";
   settingsPage.windowListeners.popstate.forEach((handler) => handler());
-  assert.strictEqual(settingsPage.sandbox.window.fitcalcNavigation.getState().primary, "Profile");
+  assert.strictEqual(settingsPage.sandbox.window.macrobayNavigation.getState().primary, "Profile");
   assert.match(settingsPage.appended.find((element) => element.className === "bottom-nav").innerHTML, /mobile-tab active[\s\S]*?<span>Profile/);
 
   [
-    ["https://fitcalc.test/", "Home", "Home"],
-    ["https://fitcalc.test/calculators/index.html", "Calculators", "Calc"],
-    ["https://fitcalc.test/planner/index.html", "Activity", "Activity"],
-    ["https://fitcalc.test/history/index.html", "Progress", "Progress"],
-    ["https://fitcalc.test/profile/index.html", "Profile", "Profile"]
+    ["https://macrobay.test/", "Home", "Home"],
+    ["https://macrobay.test/calculators/index.html", "Calculators", "Calc"],
+    ["https://macrobay.test/planner/index.html", "Activity", "Activity"],
+    ["https://macrobay.test/history/index.html", "Progress", "Progress"],
+    ["https://macrobay.test/profile/index.html", "Profile", "Profile"]
   ].forEach(([href, expectedLabel, mobileLabel]) => {
     const route = loadGlobalScriptSandbox(href);
-    assert.strictEqual(route.sandbox.window.fitcalcNavigation.getState().primary, expectedLabel);
+    assert.strictEqual(route.sandbox.window.macrobayNavigation.getState().primary, expectedLabel);
     assert.match(route.desktopNav.innerHTML, new RegExp('class="active"[^>]*aria-current="page">' + expectedLabel));
     assert.match(route.appended.find((element) => element.className === "bottom-nav").innerHTML, new RegExp('mobile-tab active[\\s\\S]*?<span>' + mobileLabel));
   });
@@ -3565,7 +3579,7 @@ test("Phase 6 global script builds consistent navigation and keyboard mobile con
   app.mobileMenu.handlers.click({ target: { closest() { return {}; } } });
   assert.strictEqual(app.hamburger.getAttribute("aria-expanded"), "false");
   assert.strictEqual(app.mobileMenu.hidden, true);
-  app.sandbox.window.fitcalcApplyThemePreference("light");
+  app.sandbox.window.macrobayApplyThemePreference("light");
   assert.strictEqual(app.rootElement.dataset.theme, "light");
 });
 
@@ -3584,52 +3598,52 @@ test("Header theme buttons are removed from app pages while Settings keeps its t
   const settings = fs.readFileSync(__dirname + "/../settings/index.html", "utf8");
   assert.match(settings, /id="settings-theme"/);
   assert.match(settings, /<script src="\.\.\/settings\.js"><\/script>/);
-  assert.match(fs.readFileSync(__dirname + "/../theme-init.js", "utf8"), /fitcalcApplyThemePreference|dataset\.theme/);
+  assert.match(fs.readFileSync(__dirname + "/../theme-init.js", "utf8"), /macrobayApplyThemePreference|dataset\.theme/);
 });
 
-test("Onboarding completion persists through refresh and legacy FitCalc data is migrated", () => {
+test("Onboarding completion persists through refresh and legacy MACROBAY data is migrated", () => {
   const freshStorage = new Map();
-  const firstVisit = loadGlobalScriptSandbox("https://fitcalc.test/", {
+  const firstVisit = loadGlobalScriptSandbox("https://macrobay.test/", {
     includeSplash: true, withStore: true, storage: freshStorage
   });
   assert.strictEqual(firstVisit.splashScreen.hidden, false);
   assert.strictEqual(firstVisit.bodyClasses.has("splash-active"), true);
-  assert.strictEqual(firstVisit.sandbox.hasCompletedFitCalcOnboarding(), false);
+  assert.strictEqual(firstVisit.sandbox.hasCompletedMacroBayOnboarding(), false);
 
   firstVisit.splashStart.click();
   assert.strictEqual(firstVisit.splashScreen.hidden, true);
   assert.strictEqual(firstVisit.bodyClasses.has("splash-active"), false);
-  assert.strictEqual(JSON.parse(freshStorage.get("fitcalc_preferences")).onboardingComplete, true);
+  assert.strictEqual(JSON.parse(freshStorage.get("macrobay_preferences")).onboardingComplete, true);
 
-  const homeRefresh = loadGlobalScriptSandbox("https://fitcalc.test/", {
+  const homeRefresh = loadGlobalScriptSandbox("https://macrobay.test/", {
     includeSplash: true, withStore: true, storage: freshStorage
   });
   assert.strictEqual(homeRefresh.splashScreen.hidden, true);
   assert.strictEqual(homeRefresh.bodyClasses.has("splash-active"), false);
-  assert.strictEqual(homeRefresh.sandbox.window.fitcalcNavigation.getState().primary, "Home");
+  assert.strictEqual(homeRefresh.sandbox.window.macrobayNavigation.getState().primary, "Home");
 
   const existingProfileBytes = JSON.stringify(male);
   const legacyStorage = new Map([
-    ["fitcalc_profile", existingProfileBytes],
-    ["fitcalc_preferences", JSON.stringify({ theme: "light", units: { weight: "lb", height: "ft-in" } })]
+    ["macrobay_profile", existingProfileBytes],
+    ["macrobay_preferences", JSON.stringify({ theme: "light", units: { weight: "lb", height: "ft-in" } })]
   ]);
-  const existingProfileHome = loadGlobalScriptSandbox("https://fitcalc.test/", {
+  const existingProfileHome = loadGlobalScriptSandbox("https://macrobay.test/", {
     includeSplash: true, withStore: true, storage: legacyStorage
   });
   assert.strictEqual(existingProfileHome.splashScreen.hidden, true);
-  assert.strictEqual(legacyStorage.get("fitcalc_profile"), existingProfileBytes);
-  assert.deepStrictEqual(JSON.parse(legacyStorage.get("fitcalc_preferences")), {
+  assert.strictEqual(legacyStorage.get("macrobay_profile"), existingProfileBytes);
+  assert.deepStrictEqual(JSON.parse(legacyStorage.get("macrobay_preferences")), {
     theme: "light", units: { weight: "lb", height: "ft-in" }, onboardingComplete: true
   });
 
   const loggedDataStorage = new Map([
-    ["fitcalc_nutrition", JSON.stringify({ "2026-10-06": { calories: 180, foods: [{ name: "Oats", calories: 180 }] } })]
+    ["macrobay_nutrition", JSON.stringify({ "2026-10-06": { calories: 180, foods: [{ name: "Oats", calories: 180 }] } })]
   ]);
-  const existingActivityHome = loadGlobalScriptSandbox("https://fitcalc.test/", {
+  const existingActivityHome = loadGlobalScriptSandbox("https://macrobay.test/", {
     includeSplash: true, withStore: true, storage: loggedDataStorage
   });
   assert.strictEqual(existingActivityHome.splashScreen.hidden, true);
-  assert.strictEqual(JSON.parse(loggedDataStorage.get("fitcalc_preferences")).onboardingComplete, true);
+  assert.strictEqual(JSON.parse(loggedDataStorage.get("macrobay_preferences")).onboardingComplete, true);
 });
 
 test("Header keeps mauve controls, removes the bottom rule, and retains keyboard-only focus styling", () => {
@@ -3703,7 +3717,7 @@ test("Mobile navigation uses one detached capsule layout with room below page co
 
 test("Settings exposes shared app preferences, data tools, and app information", () => {
   const html = fs.readFileSync(__dirname + "/../settings/index.html", "utf8");
-  assert.match(html, /<title>Settings — FitCalc<\/title>/);
+  assert.match(html, /<title>Settings — MACROBAY<\/title>/);
   assert.match(html, /<select id="settings-theme">[\s\S]*value="system">System[\s\S]*value="light">Light[\s\S]*value="dark">Dark/);
   assert.match(html, /id="unit-preferences-form"/);
   assert.match(html, /id="unit-weight"[\s\S]*value="kg"[\s\S]*value="lb"/);
@@ -3720,72 +3734,130 @@ test("USDA API key is saved and cleared through the existing preferences storage
   const app = loadProfileSandbox();
   app.getElement("usda-api-key").value = "user-provided-key";
   app.getElement("usda-key-form").handlers.submit({ preventDefault() {} });
-  assert.strictEqual(app.sandbox.getFitCalcPreferences().usdaApiKey, "user-provided-key");
-  assert.strictEqual(app.storage.has("fitcalc_preferences"), true);
+  assert.strictEqual(app.sandbox.getMacroBayPreferences().usdaApiKey, "user-provided-key");
+  assert.strictEqual(app.storage.has("macrobay_preferences"), true);
 
   app.getElement("clear-usda-key").click();
-  assert.strictEqual(app.sandbox.getFitCalcPreferences().usdaApiKey, "");
+  assert.strictEqual(app.sandbox.getMacroBayPreferences().usdaApiKey, "");
   assert.strictEqual(app.getElement("usda-api-key").value, "");
 });
 
 test("B21 initial theme follows OS light preference unless a theme is stored", () => {
-  const followsOS = loadGlobalScriptSandbox("https://fitcalc.test/", { osLight: true });
+  const followsOS = loadGlobalScriptSandbox("https://macrobay.test/", { osLight: true });
   assert.strictEqual(followsOS.rootElement.dataset.theme, "light");
 
-  const systemPreferenceFollowsOS = loadGlobalScriptSandbox("https://fitcalc.test/settings/index.html", {
+  const systemPreferenceFollowsOS = loadGlobalScriptSandbox("https://macrobay.test/settings/index.html", {
     osLight: true,
     preferences: { theme: "system" }
   });
   assert.strictEqual(systemPreferenceFollowsOS.rootElement.dataset.theme, "light");
 
-  const storedChoiceWins = loadGlobalScriptSandbox("https://fitcalc.test/", {
+  const storedChoiceWins = loadGlobalScriptSandbox("https://macrobay.test/", {
     osLight: true,
     preferences: { theme: "dark" }
   });
   assert.strictEqual(storedChoiceWins.rootElement.dataset.theme, "dark");
 });
 
-test("R7 early theme initializer applies saved preference, OS fallback, and the test storage namespace", () => {
+function runThemeInitializer(options = {}) {
   const source = fs.readFileSync(__dirname + "/../theme-init.js", "utf8");
-  function loadTheme(options = {}) {
-    const root = { dataset: {} };
-    const requestedKeys = [];
-    const storedValues = options.values || {};
-    const window = {
-      FITCALC_TEST_MODE: options.testMode === true,
-      location: { pathname: options.pathname || "/" },
-      matchMedia: options.matchMedia === false ? undefined : function (query) {
-        assert.strictEqual(query, "(prefers-color-scheme: light)");
-        if (options.throwMatchMedia) throw new Error("matchMedia unavailable");
-        return { matches: options.osLight === true };
-      }
-    };
-    window.top = window;
-    const sandbox = {
-      document: { documentElement: root }, window,
-      localStorage: {
-        getItem(key) {
-          requestedKeys.push(key);
-          if (options.throwStorage) throw new Error("storage unavailable");
-          return Object.prototype.hasOwnProperty.call(storedValues, key) ? storedValues[key] : null;
-        }
-      }
-    };
-    vm.runInNewContext(source, sandbox);
-    return { theme: root.dataset.theme, requestedKeys };
-  }
+  const root = { dataset: {} };
+  const requestedKeys = [];
+  const storedValues = Object.assign({}, options.values || {});
+  const window = {
+    MACROBAY_TEST_MODE: options.testMode === true,
+    location: { pathname: options.pathname || "/" },
+    matchMedia: options.matchMedia === false ? undefined : function (query) {
+      assert.strictEqual(query, "(prefers-color-scheme: light)");
+      if (options.throwMatchMedia) throw new Error("matchMedia unavailable");
+      return { matches: options.osLight === true };
+    }
+  };
+  window.top = window;
+  const sandbox = {
+    document: { documentElement: root }, window,
+    localStorage: {
+      getItem(key) {
+        requestedKeys.push(key);
+        if (options.throwStorage) throw new Error("storage unavailable");
+        return Object.prototype.hasOwnProperty.call(storedValues, key) ? storedValues[key] : null;
+      },
+      setItem(key, value) { storedValues[key] = String(value); }
+    }
+  };
+  vm.runInNewContext(source, sandbox);
+  return { theme: root.dataset.theme, requestedKeys, values: storedValues };
+}
+
+test("R7 early theme initializer applies saved preference, OS fallback, and the test storage namespace", () => {
+  const loadTheme = runThemeInitializer;
 
   assert.strictEqual(loadTheme({ osLight: true }).theme, "light");
-  assert.strictEqual(loadTheme({ osLight: true, values: { fitcalc_preferences: JSON.stringify({ theme: "system" }) } }).theme, "light");
-  assert.strictEqual(loadTheme({ osLight: true, values: { fitcalc_preferences: JSON.stringify({ theme: "dark" }) } }).theme, "dark");
+  assert.strictEqual(loadTheme({ osLight: true, values: { macrobay_preferences: JSON.stringify({ theme: "system" }) } }).theme, "light");
+  assert.strictEqual(loadTheme({ osLight: true, values: { macrobay_preferences: JSON.stringify({ theme: "dark" }) } }).theme, "dark");
   assert.strictEqual(loadTheme({ matchMedia: false }).theme, "dark");
   assert.strictEqual(loadTheme({ throwStorage: true, throwMatchMedia: true }).theme, "dark");
   const testPage = loadTheme({
     pathname: "/tests/profile.html", testMode: true, osLight: false,
-    values: { test_fitcalc_preferences: JSON.stringify({ theme: "light" }) }
+    values: { test_macrobay_preferences: JSON.stringify({ theme: "light" }) }
   });
   assert.strictEqual(testPage.theme, "light");
-  assert.deepStrictEqual(testPage.requestedKeys, ["test_fitcalc_preferences"]);
+  assert.strictEqual(testPage.requestedKeys.at(-1), "test_macrobay_preferences");
+});
+
+test("FitCalc storage keys migrate byte-for-byte to MACROBAY keys without replacing newer data", () => {
+  const loadTheme = runThemeInitializer;
+  const mapping = [
+    ["fitcalc_profile", "macrobay_profile"],
+    ["fitcalc_history", "macrobay_history"],
+    ["fitcalc_targets", "macrobay_targets"],
+    ["fitcalc_nutrition", "macrobay_nutrition"],
+    ["fitcalc_planner", "macrobay_planner"],
+    ["fitcalc_preferences", "macrobay_preferences"],
+    ["fitcalc_food_library", "macrobay_food_library"],
+    ["fitcalc_workout_templates", "macrobay_workout_templates"],
+    ["fitcalc_progress_backfill_v1", "macrobay_progress_backfill_v1"],
+    ["fitcalc_progress_backfill_v2", "macrobay_progress_backfill_v2"],
+    ["fitcalc_schema_version", "macrobay_schema_version"]
+  ];
+  const legacy = Object.fromEntries(mapping.map(([oldKey], index) => [oldKey, index === 0 ? "{\"name\":\"Existing user\",\"onboardingComplete\":true}" : `raw-${index}`]));
+  legacy.fitcalc_nutrition = "null";
+  legacy.fitcalc_history = "not-json";
+  const existingUser = loadTheme({ osLight: false, values: legacy });
+  assert.strictEqual(existingUser.values.macrobay_profile, legacy.fitcalc_profile);
+  assert.strictEqual(existingUser.values.macrobay_preferences, legacy.fitcalc_preferences);
+  assert.strictEqual(existingUser.theme, "dark", "malformed preferences fall back safely");
+  const existingStorage = new Map([
+    ["macrobay_profile", existingUser.values.macrobay_profile],
+    ["macrobay_preferences", existingUser.values.macrobay_preferences]
+  ]);
+  const existingHome = loadGlobalScriptSandbox("https://macrobay.test/", { withStore: true, storage: existingStorage });
+  assert.strictEqual(existingHome.sandbox.hasCompletedMacroBayOnboarding(), true, "existing users must not be sent through onboarding again");
+  assert.strictEqual(JSON.parse(existingStorage.get("macrobay_profile")).name, "Existing user");
+  assert.strictEqual(JSON.parse(existingStorage.get("macrobay_preferences")).onboardingComplete, true);
+
+  const currentProfile = "{\"name\":\"Newer profile\"}";
+  const migrated = loadTheme({ osLight: false, values: Object.assign({}, legacy, { macrobay_profile: currentProfile }) });
+
+  for (const [oldKey, newKey] of mapping) {
+    if (newKey === "macrobay_profile") assert.strictEqual(migrated.values[newKey], currentProfile, "new MACROBAY profile must win");
+    else assert.strictEqual(migrated.values[newKey], legacy[oldKey], `${oldKey} should be preserved exactly`);
+  }
+  assert.strictEqual(migrated.values.macrobay_storage_migration_v1, "1");
+  assert.strictEqual(JSON.parse(migrated.values.macrobay_profile).name, "Newer profile");
+
+  migrated.values.fitcalc_profile = "stale profile";
+  const rerun = loadTheme({ osLight: false, values: migrated.values });
+  assert.strictEqual(rerun.values.macrobay_profile, currentProfile, "rerunning migration must not overwrite existing data");
+  assert.strictEqual(rerun.values.macrobay_storage_migration_v1, "1");
+
+  const testMode = loadTheme({
+    testMode: true, pathname: "/tests/migration.html", osLight: false,
+    values: { test_fitcalc_preferences: "{\"theme\":\"light\"}", test_fitcalc_profile: "profile" }
+  });
+  assert.strictEqual(testMode.theme, "light");
+  assert.strictEqual(testMode.values.test_macrobay_profile, "profile");
+  assert.strictEqual(testMode.values.test_macrobay_storage_migration_v1, "1");
 });
 
 test("R7 theme tokens, page bootstraps, and service-worker shell cover both themes", () => {
@@ -3811,7 +3883,7 @@ test("R7 theme tokens, page bootstraps, and service-worker shell cover both them
   ].forEach((token) => assert.ok(css.includes(token), `missing theme token ${token}`));
   assert.match(css, /\.brand-mark\s*\{[^}]*color:\s*var\(--accent-ink\)/);
   assert.match(css, /box-shadow:\s*0 0 14px color-mix\(in srgb, var\(--terminal-accent\) 24%, transparent\)/);
-  assert.match(css, /\.fitcalc-dialog::backdrop\s*\{\s*background:\s*rgba\(0,0,0,\.58\)/);
+  assert.match(css, /\.macrobay-dialog::backdrop\s*\{\s*background:\s*rgba\(0,0,0,\.58\)/);
 
   function htmlFiles(directory) {
     return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -3887,7 +3959,7 @@ test("R8 feature icon accents are semantic in both themes while brand navigation
 });
 
 test("Capacitor native runtime skips service-worker registration while browser PWA keeps it", () => {
-  const browser = loadGlobalScriptSandbox("https://fitcalc.test/");
+  const browser = loadGlobalScriptSandbox("https://macrobay.test/");
   assert.strictEqual(browser.serviceWorkerRegistrations.length, 1);
 
   const native = loadGlobalScriptSandbox("https://localhost/", { capacitorNative: true });
@@ -3908,14 +3980,14 @@ test("history-generated edit and empty-state navigation uses explicit page files
 
 test("Phase 6 production query strings cannot switch localStorage into test mode", () => {
   const previousLocation = ctx.window.location;
-  const previousFlag = ctx.window.FITCALC_TEST_MODE;
+  const previousFlag = ctx.window.MACROBAY_TEST_MODE;
   ctx.window.location = { pathname: "/index.html", search: "?test=1" };
-  ctx.window.FITCALC_TEST_MODE = true;
+  ctx.window.MACROBAY_TEST_MODE = true;
   try {
-    assert.strictEqual(ctx.fitcalcStorageKey("fitcalc_profile"), "fitcalc_profile");
+    assert.strictEqual(ctx.macrobayStorageKey("macrobay_profile"), "macrobay_profile");
   } finally {
     ctx.window.location = previousLocation;
-    ctx.window.FITCALC_TEST_MODE = previousFlag;
+    ctx.window.MACROBAY_TEST_MODE = previousFlag;
   }
 });
 
@@ -3961,7 +4033,7 @@ test("R2-0 optional service worker icons cannot block the critical app-shell ins
     "./build/icon.iconset/icon_512x512.png"
   ]);
   const packageVersion = JSON.parse(fs.readFileSync(__dirname + "/../package.json", "utf8")).version;
-  assert.strictEqual(openedCacheName, `fitcalc-app-shell-v${packageVersion}`);
+  assert.strictEqual(openedCacheName, `macrobay-app-shell-v${packageVersion}`);
   assert.strictEqual(skippedWaiting, true);
 });
 
@@ -3983,7 +4055,7 @@ test("R5-7 B18 service worker uses safe navigation caching and cache-first for f
     URL,
     Promise,
     self: {
-      location: { origin: "https://fitcalc.test" },
+      location: { origin: "https://macrobay.test" },
       clients: { claim() { return Promise.resolve(); } },
       skipWaiting() { return Promise.resolve(); },
       addEventListener(type, handler) { listeners[type] = handler; }
@@ -4018,7 +4090,7 @@ test("R5-7 B18 service worker uses safe navigation caching and cache-first for f
   listeners.install({ waitUntil(value) { installPromise = value; } });
   await installPromise;
   const packageVersion = JSON.parse(fs.readFileSync(__dirname + "/../package.json", "utf8")).version;
-  assert.strictEqual(cacheName, `fitcalc-app-shell-v${packageVersion}`);
+  assert.strictEqual(cacheName, `macrobay-app-shell-v${packageVersion}`);
   assert.ok(cachedAssets.includes("./calculators.js"));
   assert.ok(cachedAssets.includes("./calculators/index.html"));
   assert.ok(cachedAssets.includes("./assets/fonts/Inter-Variable.ttf"));
@@ -4026,7 +4098,7 @@ test("R5-7 B18 service worker uses safe navigation caching and cache-first for f
   for (const resource of ["/main.js", "/main.css", "/planner/index.html"]) {
     let responsePromise;
     listeners.fetch({
-      request: { method: "GET", url: "https://fitcalc.test" + resource, mode: "cors", destination: "" },
+      request: { method: "GET", url: "https://macrobay.test" + resource, mode: "cors", destination: "" },
       respondWith(value) { responsePromise = value; },
       waitUntil() {}
     });
@@ -4038,7 +4110,7 @@ test("R5-7 B18 service worker uses safe navigation caching and cache-first for f
   failFetch = true;
   let offlineResponse;
   listeners.fetch({
-    request: { method: "GET", url: "https://fitcalc.test/offline.js", mode: "cors", destination: "script" },
+    request: { method: "GET", url: "https://macrobay.test/offline.js", mode: "cors", destination: "script" },
     respondWith(value) { offlineResponse = value; },
     waitUntil() {}
   });
@@ -4046,7 +4118,7 @@ test("R5-7 B18 service worker uses safe navigation caching and cache-first for f
 
   let directoryResponse;
   listeners.fetch({
-    request: { method: "GET", url: "https://fitcalc.test/planner/", mode: "navigate", destination: "document" },
+    request: { method: "GET", url: "https://macrobay.test/planner/", mode: "navigate", destination: "document" },
     respondWith(value) { directoryResponse = value; },
     waitUntil() {}
   });
@@ -4054,7 +4126,7 @@ test("R5-7 B18 service worker uses safe navigation caching and cache-first for f
 
   let queryResponse;
   listeners.fetch({
-    request: { method: "GET", url: "https://fitcalc.test/profile/index.html?targetCalories=2000", mode: "navigate", destination: "document" },
+    request: { method: "GET", url: "https://macrobay.test/profile/index.html?targetCalories=2000", mode: "navigate", destination: "document" },
     respondWith(value) { queryResponse = value; },
     waitUntil() {}
   });
@@ -4065,7 +4137,7 @@ test("R5-7 B18 service worker uses safe navigation caching and cache-first for f
   fetchResponseOk = false;
   let notFoundResponse;
   listeners.fetch({
-    request: { method: "GET", url: "https://fitcalc.test/not-found/index.html", mode: "navigate", destination: "document" },
+    request: { method: "GET", url: "https://macrobay.test/not-found/index.html", mode: "navigate", destination: "document" },
     respondWith(value) { notFoundResponse = value; },
     waitUntil() {}
   });
@@ -4077,7 +4149,7 @@ test("R5-7 B18 service worker uses safe navigation caching and cache-first for f
   let fontResponse;
   let fontRefresh;
   listeners.fetch({
-    request: { method: "GET", url: "https://fitcalc.test/assets/fonts/Inter-Variable.ttf", mode: "cors", destination: "font" },
+    request: { method: "GET", url: "https://macrobay.test/assets/fonts/Inter-Variable.ttf", mode: "cors", destination: "font" },
     respondWith(value) { fontResponse = value; },
     waitUntil(value) { fontRefresh = value; }
   });

@@ -217,8 +217,8 @@ function updateHomeWeightCard() {
         : (records.length ? Number(records[records.length - 1].weight) : null);
     const weightValue = document.getElementById("home-weight-value");
     const weightUnit = document.getElementById("home-weight-unit");
-    if (weightValue) weightValue.textContent = currentWeight === null ? "—" : formatFitCalcWeight(currentWeight, 1);
-    if (weightUnit) weightUnit.textContent = getFitCalcWeightUnit();
+    if (weightValue) weightValue.textContent = currentWeight === null ? "—" : formatMacroBayWeight(currentWeight, 1);
+    if (weightUnit) weightUnit.textContent = getMacroBayWeightUnit();
 
     const changeLabel = document.getElementById("home-weight-change");
     if (changeLabel) {
@@ -226,7 +226,7 @@ function updateHomeWeightCard() {
             const change = Number(records[records.length - 1].weight) - Number(records[0].weight);
             changeLabel.textContent = Math.abs(change) < 0.05
                 ? "No change this week"
-                : (change > 0 ? "+" : "−") + formatFitCalcWeight(Math.abs(change), 1) + " " + getFitCalcWeightUnit() + " this week";
+                : (change > 0 ? "+" : "−") + formatMacroBayWeight(Math.abs(change), 1) + " " + getMacroBayWeightUnit() + " this week";
         } else {
             changeLabel.textContent = "Log another weigh-in to see your weekly change.";
         }
@@ -247,7 +247,7 @@ function updateHomeWeightCard() {
             }).join(" ");
             line.setAttribute("points", points);
             const chart = line.closest("svg");
-            if (chart) chart.setAttribute("aria-label", "Weight trend from " + formatFitCalcWeight(values[0], 1) + " to " + formatFitCalcWeight(values[values.length - 1], 1) + " " + getFitCalcWeightUnit() + " over the last seven days");
+            if (chart) chart.setAttribute("aria-label", "Weight trend from " + formatMacroBayWeight(values[0], 1) + " to " + formatMacroBayWeight(values[values.length - 1], 1) + " " + getMacroBayWeightUnit() + " over the last seven days");
         } else {
             line.setAttribute("points", "");
             const chart = line.closest("svg");
@@ -310,7 +310,7 @@ window.addEventListener(
     }
 );
 
-window.addEventListener("fitcalc:data-change", updateDashboard);
+window.addEventListener("macrobay:data-change", updateDashboard);
 if (document && typeof document.addEventListener === "function") {
     document.addEventListener("visibilitychange", function () {
         if (document.visibilityState === "visible") updateDashboard();

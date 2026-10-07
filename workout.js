@@ -2,7 +2,7 @@ function formatWorkoutSet(set) {
     if (Number(set.durationMinutes) > 0) return Number(set.durationMinutes) + " min";
     const displayWeight = kilogramsToDisplayWeight(set.weight || 0);
     const weightText = Number.isInteger(displayWeight) ? String(displayWeight) : displayWeight.toFixed(1);
-    return Number(set.reps) + "×" + weightText + getFitCalcWeightUnit();
+    return Number(set.reps) + "×" + weightText + getMacroBayWeightUnit();
 }
 
 function createWorkoutRecordId() {
@@ -305,7 +305,7 @@ function renderWorkoutTemplates() {
                         return;
                     }
 
-                    if (!await window.fitcalcDialog.confirm(
+                    if (!await window.macrobayDialog.confirm(
                         `Delete the “${template.name || "Workout"}” workout template?`,
                         "Delete template",
                         "Delete"
@@ -375,7 +375,7 @@ if (saveWorkoutTemplateButton) {
         const existing = templates.find(function (template) {
             return template && normalizeName(template.name) === normalizeName(name);
         });
-        if (existing && !await window.fitcalcDialog.confirm(
+        if (existing && !await window.macrobayDialog.confirm(
             "A workout template with this name already exists. Overwrite it?",
             "Overwrite template",
             "Overwrite"
@@ -383,6 +383,6 @@ if (saveWorkoutTemplateButton) {
 
         if (!createWorkoutTemplate(name, workout.exercises)) return;
         renderWorkoutTemplates();
-        window.fitcalcToast("Workout saved as a reusable template.");
+        window.macrobayToast("Workout saved as a reusable template.");
     });
 }

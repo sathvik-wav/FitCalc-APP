@@ -6,7 +6,7 @@ const os = require("os");
 const path = require("path");
 
 const electronPath = require("electron");
-const browserDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "fitcalc-browser-tests-"));
+const browserDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "macrobay-browser-tests-"));
 let result;
 try {
   result = spawnSync(electronPath, [

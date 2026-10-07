@@ -25,7 +25,7 @@ const mimeTypes = {
 };
 
 protocol.registerSchemesAsPrivileged([{
-  scheme: "fitcalc",
+  scheme: "macrobay",
   privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true }
 }]);
 
@@ -34,7 +34,7 @@ function finish(code) {
 }
 
 app.whenReady().then(async function () {
-  protocol.handle("fitcalc", async function (request) {
+  protocol.handle("macrobay", async function (request) {
     let relative;
     try { relative = decodeURIComponent(new URL(request.url).pathname).replace(/^\/+/, ""); }
     catch (_) { return new Response("Bad request", { status: 400 }); }
@@ -81,7 +81,7 @@ app.whenReady().then(async function () {
   });
 
   for (const page of pages) {
-    const url = "fitcalc://app/" + page;
+    const url = "macrobay://app/" + page;
     console.log("Browser check:", page);
     try {
       await win.loadURL(url);
@@ -107,7 +107,7 @@ app.whenReady().then(async function () {
   console.log("Browser check: dynamic preview routes use explicit page files");
   for (const route of ["calories/", "calories"]) {
     try {
-      await win.loadURL("fitcalc://app/tests/ui-preview.html?route=" + encodeURIComponent(route));
+      await win.loadURL("macrobay://app/tests/ui-preview.html?route=" + encodeURIComponent(route));
       const started = Date.now();
       let preview;
       while (Date.now() - started < 10000) {
@@ -182,7 +182,7 @@ app.whenReady().then(async function () {
       homeLoaded: !!document.querySelector(".dashboard-page")
     })`);
     if (destinationPage.protocol !== "http:" || destinationPage.pathname !== "/index.html" || !destinationPage.homeLoaded) {
-      throw new Error("HTTP home navigation did not load the FitCalc dashboard from index.html");
+      throw new Error("HTTP home navigation did not load the MACROBAY dashboard from index.html");
     }
     console.log("PASS calculator → home uses an explicit HTTP index.html URL");
   } catch (error) {
@@ -222,7 +222,7 @@ app.whenReady().then(async function () {
       homeLoaded: !!document.querySelector(".dashboard-page")
     })`);
     if (destinationPage.protocol !== "file:" || !destinationPage.pathname.endsWith("/index.html") || !destinationPage.homeLoaded) {
-      throw new Error("Explicit file:// home navigation did not load the FitCalc dashboard");
+      throw new Error("Explicit file:// home navigation did not load the MACROBAY dashboard");
     }
     console.log("PASS calculator → home uses an explicit index.html file URL");
   } catch (error) {

@@ -6,11 +6,14 @@ const path = require("path");
 const os = require("os");
 
 const root = path.resolve(__dirname, "..");
-const outputDir = path.join(os.tmpdir(), "fitcalc-responsive-audit");
+const outputDir = path.join(os.tmpdir(), "macrobay-responsive-audit");
+const browserDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "macrobay-responsive-data-"));
 const widths = [360, 375, 430];
 const baseHeight = 844;
 
-protocol.registerSchemesAsPrivileged([{ scheme: "fitcalc", privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
+protocol.registerSchemesAsPrivileged([{ scheme: "macrobay", privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
+app.setPath("userData", browserDataDir);
+app.setPath("sessionData", browserDataDir);
 
 function listPages(dir, relative) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap(function (entry) {
@@ -27,7 +30,7 @@ function safeName(value) { return value.replace(/[^a-z0-9.-]+/gi, "_"); }
 function wait(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
 
 app.whenReady().then(async function () {
-  protocol.handle("fitcalc", async function (request) {
+  protocol.handle("macrobay", async function (request) {
     let relative;
     try { relative = decodeURIComponent(new URL(request.url).pathname).replace(/^\/+/, ""); }
     catch (_) { return new Response("Bad request", { status: 400 }); }
@@ -47,14 +50,14 @@ app.whenReady().then(async function () {
     height: baseHeight,
     webPreferences: { contextIsolation: true, nodeIntegration: false }
   });
-  await win.loadURL("fitcalc://app/index.html");
-  await win.webContents.executeJavaScript("localStorage.setItem('fitcalc_preferences', JSON.stringify({ onboardingComplete: true, profileSetupDismissed: true, theme: 'dark' }));");
+  await win.loadURL("macrobay://app/index.html");
+  await win.webContents.executeJavaScript("localStorage.setItem('macrobay_preferences', JSON.stringify({ onboardingComplete: true, profileSetupDismissed: true, theme: 'dark' }));");
   let issues = 0;
   for (const page of pages) {
     for (const width of widths) {
       win.setContentSize(width, baseHeight);
-      if (page === "planner/index.html") await win.webContents.executeJavaScript("localStorage.setItem('fitcalc_planner', '{}'); localStorage.setItem('fitcalc_workout_templates', '[]');");
-      await win.loadURL("fitcalc://app/" + page.replace(/\\/g, "/"));
+      if (page === "planner/index.html") await win.webContents.executeJavaScript("localStorage.setItem('macrobay_planner', '{}'); localStorage.setItem('macrobay_workout_templates', '[]');");
+      await win.loadURL("macrobay://app/" + page.replace(/\\/g, "/"));
       await wait(120);
       const report = await win.webContents.executeJavaScript(`(() => {
         const visible = el => !!(el.getClientRects().length) && getComputedStyle(el).visibility !== "hidden" && getComputedStyle(el).display !== "none";
@@ -99,8 +102,10 @@ app.whenReady().then(async function () {
   console.log("Audited " + pages.length + " app pages at " + widths.join(", ") + "px; saved " + (pages.length * widths.length + 6) + " screenshots, including workout list/session views, to " + outputDir + ".");
   console.log(issues ? "Found " + issues + " clipped or overflowing visible elements." : "No visible text overflow or ellipsis clipping found.");
   win.destroy();
+  fs.rmSync(browserDataDir, { recursive: true, force: true });
   app.exit(issues ? 1 : 0);
 }).catch(function (error) {
   console.error(error);
+  fs.rmSync(browserDataDir, { recursive: true, force: true });
   app.exit(1);
 });

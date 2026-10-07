@@ -135,7 +135,7 @@ function foodSearchRank(food, query) {
 function foodSearchSourceRank(food) {
     if (food.resultGroup === "your" || food.source === "Favorite" || food.source === "Custom food") return 0;
     if (food.resultGroup === "basic" && food.source === "USDA FoodData Central") return 1;
-    if (food.source === "FitCalc built-in") return 2;
+    if (food.source === "MACROBAY built-in") return 2;
     if (food.source === "Open Food Facts" || food.source === "USDA FoodData Central") return 3;
     return 1;
 }
@@ -193,7 +193,7 @@ function searchLocalFoodSources(query) {
     let basicRecords = [];
     if (typeof foodDatabase !== "undefined" && Array.isArray(foodDatabase)) {
         basicRecords = basicRecords.concat(foodDatabase.map(function (food) {
-            return Object.assign({}, food, { source: "FitCalc built-in" });
+            return Object.assign({}, food, { source: "MACROBAY built-in" });
         }));
     } else if (typeof searchBuiltInFoodList === "function") {
         basicRecords = basicRecords.concat(searchBuiltInFoodList(query));
@@ -514,7 +514,7 @@ function chooseFoodFromApi(food) {
     const normalized = normalizeFoodSearchResult(food);
     if (!normalized) return;
     cancelUnifiedFoodSearch();
-    window.fitcalcPendingFood = normalized;
+    window.macrobayPendingFood = normalized;
     const name = document.getElementById("food-name");
     if (name) name.value = normalized.name;
     if (typeof window.updateNutritionFoodUnits === "function") window.updateNutritionFoodUnits(normalized);
@@ -662,7 +662,7 @@ function appendPackagedUnavailable(root) {
 
 function getSavedUSDAKey() {
     try {
-        const preferences = typeof getFitCalcPreferences === "function" ? getFitCalcPreferences() : {};
+        const preferences = typeof getMacroBayPreferences === "function" ? getMacroBayPreferences() : {};
         return String(preferences.usdaApiKey || "").trim();
     } catch (error) {
         return "";

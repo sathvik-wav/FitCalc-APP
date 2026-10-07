@@ -2,8 +2,8 @@
 
 function populateUnitPreferences() {
     const form = document.getElementById("unit-preferences-form");
-    if (!form || typeof getFitCalcUnits !== "function") return;
-    const units = getFitCalcUnits();
+    if (!form || typeof getMacroBayUnits !== "function") return;
+    const units = getMacroBayUnits();
     const weight = document.getElementById("unit-weight");
     const height = document.getElementById("unit-height");
     if (weight) weight.value = units.weight;
@@ -12,11 +12,11 @@ function populateUnitPreferences() {
 
 function populateSettingsPreferences() {
     populateUnitPreferences();
-    const preferences = typeof getFitCalcPreferences === "function" ? getFitCalcPreferences() : {};
+    const preferences = typeof getMacroBayPreferences === "function" ? getMacroBayPreferences() : {};
     const usdaKey = document.getElementById("usda-api-key");
     if (usdaKey) usdaKey.value = preferences.usdaApiKey || "";
     const theme = document.getElementById("settings-theme");
-    if (!theme || typeof getFitCalcPreferences !== "function") return;
+    if (!theme || typeof getMacroBayPreferences !== "function") return;
     const preference = preferences.theme;
     theme.value = preference === "light" || preference === "dark" || preference === "system" ? preference : "system";
 }
@@ -27,7 +27,7 @@ if (usdaKeyForm) {
         event.preventDefault();
         const value = document.getElementById("usda-api-key").value.trim();
         try {
-            saveFitCalcPreferences({ usdaApiKey: value });
+            saveMacroBayPreferences({ usdaApiKey: value });
             const status = document.getElementById("usda-key-status");
             if (status) status.textContent = value ? "USDA search key saved on this device." : "USDA search key cleared.";
             if (typeof announceDataChange === "function") announceDataChange(getDateKey(new Date()), PREFERENCES_KEY);
@@ -46,7 +46,7 @@ if (clearUsdaKeyButton) {
     clearUsdaKeyButton.addEventListener("click", function () {
         const input = document.getElementById("usda-api-key");
         if (input) input.value = "";
-        saveFitCalcPreferences({ usdaApiKey: "" });
+        saveMacroBayPreferences({ usdaApiKey: "" });
         const status = document.getElementById("usda-key-status");
         if (status) status.textContent = "USDA search key cleared.";
         if (typeof announceDataChange === "function") announceDataChange(getDateKey(new Date()), PREFERENCES_KEY);
@@ -60,9 +60,9 @@ function setDataManagementStatus(message) {
 
 function updateAfterDataRestore() {
     populateSettingsPreferences();
-    if (typeof window.fitcalcApplyThemePreference === "function") {
-        const preferences = typeof getFitCalcPreferences === "function" ? getFitCalcPreferences() : {};
-        window.fitcalcApplyThemePreference(preferences.theme || "system");
+    if (typeof window.macrobayApplyThemePreference === "function") {
+        const preferences = typeof getMacroBayPreferences === "function" ? getMacroBayPreferences() : {};
+        window.macrobayApplyThemePreference(preferences.theme || "system");
     }
     if (typeof populateProfileForm === "function" && typeof getProfile === "function") {
         populateProfileForm(getProfile());
@@ -75,7 +75,7 @@ if (unitPreferencesForm) {
     unitPreferencesForm.addEventListener("submit", function (event) {
         event.preventDefault();
         try {
-            saveFitCalcPreferences({ units: {
+            saveMacroBayPreferences({ units: {
                 weight: document.getElementById("unit-weight").value,
                 height: document.getElementById("unit-height").value
             } });
@@ -85,14 +85,14 @@ if (unitPreferencesForm) {
             const status = document.getElementById("unit-status");
             if (status) status.textContent = "Display units saved. Stored measurements remain unchanged.";
             if (typeof announceDataChange === "function") announceDataChange(getDateKey(new Date()), PREFERENCES_KEY);
-            if (window.fitcalcToast) window.fitcalcToast("Display units updated.");
+            if (window.macrobayToast) window.macrobayToast("Display units updated.");
         } catch (error) {
             const status = document.getElementById("unit-status");
             if (status) {
                 status.textContent = "Unit preferences could not be saved. Check device storage and try again.";
                 status.dataset.state = "error";
             }
-            if (window.fitcalcToast) window.fitcalcToast("Unit preferences could not be saved.", "error");
+            if (window.macrobayToast) window.macrobayToast("Unit preferences could not be saved.", "error");
         }
     });
 }
@@ -101,9 +101,9 @@ const themePreferenceSelect = document.getElementById("settings-theme");
 if (themePreferenceSelect) {
     themePreferenceSelect.addEventListener("change", function () {
         try {
-            saveFitCalcPreferences({ theme: themePreferenceSelect.value });
-            if (typeof window.fitcalcApplyThemePreference === "function") {
-                window.fitcalcApplyThemePreference(themePreferenceSelect.value);
+            saveMacroBayPreferences({ theme: themePreferenceSelect.value });
+            if (typeof window.macrobayApplyThemePreference === "function") {
+                window.macrobayApplyThemePreference(themePreferenceSelect.value);
             }
             if (typeof announceDataChange === "function") announceDataChange(getDateKey(new Date()), PREFERENCES_KEY);
             const status = document.getElementById("settings-theme-status");
@@ -122,21 +122,21 @@ const exportDataButton = document.getElementById("export-data");
 if (exportDataButton) {
     exportDataButton.addEventListener("click", function () {
         try {
-            const backup = exportFitCalcData();
+            const backup = exportMacroBayData();
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = "fitcalc-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+            link.download = "macrobay-backup-" + new Date().toISOString().slice(0, 10) + ".json";
             document.body.appendChild(link);
             link.click();
             link.remove();
             window.setTimeout(function () { URL.revokeObjectURL(url); }, 0);
             setDataManagementStatus("Backup downloaded. Keep the JSON file somewhere safe.");
-            if (window.fitcalcToast) window.fitcalcToast("FitCalc backup downloaded.");
+            if (window.macrobayToast) window.macrobayToast("MACROBAY backup downloaded.");
         } catch (error) {
             setDataManagementStatus(error.message || "Could not create a backup.");
-            if (window.fitcalcToast) window.fitcalcToast("Could not create the backup.", "error");
+            if (window.macrobayToast) window.macrobayToast("Could not create the backup.", "error");
         }
     });
 }
@@ -148,23 +148,23 @@ if (importDataInput) {
         if (!file) return;
         try {
             const backup = JSON.parse(await file.text());
-            validateFitCalcBackup(backup);
-            const confirmed = window.fitcalcDialog
-                ? await window.fitcalcDialog.confirm(
-                    "Importing this backup replaces FitCalc data saved on this device. Continue?",
+            validateMacroBayBackup(backup);
+            const confirmed = window.macrobayDialog
+                ? await window.macrobayDialog.confirm(
+                    "Importing this backup replaces MACROBAY data saved on this device. Continue?",
                     "Replace saved data",
                     "Import backup"
                 )
-                : window.confirm("Importing this backup replaces FitCalc data saved on this device. Continue?");
+                : window.confirm("Importing this backup replaces MACROBAY data saved on this device. Continue?");
             if (!confirmed) return;
-            importFitCalcData(backup);
+            importMacroBayData(backup);
             updateAfterDataRestore();
             setDataManagementStatus("Backup restored successfully.");
-            if (window.fitcalcToast) window.fitcalcToast("FitCalc backup restored.");
+            if (window.macrobayToast) window.macrobayToast("MACROBAY backup restored.");
         } catch (error) {
             const message = error && error.message ? error.message : "Could not read this backup.";
             setDataManagementStatus(message);
-            if (window.fitcalcToast) window.fitcalcToast(message, "error");
+            if (window.macrobayToast) window.macrobayToast(message, "error");
         } finally {
             importDataInput.value = "";
         }
@@ -174,23 +174,23 @@ if (importDataInput) {
 const resetDataButton = document.getElementById("reset-data");
 if (resetDataButton) {
     resetDataButton.addEventListener("click", async function () {
-        const confirmed = window.fitcalcDialog
-            ? await window.fitcalcDialog.confirm(
+        const confirmed = window.macrobayDialog
+            ? await window.macrobayDialog.confirm(
                 "This permanently removes your profile, targets, nutrition, planner, workouts, history, templates, and preferences from this device.",
-                "Reset FitCalc data",
+                "Reset MACROBAY data",
                 "Delete data"
             )
-            : window.confirm("Permanently delete all FitCalc data saved on this device?");
+            : window.confirm("Permanently delete all MACROBAY data saved on this device?");
         if (!confirmed) return;
         try {
-            resetFitCalcData();
+            resetMacroBayData();
             updateAfterDataRestore();
-            setDataManagementStatus("FitCalc data was removed from this device.");
-            if (window.fitcalcToast) window.fitcalcToast("FitCalc data reset.");
+            setDataManagementStatus("MACROBAY data was removed from this device.");
+            if (window.macrobayToast) window.macrobayToast("MACROBAY data reset.");
         } catch (error) {
-            const message = error && error.message ? error.message : "Could not reset FitCalc data.";
+            const message = error && error.message ? error.message : "Could not reset MACROBAY data.";
             setDataManagementStatus(message);
-            if (window.fitcalcToast) window.fitcalcToast(message, "error");
+            if (window.macrobayToast) window.macrobayToast(message, "error");
         }
     });
 }

@@ -71,7 +71,7 @@
     }
     return { path: path, primary: primaryLabel, tracking: tracking ? tracking.label : null, tool: tool ? tool.label : null, app: appLabel };
   }
-  window.fitcalcNavigation = { getState: routeState };
+  window.macrobayNavigation = { getState: routeState };
   function navAnchor(item, className, active) {
     var url = new URL(item.path, BASE);
     var classes = [className, active ? "active" : ""].filter(Boolean).join(" ");
@@ -154,7 +154,7 @@
     });
   }
 
-  var storedPreferences = typeof getFitCalcPreferences === "function" ? getFitCalcPreferences() : {};
+  var storedPreferences = typeof getMacroBayPreferences === "function" ? getMacroBayPreferences() : {};
   var themeMedia = null;
   if (typeof window.matchMedia === "function") {
     try { themeMedia = window.matchMedia("(prefers-color-scheme: light)"); }
@@ -182,20 +182,20 @@
     }
     return root.dataset.theme;
   }
-  window.fitcalcApplyThemePreference = applyThemePreference;
+  window.macrobayApplyThemePreference = applyThemePreference;
   applyThemePreference(storedPreferences && storedPreferences.theme);
   if (themeMedia && typeof themeMedia.addEventListener === "function") {
     themeMedia.addEventListener("change", function () {
-      var current = typeof getFitCalcPreferences === "function" ? getFitCalcPreferences() : {};
+      var current = typeof getMacroBayPreferences === "function" ? getMacroBayPreferences() : {};
       if (!current || (current.theme !== "light" && current.theme !== "dark")) applyThemePreference("system");
     });
   }
   document.querySelectorAll(".theme-toggle").forEach(function (button) {
     button.addEventListener("click", function () {
-      if (typeof saveFitCalcPreferences === "function") {
+      if (typeof saveMacroBayPreferences === "function") {
         try {
           var nextTheme = root.dataset.theme === "light" ? "dark" : "light";
-          saveFitCalcPreferences({ theme: nextTheme });
+          saveMacroBayPreferences({ theme: nextTheme });
           applyThemePreference(nextTheme);
         }
         catch (error) { /* Storage failure is already announced by store.js. */ }
@@ -215,7 +215,7 @@
     }
   }
 
-  var splashScreen = document.getElementById("fitcalc-splash");
+  var splashScreen = document.getElementById("macrobay-splash");
   var splashStart = document.getElementById("splash-start");
   if (splashScreen && splashStart) {
     var firstRunScreen = document.getElementById("first-run-profile");
@@ -240,8 +240,8 @@
     }
 
     function shouldShowFirstRunProfile() {
-      if (!firstRunScreen || hasSavedProfile() || typeof getFitCalcPreferences !== "function") return false;
-      return getFitCalcPreferences().profileSetupDismissed !== true;
+      if (!firstRunScreen || hasSavedProfile() || typeof getMacroBayPreferences !== "function") return false;
+      return getMacroBayPreferences().profileSetupDismissed !== true;
     }
 
     function renderFirstRunStep() {
@@ -261,7 +261,7 @@
       firstRunScreen.hidden = false;
       document.body.classList.add("first-run-active");
       Array.prototype.forEach.call(document.body.children, function (child) { child.inert = child !== firstRunScreen; });
-      var units = typeof getFitCalcUnits === "function" ? getFitCalcUnits() : { weight: "kg", height: "cm" };
+      var units = typeof getMacroBayUnits === "function" ? getMacroBayUnits() : { weight: "kg", height: "cm" };
       var height = document.getElementById("first-run-height");
       var imperial = document.getElementById("first-run-height-imperial");
       var heightLabel = firstRunScreen.querySelector('label[for="first-run-height"]');
@@ -315,8 +315,8 @@
 
     function setFirstRunDismissed() {
       try {
-        if (typeof saveFitCalcPreferences !== "function") throw new Error("Saved app state is unavailable.");
-        saveFitCalcPreferences({ profileSetupDismissed: true, onboardingComplete: true });
+        if (typeof saveMacroBayPreferences !== "function") throw new Error("Saved app state is unavailable.");
+        saveMacroBayPreferences({ profileSetupDismissed: true, onboardingComplete: true });
       } catch (error) {
         var status = document.getElementById("first-run-status");
         if (status) status.textContent = "This choice could not be saved. Check device storage and try again.";
@@ -327,7 +327,7 @@
 
     function saveFirstRunProfile() {
       if (!currentFirstRunStepIsValid()) return;
-      var units = typeof getFitCalcUnits === "function" ? getFitCalcUnits() : { weight: "kg", height: "cm" };
+      var units = typeof getMacroBayUnits === "function" ? getMacroBayUnits() : { weight: "kg", height: "cm" };
       var height = units.height === "ft-in"
         ? feetInchesToCentimeters(document.getElementById("first-run-height-feet").value, document.getElementById("first-run-height-inches").value)
         : Number(document.getElementById("first-run-height").value);
@@ -352,7 +352,7 @@
       var targetsSaved = typeof refreshTargets !== "function" || refreshTargets();
       hideFirstRunProfile();
       if (typeof updateDashboard === "function") updateDashboard();
-      if (!targetsSaved && window.fitcalcToast) window.fitcalcToast("Profile saved, but estimated targets could not be updated.", "error");
+      if (!targetsSaved && window.macrobayToast) window.macrobayToast("Profile saved, but estimated targets could not be updated.", "error");
     }
 
     var firstRunNext = document.getElementById("first-run-next");
@@ -380,8 +380,8 @@
     if (firstRunSave) firstRunSave.addEventListener("click", saveFirstRunProfile);
 
     var onboardingComplete = false;
-    if (typeof hasCompletedFitCalcOnboarding === "function") {
-      try { onboardingComplete = hasCompletedFitCalcOnboarding(); }
+    if (typeof hasCompletedMacroBayOnboarding === "function") {
+      try { onboardingComplete = hasCompletedMacroBayOnboarding(); }
       catch (error) { /* Fall back to showing onboarding if saved state cannot be read. */ }
     }
     if (window.location.hash || onboardingComplete) {
@@ -393,10 +393,10 @@
     }
     splashStart.addEventListener("click", function () {
       try {
-        if (typeof completeFitCalcOnboarding !== "function") throw new Error("Saved app state is unavailable.");
-        completeFitCalcOnboarding();
+        if (typeof completeMacroBayOnboarding !== "function") throw new Error("Saved app state is unavailable.");
+        completeMacroBayOnboarding();
       } catch (error) {
-        if (window.fitcalcToast) window.fitcalcToast("Could not save onboarding. Check device storage and try again.", "error");
+        if (window.macrobayToast) window.macrobayToast("Could not save onboarding. Check device storage and try again.", "error");
         return;
       }
       dismissSplash();
@@ -408,11 +408,11 @@
   }
 
   function ensureToast() {
-    var toast = document.getElementById("fitcalc-toast");
+    var toast = document.getElementById("macrobay-toast");
     if (!toast) {
       toast = document.createElement("div");
-      toast.id = "fitcalc-toast";
-      toast.className = "fitcalc-toast";
+      toast.id = "macrobay-toast";
+      toast.className = "macrobay-toast";
       toast.setAttribute("role", "status");
       toast.setAttribute("aria-live", "polite");
       toast.hidden = true;
@@ -420,7 +420,7 @@
     }
     return toast;
   }
-  window.fitcalcToast = function (message, kind) {
+  window.macrobayToast = function (message, kind) {
     var toast = ensureToast();
     toast.textContent = String(message || "");
     toast.dataset.kind = kind || "info";
@@ -433,8 +433,8 @@
   function ensureDialog() {
     if (dialog) return dialog;
     dialog = document.createElement("dialog");
-    dialog.className = "fitcalc-dialog";
-    dialog.setAttribute("aria-labelledby", "fitcalc-dialog-title");
+    dialog.className = "macrobay-dialog";
+    dialog.setAttribute("aria-labelledby", "macrobay-dialog-title");
     dialog.addEventListener("click", function (event) {
       if (event.target === dialog && dialog.open) dialog.close("cancel");
     });
@@ -445,11 +445,11 @@
     var settings = options || {};
     var modal = ensureDialog();
     var form = document.createElement("form");
-    form.className = "fitcalc-dialog-content";
+    form.className = "macrobay-dialog-content";
     form.method = "dialog";
     var title = document.createElement("h2");
-    title.id = "fitcalc-dialog-title";
-    title.textContent = settings.title || "FitCalc";
+    title.id = "macrobay-dialog-title";
+    title.textContent = settings.title || "MACROBAY";
     form.appendChild(title);
     if (settings.message) {
       var message = document.createElement("p");
@@ -469,13 +469,13 @@
       input.autocomplete = "off";
       input.value = settings.value || "";
       input.required = !!settings.required;
-      label.htmlFor = "fitcalc-dialog-input";
-      input.id = "fitcalc-dialog-input";
+      label.htmlFor = "macrobay-dialog-input";
+      input.id = "macrobay-dialog-input";
       field.append(label, input);
       form.appendChild(field);
     }
     var actions = document.createElement("div");
-    actions.className = "fitcalc-dialog-actions";
+    actions.className = "macrobay-dialog-actions";
     if (settings.cancel !== false) {
       var cancel = document.createElement("button");
       cancel.type = "button";
@@ -508,23 +508,23 @@
       window.setTimeout(function () { (input || submit).focus(); }, 0);
     });
   }
-  window.fitcalcDialog = {
+  window.macrobayDialog = {
     alert: function (message, title) { return showDialog({ title: title || "A quick note", message: message, cancel: false, confirmLabel: "Got it" }); },
     confirm: function (message, title, confirmLabel) { return showDialog({ title: title || "Please confirm", message: message, confirmLabel: confirmLabel || "Confirm" }); },
     prompt: function (options) { return showDialog(Object.assign({ prompt: true }, options || {})); }
   };
 
-  window.addEventListener("fitcalc:storage-error", function () {
-    var notice = document.getElementById("fitcalc-storage-notice");
+  window.addEventListener("macrobay:storage-error", function () {
+    var notice = document.getElementById("macrobay-storage-notice");
     if (!notice) {
       notice = document.createElement("div");
-      notice.id = "fitcalc-storage-notice";
+      notice.id = "macrobay-storage-notice";
       notice.className = "storage-notice";
       notice.setAttribute("role", "alert");
       notice.setAttribute("aria-live", "assertive");
       document.body.appendChild(notice);
     }
-    notice.textContent = "FitCalc could not save this change. Check browser storage and try again.";
+    notice.textContent = "MACROBAY could not save this change. Check browser storage and try again.";
     notice.hidden = false;
     window.clearTimeout(notice.hideTimer);
     notice.hideTimer = window.setTimeout(function () { notice.hidden = true; }, 6000);

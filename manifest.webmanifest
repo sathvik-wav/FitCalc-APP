@@ -1,6 +1,6 @@
 {
-  "name": "FitCalc — Fitness, nutrition and training",
-  "short_name": "FitCalc",
+  "name": "MACROBAY — Fitness, nutrition and training",
+  "short_name": "MACROBAY",
   "description": "Local-first fitness calculators and daily tracking.",
   "start_url": "./index.html",
   "scope": "./",

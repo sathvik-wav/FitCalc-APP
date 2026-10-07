@@ -2,17 +2,17 @@
   "use strict";
 
   var buttons = Array.prototype.slice.call(document.querySelectorAll("[data-bmi-unit]"));
-  if (!buttons.length || typeof saveFitCalcPreferences !== "function") return;
+  if (!buttons.length || typeof saveMacroBayPreferences !== "function") return;
 
   function updatePressedState() {
-    var selected = getFitCalcUnits().weight === "lb" || getFitCalcUnits().height === "ft-in" ? "imperial" : "metric";
+    var selected = getMacroBayUnits().weight === "lb" || getMacroBayUnits().height === "ft-in" ? "imperial" : "metric";
     buttons.forEach(function (button) {
       button.setAttribute("aria-pressed", String(button.dataset.bmiUnit === selected));
     });
   }
 
   function setUnits(system) {
-    var current = getFitCalcUnits();
+    var current = getMacroBayUnits();
     var heightInput = document.getElementById("height");
     var feetInput = document.getElementById("height-feet");
     var inchesInput = document.getElementById("height-inches");
@@ -31,13 +31,13 @@
       ? { weight: "lb", height: "ft-in" }
       : { weight: "kg", height: "cm" };
     try {
-      saveFitCalcPreferences({ units: next });
+      saveMacroBayPreferences({ units: next });
     } catch (error) {
-      if (window.fitcalcToast) window.fitcalcToast("FitCalc could not save your unit preference.", "error");
+      if (window.macrobayToast) window.macrobayToast("MACROBAY could not save your unit preference.", "error");
       return;
     }
 
-    window.dispatchEvent(new CustomEvent("fitcalc:data-change", { detail: { key: PREFERENCES_KEY } }));
+    window.dispatchEvent(new CustomEvent("macrobay:data-change", { detail: { key: PREFERENCES_KEY } }));
 
     if (heightCm !== null && Number.isFinite(heightCm)) {
       if (system === "imperial") {
@@ -57,7 +57,7 @@
   buttons.forEach(function (button) {
     button.addEventListener("click", function () { setUnits(button.dataset.bmiUnit); });
   });
-  window.addEventListener("fitcalc:data-change", updatePressedState);
+  window.addEventListener("macrobay:data-change", updatePressedState);
   window.addEventListener("storage", updatePressedState);
   updatePressedState();
 })();

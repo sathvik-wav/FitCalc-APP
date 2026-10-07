@@ -81,13 +81,13 @@ function renderWorkoutSession() {
     const planner = getPlanner();
     const workout = currentWorkoutById(planner, activeWorkoutId);
     if (!workout) { closeWorkoutSession(); return; }
-    const unit = getFitCalcWeightUnit();
+    const unit = getMacroBayWeightUnit();
     const exercises = Array.isArray(workout.exercises) ? workout.exercises : [];
     const title = escapeHTML(workout.name || "Workout");
     const sections = exercises.map(function (exercise, exerciseIndex) {
         const sets = Array.isArray(exercise.sets) ? exercise.sets : [];
         const last = findLastExercisePerformance(exercise.name);
-        const previousText = last ? (Number(last.reps) > 0 ? String(last.reps) + " reps" : Number(last.durationMinutes) + " min") + (Number(last.weight) > 0 ? " · " + formatFitCalcWeight(last.weight) + " " + unit : "") : "—";
+        const previousText = last ? (Number(last.reps) > 0 ? String(last.reps) + " reps" : Number(last.durationMinutes) + " min") + (Number(last.weight) > 0 ? " · " + formatMacroBayWeight(last.weight) + " " + unit : "") : "—";
         const rows = sets.map(function (set, setIndex) {
             const w = Number(set && set.weight) > 0 ? kilogramsToDisplayWeight(Number(set.weight)) : "";
             const reps = Number(set && set.reps) > 0 ? Number(set.reps) : "";
@@ -103,7 +103,7 @@ function renderWorkoutSession() {
     root.innerHTML = '<header class="workout-session-header"><button type="button" class="text-button session-back" aria-label="Back to workouts">←</button><button type="button" class="session-title" id="session-rename">' + title + '</button><details class="workout-menu session-menu"><summary aria-label="Workout actions">…</summary><div><button type="button" id="save-session-template">Save as template</button><button type="button" id="duplicate-session">Duplicate</button><button type="button" id="delete-session">Delete</button></div></details></header><div class="workout-session-body"><div class="workout-session-summary">' + (workout.completed ? '<strong>Workout complete</strong><span>' + setCount + (setCount === 1 ? ' set' : ' sets') + ' · ' + Math.round(volume).toLocaleString() + ' kg total volume</span><button type="button" class="text-button" id="undo-finish">Undo</button>' : '<span>Log each set as you go. Previous numbers are hints only.</span>') + '</div><div class="workout-exercise-list">' + (sections || '<p class="session-empty-copy">Add an exercise to begin.</p>') + '</div><button type="button" class="text-button add-session-exercise">+ Add exercise</button></div><footer class="workout-session-footer">' + (workout.completed ? '<span>Finished</span>' : '<span></span><button type="button" class="primary-btn" id="finish-workout">Finish workout</button>') + '</footer>';
     root.querySelector(".session-back").addEventListener("click", closeWorkoutSession);
     root.querySelector("#session-rename").addEventListener("click", async function () {
-        const name = await window.fitcalcDialog.prompt({ title: "Rename workout", message: "Choose a name for this workout.", label: "Workout name", value: workout.name || "Workout", required: true });
+        const name = await window.macrobayDialog.prompt({ title: "Rename workout", message: "Choose a name for this workout.", label: "Workout name", value: workout.name || "Workout", required: true });
         if (name === null || !name.trim()) return;
         workout.name = name.trim().slice(0, 80);
         if (savePlanner(planner)) { renderWorkoutSession(); renderWorkoutList(); }
@@ -128,12 +128,12 @@ function renderWorkoutSession() {
         row.querySelector(".set-done-input").addEventListener("change", function (event) { set.done = event.target.checked; savePlanner(planner); });
     });
     root.querySelectorAll(".remove-exercise").forEach(function (button) { button.addEventListener("click", async function () {
-        if (!await window.fitcalcDialog.confirm("Remove this exercise and its sets?", "Remove exercise", "Remove")) return;
+        if (!await window.macrobayDialog.confirm("Remove this exercise and its sets?", "Remove exercise", "Remove")) return;
         workout.exercises.splice(Number(button.dataset.exercise), 1);
         if (savePlanner(planner)) { renderWorkoutSession(); renderWorkoutList(); }
     }); });
     root.querySelectorAll(".remove-last-set:not([disabled])").forEach(function (button) { button.addEventListener("click", async function () {
-        if (!await window.fitcalcDialog.confirm("Remove the last set from this exercise?", "Remove set", "Remove")) return;
+        if (!await window.macrobayDialog.confirm("Remove the last set from this exercise?", "Remove set", "Remove")) return;
         workout.exercises[Number(button.dataset.exercise)].sets.pop();
         if (savePlanner(planner)) renderWorkoutSession();
     }); });
@@ -145,7 +145,7 @@ function renderWorkoutSession() {
     root.querySelector("#save-session-template").addEventListener("click", function () { saveSessionAsTemplate(workout); });
     root.querySelector("#duplicate-session").addEventListener("click", function () { createWorkoutRecord((workout.name || "Workout") + " copy", workout.exercises); });
     root.querySelector("#delete-session").addEventListener("click", async function () {
-        if (!await window.fitcalcDialog.confirm("Delete this workout and its logged sets from this day?", "Delete workout", "Delete")) return;
+        if (!await window.macrobayDialog.confirm("Delete this workout and its logged sets from this day?", "Delete workout", "Delete")) return;
         planner.workouts.splice(planner.workouts.indexOf(workout), 1);
         if (savePlanner(planner)) { activeWorkoutId = null; root.hidden = true; updateDailyProgress(); renderWorkoutList(); }
     });
@@ -172,7 +172,7 @@ function saveSessionAsTemplate(workout) {
     const templates = Array.isArray(templatesValue) ? templatesValue : [];
     const existing = templates.find(function (item) { return String(item && item.name || "").trim().toLowerCase() === name.toLowerCase(); });
     if (existing) {
-        window.fitcalcDialog.confirm("A template with this name already exists. Overwrite it?", "Overwrite template", "Overwrite").then(function (yes) {
+        window.macrobayDialog.confirm("A template with this name already exists. Overwrite it?", "Overwrite template", "Overwrite").then(function (yes) {
             if (!yes) return;
             createWorkoutTemplate(name, workout.exercises);
             renderWorkoutTemplates();
@@ -250,8 +250,8 @@ function renderWorkoutTemplates() {
         const info = document.createElement("span"); info.className = "workout-list-copy"; info.innerHTML = '<strong>' + escapeHTML(template.name || "Workout") + '</strong><small>' + (Array.isArray(template.exercises) ? template.exercises.length : 0) + ' exercises</small>';
         const start = document.createElement("button"); start.type = "button"; start.className = "ghost-btn template-start"; start.textContent = "Start"; start.addEventListener("click", function () { createWorkoutRecord(template.name || "Workout", template.exercises); setPlannerView("workouts"); });
         const menu = document.createElement("details"); menu.className = "workout-menu"; menu.innerHTML = '<summary aria-label="Template actions">…</summary><div><button type="button" class="rename-template">Rename</button><button type="button" class="delete-template">Delete</button></div>';
-        menu.querySelector(".rename-template").addEventListener("click", async function () { const name = await window.fitcalcDialog.prompt({ title: "Rename template", message: "Choose a template name.", label: "Template name", value: template.name || "Workout", required: true }); if (!name || !name.trim()) return; template.name = name.trim().slice(0, 80); if (saveWorkoutTemplates(templates)) renderWorkoutTemplates(); });
-        menu.querySelector(".delete-template").addEventListener("click", async function () { if (!await window.fitcalcDialog.confirm('Delete the “' + (template.name || "Workout") + '” template?', "Delete template", "Delete")) return; templates.splice(index, 1); if (saveWorkoutTemplates(templates)) renderWorkoutTemplates(); });
+        menu.querySelector(".rename-template").addEventListener("click", async function () { const name = await window.macrobayDialog.prompt({ title: "Rename template", message: "Choose a template name.", label: "Template name", value: template.name || "Workout", required: true }); if (!name || !name.trim()) return; template.name = name.trim().slice(0, 80); if (saveWorkoutTemplates(templates)) renderWorkoutTemplates(); });
+        menu.querySelector(".delete-template").addEventListener("click", async function () { if (!await window.macrobayDialog.confirm('Delete the “' + (template.name || "Workout") + '” template?', "Delete template", "Delete")) return; templates.splice(index, 1); if (saveWorkoutTemplates(templates)) renderWorkoutTemplates(); });
         row.append(info, start, menu); root.appendChild(row);
     });
 }

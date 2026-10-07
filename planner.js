@@ -134,7 +134,7 @@ function saveSteps() {
         steps > 100000 ||
         currentSteps + steps > 200000
     ) {
-        window.fitcalcToast("Enter a whole step count from 1 to 100,000; the day's total cannot exceed 200,000.", "error");
+        window.macrobayToast("Enter a whole step count from 1 to 100,000; the day's total cannot exceed 200,000.", "error");
         return;
     }
 
@@ -143,7 +143,7 @@ function saveSteps() {
     if (!savePlanner(planner)) return;
 
     updateStepsDisplay();
-    window.fitcalcToast("Steps updated for this day.");
+    window.macrobayToast("Steps updated for this day.");
 
     document.getElementById(
         "steps-input"
@@ -191,11 +191,11 @@ function updateWeightDisplay() {
     const detailValue = document.getElementById("planner-weight-value-display");
     const date = document.getElementById("planner-weight-date");
     const input = document.getElementById("planner-weight-input");
-    const unit = getFitCalcWeightUnit();
+    const unit = getMacroBayWeightUnit();
     const unitLabel = document.getElementById("planner-weight-unit");
     const inputLabel = document.getElementById("planner-weight-input-label");
-    if (value) value.textContent = planner.weight === null || planner.weight === undefined ? "—" : formatFitCalcWeight(planner.weight);
-    if (detailValue) detailValue.textContent = planner.weight === null || planner.weight === undefined ? "—" : formatFitCalcWeight(planner.weight);
+    if (value) value.textContent = planner.weight === null || planner.weight === undefined ? "—" : formatMacroBayWeight(planner.weight);
+    if (detailValue) detailValue.textContent = planner.weight === null || planner.weight === undefined ? "—" : formatMacroBayWeight(planner.weight);
     if (unitLabel) unitLabel.textContent = unit;
     if (inputLabel) inputLabel.textContent = "Weight in " + unit;
     if (date) date.textContent = selectedDate.toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -209,12 +209,12 @@ function updateWeightDisplay() {
 function saveWeight() {
     const input = document.getElementById("planner-weight-input");
     const displayWeight = Number(input && input.value);
-    const unit = getFitCalcWeightUnit();
+    const unit = getMacroBayWeightUnit();
     const minimumWeight = unit === "lb" ? 66.1 : 30;
     const maximumWeight = unit === "lb" ? 661.4 : 300;
     const weight = displayWeightToKilograms(displayWeight);
     if (!Number.isFinite(displayWeight) || displayWeight < minimumWeight || displayWeight > maximumWeight) {
-        window.fitcalcToast(unit === "lb" ? "Enter a weight from 66.1 to 661.4 lb." : "Enter a weight from 30 to 300 kg.", "error");
+        window.macrobayToast(unit === "lb" ? "Enter a weight from 66.1 to 661.4 lb." : "Enter a weight from 30 to 300 kg.", "error");
         return;
     }
     const planner = getPlanner();
@@ -241,10 +241,10 @@ function saveWeight() {
 
     updateWeightDisplay();
     if (!profileTargetsSaved) {
-        window.fitcalcToast("Weight was logged, but profile targets could not be updated.", "error");
+        window.macrobayToast("Weight was logged, but profile targets could not be updated.", "error");
         return;
     }
-    window.fitcalcToast("Weight check-in saved.");
+    window.macrobayToast("Weight check-in saved.");
 }
 
 const saveWeightButton = document.getElementById("save-weight");
@@ -282,7 +282,7 @@ if (resetStepsButton) {
 
             updateStepsDisplay();
             updateWeightDisplay();
-            window.fitcalcToast("Step count reset.");
+            window.macrobayToast("Step count reset.");
         }
     );
 }
@@ -302,7 +302,7 @@ function createWorkout() {
         input.value.trim();
 
     if (!workoutName) {
-        window.fitcalcToast("Enter a workout name first.", "error");
+        window.macrobayToast("Enter a workout name first.", "error");
         return;
     }
 
@@ -321,7 +321,7 @@ function createWorkout() {
 
     updateWorkoutList();
     updateDailyProgress();
-    window.fitcalcToast("Workout added to this day.");
+    window.macrobayToast("Workout added to this day.");
 }
 
 
@@ -621,7 +621,7 @@ function updateWorkoutList() {
                         input.value.trim();
 
                     if (!exerciseName) {
-                        window.fitcalcToast("Enter an exercise name first.", "error");
+                        window.macrobayToast("Enter an exercise name first.", "error");
 
                         return;
                     }
@@ -640,7 +640,7 @@ function updateWorkoutList() {
                     if (!savePlanner(planner)) return;
 
                     updateWorkoutList();
-                    window.fitcalcToast("Exercise added.");
+                    window.macrobayToast("Exercise added.");
                 }
             );
         });
@@ -703,7 +703,7 @@ function updateWorkoutList() {
                             button.dataset.exercise
                         );
 
-                    const repsText = await window.fitcalcDialog.prompt({
+                    const repsText = await window.macrobayDialog.prompt({
                         title: "Log actual performance",
                         message: "Enter the reps you completed. Leave it blank to log an activity by duration.",
                         label: "Reps completed",
@@ -713,21 +713,21 @@ function updateWorkoutList() {
                     let actualSet;
                     if (repsText.trim() !== "") {
                         const reps = Number(repsText);
-                        if (!Number.isFinite(reps) || reps <= 0) { window.fitcalcToast("Enter a positive rep count.", "error"); return; }
-                        const weightText = await window.fitcalcDialog.prompt({
+                        if (!Number.isFinite(reps) || reps <= 0) { window.macrobayToast("Enter a positive rep count.", "error"); return; }
+                        const weightText = await window.macrobayDialog.prompt({
                             title: "Log the load",
                             message: "Record the weight used for this set. Enter 0 for bodyweight.",
-                            label: "Weight in " + getFitCalcWeightUnit(),
+                            label: "Weight in " + getMacroBayWeightUnit(),
                             type: "number",
                             required: true
                         });
                         if (weightText === null) return;
                         const enteredWeight = Number(weightText);
-                        if (!Number.isFinite(enteredWeight) || enteredWeight < 0) { window.fitcalcToast("Enter a valid weight.", "error"); return; }
-                        const weight = getFitCalcWeightUnit() === "lb" ? enteredWeight / 2.20462262185 : enteredWeight;
+                        if (!Number.isFinite(enteredWeight) || enteredWeight < 0) { window.macrobayToast("Enter a valid weight.", "error"); return; }
+                        const weight = getMacroBayWeightUnit() === "lb" ? enteredWeight / 2.20462262185 : enteredWeight;
                         actualSet = { reps: reps, weight: weight };
                     } else {
-                        const durationText = await window.fitcalcDialog.prompt({
+                        const durationText = await window.macrobayDialog.prompt({
                             title: "Log activity duration",
                             message: "Enter how long you actually performed this exercise.",
                             label: "Duration in minutes",
@@ -736,7 +736,7 @@ function updateWorkoutList() {
                         });
                         if (durationText === null) return;
                         const durationMinutes = Number(durationText);
-                        if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) { window.fitcalcToast("Enter a positive duration.", "error"); return; }
+                        if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) { window.macrobayToast("Enter a positive duration.", "error"); return; }
                         actualSet = { durationMinutes: durationMinutes };
                     }
 
@@ -757,7 +757,7 @@ function updateWorkoutList() {
                     if (!savePlanner(planner)) return;
 
                     updateWorkoutList();
-                    window.fitcalcToast("Set logged.");
+                    window.macrobayToast("Set logged.");
                 }
             );
         });
@@ -832,7 +832,7 @@ function updateWorkoutList() {
                             button.dataset.exercise
                         );
 
-                    if (!await window.fitcalcDialog.confirm("Remove this exercise from this workout?", "Remove exercise", "Remove")) {
+                    if (!await window.macrobayDialog.confirm("Remove this exercise from this workout?", "Remove exercise", "Remove")) {
                         return;
                     }
 
@@ -872,7 +872,7 @@ function updateWorkoutList() {
                             button.dataset.index
                         );
 
-                    if (!await window.fitcalcDialog.confirm("Delete this workout and its logged sets from this day?", "Delete workout", "Delete")) {
+                    if (!await window.macrobayDialog.confirm("Delete this workout and its logged sets from this day?", "Delete workout", "Delete")) {
                         return;
                     }
 
@@ -921,7 +921,7 @@ function updateWorkoutList() {
                     if (!workout) return;
                     const nextCompleted = !workout.completed;
                     if (nextCompleted && !hasWorkoutPerformance(workout)) {
-                        window.fitcalcToast("Log at least one actual set or duration before completing this workout.", "error");
+                        window.macrobayToast("Log at least one actual set or duration before completing this workout.", "error");
                         return;
                     }
                     workout.completed = nextCompleted;
@@ -963,7 +963,7 @@ function addTask() {
         taskInput.value.trim();
 
     if (!taskName) {
-        window.fitcalcToast("Enter a task first.", "error");
+        window.macrobayToast("Enter a task first.", "error");
         return;
     }
 
@@ -980,7 +980,7 @@ function addTask() {
 
     updateTaskList();
     updateDailyProgress();
-    window.fitcalcToast("Task added to this day.");
+    window.macrobayToast("Task added to this day.");
 }
 
 
@@ -1053,12 +1053,12 @@ function updateTaskList() {
 
                         updateTaskList();
                         updateDailyProgress();
-                        window.fitcalcToast(planner.tasks[index].completed ? "Task completed." : "Task marked incomplete.");
+                        window.macrobayToast(planner.tasks[index].completed ? "Task completed." : "Task marked incomplete.");
                     }
                 );
 
             taskItem.querySelector(".delete-task").addEventListener("click", async function () {
-                if (!await window.fitcalcDialog.confirm("Remove this task from the selected day?", "Remove task", "Remove")) return;
+                if (!await window.macrobayDialog.confirm("Remove this task from the selected day?", "Remove task", "Remove")) return;
                 const current = getPlanner();
                 current.tasks.splice(index, 1);
                 if (!savePlanner(current)) return;
@@ -1241,7 +1241,7 @@ if (typeof document.addEventListener === "function") {
 }
 if (typeof window.addEventListener === "function") {
     window.addEventListener("focus", handlePlannerDateChange);
-    window.addEventListener("fitcalc:data-change", function (event) {
+    window.addEventListener("macrobay:data-change", function (event) {
         const detail = event.detail || {};
         const displayKeys = [PLANNER_KEY, PROFILE_KEY, TARGETS_KEY, PREFERENCES_KEY];
         if (detail.key && displayKeys.indexOf(detail.key) === -1) return;
@@ -1250,7 +1250,7 @@ if (typeof window.addEventListener === "function") {
     });
     window.addEventListener("storage", function (event) {
         if ([PLANNER_KEY, PROFILE_KEY, TARGETS_KEY, PREFERENCES_KEY].some(function (key) {
-            return event.key === fitcalcStorageKey(key);
+            return event.key === macrobayStorageKey(key);
         })) refreshPlannerDay();
     });
 }

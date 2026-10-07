@@ -2,29 +2,31 @@
 
 const { spawn } = require("child_process");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 
 const root = path.resolve(__dirname, "..");
 const dist = path.join(root, "dist");
 
 function findExecutable() {
-  if (process.platform === "linux") return path.join(dist, "linux-unpacked", "fitcalc");
-  if (process.platform === "win32") return path.join(dist, "win-unpacked", "FitCalc.exe");
+  if (process.platform === "linux") return path.join(dist, "linux-unpacked", "macrobay");
+  if (process.platform === "win32") return path.join(dist, "win-unpacked", "MACROBAY.exe");
   if (process.platform === "darwin") {
     const folder = fs.readdirSync(dist).find((name) => /^mac(?:-|$)/.test(name));
     if (!folder) return null;
-    return path.join(dist, folder, "FitCalc.app", "Contents", "MacOS", "FitCalc");
+    return path.join(dist, folder, "MACROBAY.app", "Contents", "MacOS", "MACROBAY");
   }
   return null;
 }
 
 const executable = findExecutable();
 if (!executable || !fs.existsSync(executable)) {
-  console.error("Packaged FitCalc executable was not found for this platform.");
+  console.error("Packaged MACROBAY executable was not found for this platform.");
   process.exit(1);
 }
 
-const args = ["--headless", "--disable-gpu"];
+const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "macrobay-packaged-smoke-"));
+const args = ["--headless", "--disable-gpu", "--user-data-dir=" + userDataDir];
 if (process.platform === "linux") args.unshift("--no-sandbox", "--disable-setuid-sandbox");
 const app = spawn(executable, args, {
   cwd: root,
@@ -34,6 +36,9 @@ const app = spawn(executable, args, {
 
 let stderr = "";
 let finished = false;
+const removeUserData = () => fs.rmSync(userDataDir, { recursive: true, force: true });
+app.once("exit", removeUserData);
+app.once("error", removeUserData);
 const startup = new Promise((resolve, reject) => {
   const timeout = setTimeout(() => {
     finished = true;
@@ -58,7 +63,7 @@ startup.then(() => {
     process.exitCode = 1;
     return;
   }
-  console.log("PASS packaged FitCalc remained running for 6 seconds.");
+  console.log("PASS packaged MACROBAY remained running for 6 seconds.");
 }).catch((error) => {
   console.error(error.message);
   if (stderr) console.error(stderr);

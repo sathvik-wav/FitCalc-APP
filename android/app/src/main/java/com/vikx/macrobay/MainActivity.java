@@ -1,4 +1,4 @@
-package com.vikx.fitcalc;
+package com.vikx.macrobay;
 
 import com.getcapacitor.BridgeActivity;
 

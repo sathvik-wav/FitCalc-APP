@@ -61,9 +61,9 @@ function renderProfileSummary(profile) {
     const height = Number(value.height);
     const weight = Number(value.weight);
     if (Number.isFinite(age) && age > 0) details.push(age + " years old");
-    if (Number.isFinite(height) && height > 0) details.push(formatFitCalcHeight(height));
+    if (Number.isFinite(height) && height > 0) details.push(formatMacroBayHeight(height));
     if (Number.isFinite(weight) && weight > 0) {
-        details.push(formatFitCalcWeight(weight, 1) + " " + getFitCalcWeightUnit());
+        details.push(formatMacroBayWeight(weight, 1) + " " + getMacroBayWeightUnit());
     }
     if (detailsNode) detailsNode.textContent = details.join(" | ");
 
@@ -80,7 +80,7 @@ function renderProfileSummary(profile) {
 }
 
 function applyProfileUnitControls() {
-    const units = getFitCalcUnits();
+    const units = getMacroBayUnits();
     const heightMetric = document.getElementById("profile-height");
     const heightImperial = document.getElementById("profile-height-imperial");
     const heightLabel = document.getElementById("profile-height-label");
@@ -116,7 +116,7 @@ function applyProfileUnitControls() {
 function populateProfileForm(profile) {
     if (!profileForm) return;
     const value = profile || {};
-    const units = getFitCalcUnits();
+    const units = getMacroBayUnits();
     document.getElementById("profile-name").value = value.name || "";
     document.getElementById("profile-age").value = value.age || "";
     document.getElementById("profile-sex").value = value.sex || "";
@@ -241,7 +241,7 @@ function renderProfileTargets() {
 if (profileForm) {
     profileForm.addEventListener("submit", function (event) {
         event.preventDefault();
-        const units = getFitCalcUnits();
+        const units = getMacroBayUnits();
         const height = units.height === "ft-in"
             ? feetInchesToCentimeters(
                 document.getElementById("profile-height-feet").value,
@@ -267,7 +267,7 @@ if (profileForm) {
             const weightRange = units.weight === "lb" ? "66.1 to 661.4 lb" : "30 to 300 kg";
             if (status) status.textContent = "Check the values: age 18–100, height " + heightRange + ", and weight " + weightRange + ".";
             if (status) status.dataset.state = "error";
-            window.fitcalcToast("Please review the highlighted profile ranges.", "error");
+            window.macrobayToast("Please review the highlighted profile ranges.", "error");
             return;
         }
         try {
@@ -276,7 +276,7 @@ if (profileForm) {
             renderProfileSummary(currentProfile);
         } catch (error) {
             if (status) status.textContent = "Profile could not be saved. Check device storage and try again.";
-            window.fitcalcToast("Profile could not be saved.", "error");
+            window.macrobayToast("Profile could not be saved.", "error");
             return;
         }
         const targetsSaved = typeof refreshTargets !== "function" || refreshTargets();
@@ -284,12 +284,12 @@ if (profileForm) {
         setProfileEditMode(false, currentProfile);
         if (!targetsSaved) {
             if (status) status.textContent = "Profile saved, but estimated targets could not be saved. Check device storage and try again.";
-            window.fitcalcToast("Profile saved, but targets could not be updated.", "error");
+            window.macrobayToast("Profile saved, but targets could not be updated.", "error");
             return;
         }
         if (status) status.textContent = "Profile and estimated targets saved on this device.";
         if (status) delete status.dataset.state;
-        window.fitcalcToast("Profile saved.");
+        window.macrobayToast("Profile saved.");
     });
 }
 
@@ -308,7 +308,7 @@ if (targetForm) {
         });
         if (!saveTargetOverrides(values)) {
             setProfileStatus("target-status", "Targets could not be saved. Check the allowed ranges and device storage.", "error");
-            window.fitcalcToast("Targets could not be saved.", "error");
+            window.macrobayToast("Targets could not be saved.", "error");
             return;
         }
         calculatorTargetHandoff = null;
@@ -317,7 +317,7 @@ if (targetForm) {
         if (handoffStatus) handoffStatus.textContent = "";
         renderProfileTargets();
         setProfileStatus("target-status", "Your daily targets were saved.");
-        window.fitcalcToast("Daily targets updated.");
+        window.macrobayToast("Daily targets updated.");
     });
 }
 
@@ -326,13 +326,13 @@ if (resetTargetsButton) {
     resetTargetsButton.addEventListener("click", function () {
         if (!resetTargetOverrides()) {
             setProfileStatus("target-status", "Estimated targets could not be restored. Check device storage.", "error");
-            window.fitcalcToast("Estimated targets could not be restored.", "error");
+            window.macrobayToast("Estimated targets could not be restored.", "error");
             return;
         }
         targetEditMode = false;
         calculatorTargetHandoff = null;
         renderProfileTargets();
         setProfileStatus("target-status", "Targets reset to the calculated estimates from your profile.");
-        window.fitcalcToast("Profile target estimates restored.");
+        window.macrobayToast("Profile target estimates restored.");
     });
 }

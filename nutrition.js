@@ -287,7 +287,7 @@ function searchBuiltInFoodList(query) {
     return matches.sort(function (a, b) {
         return foodNameMatchRank(a, normalized) - foodNameMatchRank(b, normalized);
     }).slice(0, 12).map(function (food) {
-        return Object.assign({}, food, { source: "FitCalc built-in", sourceTag: food.sourceTag || "USDA", resultGroup: "basic" });
+        return Object.assign({}, food, { source: "MACROBAY built-in", sourceTag: food.sourceTag || "USDA", resultGroup: "basic" });
     });
 }
 
@@ -341,7 +341,7 @@ function foodDefinitionFromEntry(food) {
         approximateUnits: Array.isArray(food && food.approximateUnits) ? food.approximateUnits.slice() : (knownFood && knownFood.approximateUnits ? knownFood.approximateUnits.slice() : []),
         defaultUnit: food && food.defaultUnit || (knownFood && knownFood.defaultUnit) || "g",
         preparation: food && food.preparation || (knownFood && knownFood.preparation) || "",
-        source: food && food.source || "FitCalc local list",
+        source: food && food.source || "MACROBAY local list",
         barcode: food && food.barcode || ""
     };
 }
@@ -808,7 +808,7 @@ function updateFoodList() {
         entry.querySelector(".edit-food").addEventListener("click", function () { editFood(index); });
         entry.querySelector(".favorite-food").addEventListener("click", function () {
             const added = toggleFoodFavorite(food);
-            window.fitcalcToast(added ? "Food added to favorites." : "Food removed from favorites.");
+            window.macrobayToast(added ? "Food added to favorites." : "Food removed from favorites.");
         });
     });
 }
@@ -947,7 +947,7 @@ function editFood(index) {
         const loggedWeight = Number(food.gramsPerUnit);
         if (loggedWeight > 0) editUnitGrams[savedUnit] = loggedWeight;
     }
-    window.fitcalcPendingFood = {
+    window.macrobayPendingFood = {
         name: food.name, calories: per100("calories"), protein: per100("protein"), carbs: per100("carbs"), fat: per100("fat"), fiber: per100("fiber"),
         servingGrams: food.servingGrams || (knownFood && knownFood.servingGrams), unitGrams: editUnitGrams, units: editUnits,
         approximateUnits: food.approximateUnits || (knownFood && knownFood.approximateUnits) || [],
@@ -957,7 +957,7 @@ function editFood(index) {
     if (button) button.textContent = "Save changes";
     const cancel = document.getElementById("cancel-food-edit");
     if (cancel) cancel.hidden = false;
-    setNutritionFoodUnits(window.fitcalcPendingFood, { forceDefault: true, preferredUnit: savedUnit });
+    setNutritionFoodUnits(window.macrobayPendingFood, { forceDefault: true, preferredUnit: savedUnit });
     updateFoodAmountLabel();
     updateNutritionFoodPreview();
     document.getElementById("food-name").focus();
@@ -976,26 +976,26 @@ function foodUnitPreferenceKey(foodData) {
 
 function getLastFoodAmountUnit(foodData) {
     try {
-        const preferences = typeof getFitCalcPreferences === "function" ? getFitCalcPreferences() : {};
+        const preferences = typeof getMacroBayPreferences === "function" ? getMacroBayPreferences() : {};
         const saved = preferences.foodAmountUnits && preferences.foodAmountUnits[foodUnitPreferenceKey(foodData)];
         return saved ? normalizeFoodAmountUnit(saved) : null;
     } catch (error) { return null; }
 }
 
 function rememberFoodAmountUnit(foodData, unit) {
-    if (!foodData || !foodData.name || typeof saveFitCalcPreferences !== "function") return;
+    if (!foodData || !foodData.name || typeof saveMacroBayPreferences !== "function") return;
     try {
-        const preferences = getFitCalcPreferences();
+        const preferences = getMacroBayPreferences();
         const units = Object.assign({}, preferences.foodAmountUnits || {});
         units[foodUnitPreferenceKey(foodData)] = normalizeFoodAmountUnit(unit);
-        saveFitCalcPreferences({ foodAmountUnits: units });
+        saveMacroBayPreferences({ foodAmountUnits: units });
     } catch (error) { /* Food logging remains available when preferences are read-only. */ }
 }
 
 function currentFoodEntryData() {
     const name = document.getElementById("food-name");
     const foodName = name ? name.value.trim() : "";
-    const pending = window.fitcalcPendingFood;
+    const pending = window.macrobayPendingFood;
     return pending && normalizeFoodName(pending.name) === normalizeFoodName(foodName) ? pending : findFood(foodName);
 }
 
@@ -1029,7 +1029,7 @@ function setNutritionFoodUnits(foodData, options) {
         desiredUnit = rememberedUnit && units.includes(rememberedUnit)
             ? rememberedUnit
             : normalizeFoodAmountUnit(foodData && foodData.defaultUnit);
-        if (desiredUnit === "g" && typeof getFitCalcWeightUnit === "function" && getFitCalcWeightUnit() === "lb") desiredUnit = "oz";
+        if (desiredUnit === "g" && typeof getMacroBayWeightUnit === "function" && getMacroBayWeightUnit() === "lb") desiredUnit = "oz";
     }
     if (settings.preferredUnit && units.includes(normalizeFoodAmountUnit(settings.preferredUnit))) {
         desiredUnit = normalizeFoodAmountUnit(settings.preferredUnit);
@@ -1117,7 +1117,7 @@ function updateNutritionFoodPreview() {
     const amount = document.getElementById("food-amount");
     const unit = document.getElementById("food-amount-unit");
     const foodName = name ? name.value.trim() : "";
-    const pending = window.fitcalcPendingFood;
+    const pending = window.macrobayPendingFood;
     const foodData = pending && pending.name.toLowerCase() === foodName.toLowerCase() ? pending : findFood(foodName);
     const quantity = Number(amount && amount.value);
     if (!foodData || !foodName) {
@@ -1158,7 +1158,7 @@ function cancelFoodEdit() {
     editingFoodIndex = -1;
     editingFoodDateKey = null;
     editingFoodSnapshot = null;
-    window.fitcalcPendingFood = null;
+    window.macrobayPendingFood = null;
     const button = document.getElementById("add-food");
     if (button) button.textContent = "Add to log";
     const cancel = document.getElementById("cancel-food-edit");
@@ -1202,7 +1202,7 @@ function calculateLoggedFood(foodData, amount, meal, amountUnit) {
         fat: scaled("fat"),
         fiber: scaled("fiber"),
         missingNutrients: Array.isArray(foodData.missingNutrients) ? foodData.missingNutrients.slice() : [],
-        source: foodData.source || "FitCalc local list",
+        source: foodData.source || "MACROBAY local list",
         barcode: foodData.barcode || ""
     };
 }
@@ -1217,7 +1217,7 @@ function addFoodToSelectedDay(foodData, amount, meal, amountUnit) {
     rememberFoodAmountUnit(foodData, amountUnit);
     updateNutritionDisplay();
     updateFoodList();
-    window.fitcalcToast("Food added to your log.");
+    window.macrobayToast("Food added to your log.");
     return true;
 }
 
@@ -1265,7 +1265,7 @@ if (addFoodButton) {
 
             if (!foodName.trim()) {
 
-                window.fitcalcToast("Enter a food name.", "error");
+                window.macrobayToast("Enter a food name.", "error");
 
                 return;
 
@@ -1277,14 +1277,14 @@ if (addFoodButton) {
                 foodAmount <= 0
             ) {
 
-                window.fitcalcToast("Enter an amount greater than zero.", "error");
+                window.macrobayToast("Enter an amount greater than zero.", "error");
 
                 return;
 
             }
 
 
-            const pending = window.fitcalcPendingFood;
+            const pending = window.macrobayPendingFood;
             const foodData = pending && pending.name.toLowerCase() === foodName.trim().toLowerCase()
                 ? pending
                 : findFood(foodName);
@@ -1292,7 +1292,7 @@ if (addFoodButton) {
 
             if (!foodData) {
 
-                window.fitcalcToast("That food is not in the local list. Search the food database or choose a listed item.", "error");
+                window.macrobayToast("That food is not in the local list. Search the food database or choose a listed item.", "error");
 
                 return;
 
@@ -1302,11 +1302,11 @@ if (addFoodButton) {
             const amountUnit = document.getElementById("food-amount-unit")?.value || "grams";
             const food = calculateLoggedFood(foodData, foodAmount, document.getElementById("food-meal").value, amountUnit);
             if (!Number.isFinite(food.amount) || food.amount <= 0) {
-                window.fitcalcToast("Choose a supported amount unit for this food.", "error");
+                window.macrobayToast("Choose a supported amount unit for this food.", "error");
                 return;
             }
             if (food.amount > 10000) {
-                window.fitcalcToast("Food amount cannot exceed 10,000 g.", "error");
+                window.macrobayToast("Food amount cannot exceed 10,000 g.", "error");
                 return;
             }
 
@@ -1347,7 +1347,7 @@ if (addFoodButton) {
             updateNutritionDisplay();
 
             updateFoodList();
-            window.fitcalcToast(wasEditing ? "Food entry updated." : "Food added to your log.");
+            window.macrobayToast(wasEditing ? "Food entry updated." : "Food added to your log.");
 
         }
     );
@@ -1372,12 +1372,12 @@ if (customFoodForm) {
             katoriGrams: document.getElementById("custom-food-katori-grams").value
         };
         if (!saveCustomFood(food)) {
-            window.fitcalcToast("Check the food name and nutrition values. Names from the built-in list cannot be replaced.", "error");
+            window.macrobayToast("Check the food name and nutrition values. Names from the built-in list cannot be replaced.", "error");
             return;
         }
         customFoodForm.reset();
         renderFoodShortcuts();
-        window.fitcalcToast("Custom food saved per 100 g.");
+        window.macrobayToast("Custom food saved per 100 g.");
     });
 }
 
@@ -1387,7 +1387,7 @@ function copyPreviousDayNutrition() {
     const previousKey = getNutritionDateKey(previousDate);
     const source = getNutritionFor(previousKey);
     if (!source.foods.length && !(Number(source.water) > 0)) {
-        window.fitcalcToast("There is no food or water logged on the previous day.", "error");
+        window.macrobayToast("There is no food or water logged on the previous day.", "error");
         return false;
     }
     const current = getNutrition();
@@ -1399,7 +1399,7 @@ function copyPreviousDayNutrition() {
     if (!saveNutrition(current)) return false;
     updateNutritionDisplay();
     updateFoodList();
-    window.fitcalcToast("Previous day's nutrition copied.");
+    window.macrobayToast("Previous day's nutrition copied.");
     return true;
 }
 
@@ -1494,13 +1494,13 @@ function addWaterAmount(liters) {
 
 function undoWaterChange() {
     if (!previousWaterChange || previousWaterChange.date !== getNutritionDateKey()) {
-        window.fitcalcToast("There is no recent water change to undo.", "error");
+        window.macrobayToast("There is no recent water change to undo.", "error");
         return false;
     }
     const nutrition = getNutrition();
     if (Math.abs((Number(nutrition.water) || 0) - previousWaterChange.after) > 0.001) {
         previousWaterChange = null;
-        window.fitcalcToast("Water changed since that action, so it cannot be undone safely.", "error");
+        window.macrobayToast("Water changed since that action, so it cannot be undone safely.", "error");
         return false;
     }
     const previous = previousWaterChange;
@@ -1508,29 +1508,29 @@ function undoWaterChange() {
     const restored = setWaterAmount(previous.before);
     if (restored) {
         previousWaterChange = null;
-        window.fitcalcToast("Last water change undone.");
+        window.macrobayToast("Last water change undone.");
     }
     return restored;
 }
 
 document.getElementById("add-water")?.addEventListener("click", function () {
-    if (addWaterAmount(0.25)) window.fitcalcToast("250 ml added.");
+    if (addWaterAmount(0.25)) window.macrobayToast("250 ml added.");
 });
 
 document.getElementById("add-water-500")?.addEventListener("click", function () {
-    if (addWaterAmount(0.5)) window.fitcalcToast("500 ml added.");
+    if (addWaterAmount(0.5)) window.macrobayToast("500 ml added.");
 });
 
 document.getElementById("add-custom-water")?.addEventListener("click", function () {
     const input = document.getElementById("custom-water-amount");
     const amount = Number(input && input.value);
     if (!input || !String(input.value).trim() || !Number.isFinite(amount) || amount <= 0 || amount > 10) {
-        window.fitcalcToast("Enter a water amount from 0.01 to 10 litres.", "error");
+        window.macrobayToast("Enter a water amount from 0.01 to 10 litres.", "error");
         return;
     }
     if (addWaterAmount(amount)) {
         input.value = "";
-        window.fitcalcToast(amount.toFixed(2) + " L added.");
+        window.macrobayToast(amount.toFixed(2) + " L added.");
     }
 });
 
@@ -1547,7 +1547,7 @@ const resetWaterButton =
 
 
 if (resetWaterButton) resetWaterButton.addEventListener("click", function () {
-    if (setWaterAmount(0)) window.fitcalcToast("Water total reset.");
+    if (setWaterAmount(0)) window.macrobayToast("Water total reset.");
 });
 
 
@@ -1575,7 +1575,7 @@ if (typeof window !== "undefined" && typeof window.addEventListener === "functio
             if (document.visibilityState !== "hidden") refreshNutritionTodayIfNeeded();
         });
     }
-    window.addEventListener("fitcalc:data-change", function (event) {
+    window.addEventListener("macrobay:data-change", function (event) {
         const detail = event.detail || {};
         const relevantKeys = [NUTRITION_KEY, PLANNER_KEY, PROFILE_KEY, TARGETS_KEY, PREFERENCES_KEY, FOOD_LIBRARY_KEY];
         if (detail.key && relevantKeys.indexOf(detail.key) === -1) return;
@@ -1590,13 +1590,13 @@ if (typeof window !== "undefined" && typeof window.addEventListener === "functio
     });
 
     window.addEventListener("storage", function (event) {
-        if (event.key === fitcalcStorageKey(FOOD_LIBRARY_KEY)) {
+        if (event.key === macrobayStorageKey(FOOD_LIBRARY_KEY)) {
             renderFoodShortcuts();
             updateFoodList();
             return;
         }
         if ([NUTRITION_KEY, PLANNER_KEY, PROFILE_KEY, TARGETS_KEY, PREFERENCES_KEY, FOOD_LIBRARY_KEY].some(function (key) {
-            return event.key === fitcalcStorageKey(key);
+            return event.key === macrobayStorageKey(key);
         })) refreshNutritionDay();
     });
 }

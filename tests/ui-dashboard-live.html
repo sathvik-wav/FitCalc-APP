@@ -3,29 +3,29 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>FitCalc dashboard live-update check</title>
+  <title>MACROBAY dashboard live-update check</title>
   <style>
     body { margin: 0; padding: 24px; color: #f2f5ff; background: #101624; font: 14px/1.5 system-ui, sans-serif; }
     h1 { margin: 0 0 12px; font-size: 24px; }
     #results { padding: 16px; white-space: pre-wrap; border: 1px solid #34415e; border-radius: 12px; background: #182238; }
     iframe { position: fixed; top: 0; left: -2000px; width: 1366px; height: 900px; border: 0; }
   </style>
-<script>window.FITCALC_TEST_MODE = true;</script>
+<script>window.MACROBAY_TEST_MODE = true;</script>
 </head>
 <body>
-  <h1>FitCalc dashboard live-update check</h1>
+  <h1>MACROBAY dashboard live-update check</h1>
   <pre id="results" role="status">Loading dashboard…</pre>
   <script>
     (function () {
       const now = new Date();
       const key = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
-      localStorage.setItem("test_fitcalc_targets", JSON.stringify({ calories: 2000, protein: 100, carbs: 250, fat: 65, fiber: 25 }));
-      localStorage.setItem("test_fitcalc_nutrition", JSON.stringify({ [key]: { calories: 800, protein: 40, carbs: 100, fat: 30, fiber: 8, water: 0.5, foods: [] } }));
-      localStorage.setItem("test_fitcalc_planner", JSON.stringify({ [key]: { date: key, steps: 4000, workouts: [{ name: "Push Day", completed: false, exercises: [] }], tasks: [] } }));
-      localStorage.setItem("test_fitcalc_profile", JSON.stringify({ name: "Mina" }));
+      localStorage.setItem("test_macrobay_targets", JSON.stringify({ calories: 2000, protein: 100, carbs: 250, fat: 65, fiber: 25 }));
+      localStorage.setItem("test_macrobay_nutrition", JSON.stringify({ [key]: { calories: 800, protein: 40, carbs: 100, fat: 30, fiber: 8, water: 0.5, foods: [] } }));
+      localStorage.setItem("test_macrobay_planner", JSON.stringify({ [key]: { date: key, steps: 4000, workouts: [{ name: "Push Day", completed: false, exercises: [] }], tasks: [] } }));
+      localStorage.setItem("test_macrobay_profile", JSON.stringify({ name: "Mina" }));
 
       const frame = document.createElement("iframe");
-      frame.title = "FitCalc live dashboard";
+      frame.title = "MACROBAY live dashboard";
       frame.src = "../index.html";
       frame.addEventListener("load", function () {
         const doc = frame.contentDocument;

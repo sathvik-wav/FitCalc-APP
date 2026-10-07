@@ -1,14 +1,14 @@
-const PROFILE_KEY = "fitcalc_profile";
-const TARGETS_KEY = "fitcalc_targets";
-const NUTRITION_KEY = "fitcalc_nutrition";
-const PLANNER_KEY = "fitcalc_planner";
-const HISTORY_KEY = "fitcalc_history";
-const LEGACY_PROGRESS_BACKFILL_KEY = "fitcalc_progress_backfill_v1";
-const PROGRESS_BACKFILL_KEY = "fitcalc_progress_backfill_v2";
-const WORKOUT_TEMPLATES_KEY = "fitcalc_workout_templates";
-const PREFERENCES_KEY = "fitcalc_preferences";
-const FOOD_LIBRARY_KEY = "fitcalc_food_library";
-const SCHEMA_VERSION_KEY = "fitcalc_schema_version";
+const PROFILE_KEY = "macrobay_profile";
+const TARGETS_KEY = "macrobay_targets";
+const NUTRITION_KEY = "macrobay_nutrition";
+const PLANNER_KEY = "macrobay_planner";
+const HISTORY_KEY = "macrobay_history";
+const LEGACY_PROGRESS_BACKFILL_KEY = "macrobay_progress_backfill_v1";
+const PROGRESS_BACKFILL_KEY = "macrobay_progress_backfill_v2";
+const WORKOUT_TEMPLATES_KEY = "macrobay_workout_templates";
+const PREFERENCES_KEY = "macrobay_preferences";
+const FOOD_LIBRARY_KEY = "macrobay_food_library";
+const SCHEMA_VERSION_KEY = "macrobay_schema_version";
 const APP_SCHEMA_VERSION = 2;
 
 // Daily goals (single place to change them)

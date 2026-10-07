@@ -49,7 +49,7 @@ function getWorkoutProgressionInsights() {
                         return score > current.score ? { score: score, set: set } : current;
                     }, { score: -1, set: loaded[0] }).set;
                     signature = "load:" + Number(best.weight || 0) + ":reps:" + Number(best.reps || 0);
-                    summary = formatFitCalcWeight(best.weight || 0) + " " + getFitCalcWeightUnit() + " × " + Number(best.reps || 0);
+                    summary = formatMacroBayWeight(best.weight || 0) + " " + getMacroBayWeightUnit() + " × " + Number(best.reps || 0);
                 }
                 if (!signature) return;
                 const key = name.toLowerCase();
@@ -107,7 +107,7 @@ function getAdaptiveHistoryInsights() {
                 (goal === "gain" && change <= -0.3) ||
                 (goal === "maintain" && Math.abs(change) >= 0.8);
             if (isCounterToGoal) {
-                insights.push("Your weight trend moved " + (change > 0 ? "up " : "down ") + formatFitCalcWeight(Math.abs(change)) + " " + getFitCalcWeightUnit() + " over " + Math.round(elapsed) + " days. Review the trend alongside your goal and recent logging.");
+                insights.push("Your weight trend moved " + (change > 0 ? "up " : "down ") + formatMacroBayWeight(Math.abs(change)) + " " + getMacroBayWeightUnit() + " over " + Math.round(elapsed) + " days. Review the trend alongside your goal and recent logging.");
             }
         }
     }

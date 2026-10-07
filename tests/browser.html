@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><title>FitCalc browser checks</title><script>window.FITCALC_TEST_MODE = true;</script>
+<head><meta charset="utf-8"><title>MACROBAY browser checks</title><script>window.MACROBAY_TEST_MODE = true;</script>
 </head>
 <body>
-<h1>FitCalc browser checks</h1>
+<h1>MACROBAY browser checks</h1>
 <pre id="results" role="status">Starting…</pre>
 <script src="../constants.js"></script>
 <script src="../store.js"></script>
@@ -33,12 +33,12 @@
         }
         check("BMR Mifflin-St Jeor", calculateBMR({ sex: "male", age: 25, height: 180, weight: 80 }) === 1805);
         check("date key uses local calendar date", getDateKey(new Date(2026, 8, 28)) === "2026-09-28");
-        localStorage.setItem(fitcalcStorageKey("broken"), "{");
+        localStorage.setItem(macrobayStorageKey("broken"), "{");
         check("corrupt JSON falls back safely", readJSON("broken", { ok: true }).ok === true);
-        const before = localStorage.getItem(fitcalcStorageKey(NUTRITION_KEY));
+        const before = localStorage.getItem(macrobayStorageKey(NUTRITION_KEY));
         getNutritionFor("2026-09-28");
-        check("nutrition read does not create stored day", localStorage.getItem(fitcalcStorageKey(NUTRITION_KEY)) === before);
-        check("opening history does not create blank record", getProgressRecord(getDateKey(new Date())) === null && localStorage.getItem(fitcalcStorageKey(HISTORY_KEY)) === null);
+        check("nutrition read does not create stored day", localStorage.getItem(macrobayStorageKey(NUTRITION_KEY)) === before);
+        check("opening history does not create blank record", getProgressRecord(getDateKey(new Date())) === null && localStorage.getItem(macrobayStorageKey(HISTORY_KEY)) === null);
 
         const meal = calculateLoggedFood({ name: "Rice", calories: 130, protein: 2.7, carbs: 28, fat: 0.3, fiber: 0.4 }, 150, "Lunch");
         check("food amount scales calories correctly", close(meal.calories, 195));
@@ -46,7 +46,7 @@
 
         const today = getDateKey(new Date());
         let changeEvents = 0;
-        window.addEventListener("fitcalc:data-change", function () { changeEvents += 1; });
+        window.addEventListener("macrobay:data-change", function () { changeEvents += 1; });
         saveNutritionFor(today, { calories: meal.calories, protein: meal.protein, carbs: meal.carbs, fat: meal.fat, fiber: meal.fiber, water: 0.5, foods: [meal] });
         check("domain saves publish same-window change events", changeEvents === 1);
         check("nutrition write creates a dated progress record", getProgressRecord(today).calories === 195 && getProgressRecord(today).water === 0.5);
@@ -87,7 +87,7 @@
     }
     lines.push("\n" + (failures ? failures + " checks failed" : "All checks passed"));
     document.getElementById("results").textContent = lines.join("\n");
-    document.title = failures ? "FAIL " + failures : "PASS FitCalc browser checks";
+    document.title = failures ? "FAIL " + failures : "PASS MACROBAY browser checks";
     document.body.dataset.result = failures ? "fail" : "pass";
 }());
 </script>

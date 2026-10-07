@@ -2,9 +2,9 @@
  * store.js: the ONLY file that reads/writes localStorage JSON for shared data.
  * Reads never write. Load right after constants.js.
  */
-function fitcalcStorageKey(key) {
+function macrobayStorageKey(key) {
     function isTestPage(target) {
-        if (!target || target.FITCALC_TEST_MODE !== true) return false;
+        if (!target || target.MACROBAY_TEST_MODE !== true) return false;
         const pathname = target.location && target.location.pathname;
         return typeof pathname === "string" && (pathname === "/tests" || pathname.indexOf("/tests/") === 0);
     }
@@ -19,7 +19,7 @@ function fitcalcStorageKey(key) {
 
 function readJSON(key, fallback) {
     try {
-        const value = JSON.parse(localStorage.getItem(fitcalcStorageKey(key)));
+        const value = JSON.parse(localStorage.getItem(macrobayStorageKey(key)));
         return value === null || value === undefined ? fallback : value;
     } catch (error) {
         return fallback;
@@ -28,10 +28,10 @@ function readJSON(key, fallback) {
 
 function writeJSON(key, value) {
     try {
-        localStorage.setItem(fitcalcStorageKey(key), JSON.stringify(value));
+        localStorage.setItem(macrobayStorageKey(key), JSON.stringify(value));
     } catch (error) {
         if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
-            window.dispatchEvent(new CustomEvent("fitcalc:storage-error", { detail: { key: key } }));
+            window.dispatchEvent(new CustomEvent("macrobay:storage-error", { detail: { key: key } }));
         }
         throw error;
     }
@@ -79,12 +79,12 @@ function saveProgressHistoryStorage(history) {
     return true;
 }
 
-function getFitCalcPreferences() {
+function getMacroBayPreferences() {
     return readJSON(PREFERENCES_KEY, {});
 }
 
-function saveFitCalcPreferences(updates) {
-    const current = getFitCalcPreferences();
+function saveMacroBayPreferences(updates) {
+    const current = getMacroBayPreferences();
     const next = Object.assign({}, current, updates || {});
     if (updates && updates.units) {
         next.units = Object.assign({}, current.units || {}, updates.units);
@@ -93,21 +93,21 @@ function saveFitCalcPreferences(updates) {
     return next;
 }
 
-function hasMeaningfulFitCalcData(value) {
+function hasMeaningfulMacroBayData(value) {
     if (value === null || value === undefined || value === false) return false;
     if (typeof value === "string") return value.trim().length > 0;
     if (typeof value === "number") return Number.isFinite(value) && value !== 0;
-    if (Array.isArray(value)) return value.some(hasMeaningfulFitCalcData);
+    if (Array.isArray(value)) return value.some(hasMeaningfulMacroBayData);
     if (typeof value === "object") return Object.keys(value).some(function (key) {
-        return hasMeaningfulFitCalcData(value[key]);
+        return hasMeaningfulMacroBayData(value[key]);
     });
     return false;
 }
 
-function hasExistingFitCalcUserData() {
+function hasExistingMacroBayUserData() {
     const profile = getProfile();
     const profileFields = ["name", "age", "sex", "height", "weight", "activity", "goal"];
-    if (profileFields.some(function (key) { return hasMeaningfulFitCalcData(profile[key]); })) return true;
+    if (profileFields.some(function (key) { return hasMeaningfulMacroBayData(profile[key]); })) return true;
 
     return [
         getTargets(),
@@ -116,50 +116,50 @@ function hasExistingFitCalcUserData() {
         getProgressHistoryStorage(),
         readJSON(WORKOUT_TEMPLATES_KEY, []),
         getFoodLibrary()
-    ].some(hasMeaningfulFitCalcData);
+    ].some(hasMeaningfulMacroBayData);
 }
 
-function hasCompletedFitCalcOnboarding() {
-    if (getFitCalcPreferences().onboardingComplete === true) return true;
-    if (!hasExistingFitCalcUserData()) return false;
+function hasCompletedMacroBayOnboarding() {
+    if (getMacroBayPreferences().onboardingComplete === true) return true;
+    if (!hasExistingMacroBayUserData()) return false;
 
-    // Migrate users who already have FitCalc data into the single persisted
+    // Migrate users who already have MACROBAY data into the single persisted
     // completion state without touching their profile or other data records.
-    try { saveFitCalcPreferences({ onboardingComplete: true }); }
+    try { saveMacroBayPreferences({ onboardingComplete: true }); }
     catch (error) { /* Existing user data still takes precedence if storage is read-only. */ }
     return true;
 }
 
-function completeFitCalcOnboarding() {
-    saveFitCalcPreferences({ onboardingComplete: true });
+function completeMacroBayOnboarding() {
+    saveMacroBayPreferences({ onboardingComplete: true });
     return true;
 }
 
-function getFitCalcUnits() {
-    const units = getFitCalcPreferences().units || {};
+function getMacroBayUnits() {
+    const units = getMacroBayPreferences().units || {};
     return {
         weight: units.weight === "lb" ? "lb" : "kg",
         height: units.height === "ft-in" ? "ft-in" : "cm"
     };
 }
 
-function getFitCalcWeightUnit() {
-    return getFitCalcUnits().weight;
+function getMacroBayWeightUnit() {
+    return getMacroBayUnits().weight;
 }
 
 function kilogramsToDisplayWeight(kilograms) {
     const value = Number(kilograms);
     if (!Number.isFinite(value)) return null;
-    return getFitCalcWeightUnit() === "lb" ? value * 2.20462262185 : value;
+    return getMacroBayWeightUnit() === "lb" ? value * 2.20462262185 : value;
 }
 
 function displayWeightToKilograms(value) {
     const number = Number(value);
     if (!Number.isFinite(number)) return null;
-    return getFitCalcWeightUnit() === "lb" ? number / 2.20462262185 : number;
+    return getMacroBayWeightUnit() === "lb" ? number / 2.20462262185 : number;
 }
 
-function formatFitCalcWeight(kilograms, decimals) {
+function formatMacroBayWeight(kilograms, decimals) {
     const value = kilogramsToDisplayWeight(kilograms);
     if (value === null) return "—";
     return value.toFixed(Number.isInteger(decimals) ? decimals : 1);
@@ -182,10 +182,10 @@ function feetInchesToCentimeters(feet, inches) {
     return (feetValue * 12 + inchValue) * 2.54;
 }
 
-function formatFitCalcHeight(centimeters) {
+function formatMacroBayHeight(centimeters) {
     const value = Number(centimeters);
     if (!Number.isFinite(value)) return "—";
-    if (getFitCalcUnits().height === "cm") return value.toFixed(1) + " cm";
+    if (getMacroBayUnits().height === "cm") return value.toFixed(1) + " cm";
     const parts = centimetersToFeetInches(value);
     return parts.feet + " ft " + parts.inches.toFixed(1) + " in";
 }
@@ -229,7 +229,7 @@ function persistWorkoutTemplates(templates) {
 
 function announceDataChange(dateKey, key) {
     if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
-        window.dispatchEvent(new CustomEvent("fitcalc:data-change", {
+        window.dispatchEvent(new CustomEvent("macrobay:data-change", {
             detail: { date: dateKey, key: key || null }
         }));
     }
@@ -238,8 +238,8 @@ function announceDataChange(dateKey, key) {
 /*
  * Data backup and schema migrations
  */
-const FITCALC_BACKUP_FORMAT = "fitcalc-backup";
-const FITCALC_DATA_KEYS = [
+const MACROBAY_BACKUP_FORMAT = "macrobay-backup";
+const MACROBAY_DATA_KEYS = [
     PROFILE_KEY,
     TARGETS_KEY,
     NUTRITION_KEY,
@@ -249,11 +249,11 @@ const FITCALC_DATA_KEYS = [
     PREFERENCES_KEY,
     FOOD_LIBRARY_KEY
 ];
-const FITCALC_RESETTABLE_KEYS = FITCALC_DATA_KEYS.concat([
+const MACROBAY_RESETTABLE_KEYS = MACROBAY_DATA_KEYS.concat([
     LEGACY_PROGRESS_BACKFILL_KEY,
     PROGRESS_BACKFILL_KEY
 ]);
-const FITCALC_DATA_DEFAULTS = {
+const MACROBAY_DATA_DEFAULTS = {
     [PROFILE_KEY]: {},
     [TARGETS_KEY]: {},
     [NUTRITION_KEY]: {},
@@ -264,10 +264,10 @@ const FITCALC_DATA_DEFAULTS = {
     [FOOD_LIBRARY_KEY]: { customFoods: [], favorites: [], recents: [] }
 };
 
-// Version 0 is the unversioned localStorage layout already used by FitCalc.
+// Version 0 is the unversioned localStorage layout already used by MACROBAY.
 // It is structurally identical to v1, so the first migration only records the
 // version. Future migrations can transform this known-data object.
-const FITCALC_SCHEMA_MIGRATIONS = {
+const MACROBAY_SCHEMA_MIGRATIONS = {
     0: function (data) { return data; },
     1: function (data) {
         return Object.assign({}, data, {
@@ -278,56 +278,56 @@ const FITCALC_SCHEMA_MIGRATIONS = {
     }
 };
 
-function isFitCalcRecord(value) {
+function isMacroBayRecord(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function cloneFitCalcJSON(value) {
+function cloneMacroBayJSON(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-function readFitCalcData() {
+function readMacroBayData() {
     const data = {};
-    FITCALC_DATA_KEYS.forEach(function (key) {
-        const raw = localStorage.getItem(fitcalcStorageKey(key));
+    MACROBAY_DATA_KEYS.forEach(function (key) {
+        const raw = localStorage.getItem(macrobayStorageKey(key));
         if (raw === null) {
-            data[key] = cloneFitCalcJSON(FITCALC_DATA_DEFAULTS[key]);
+            data[key] = cloneMacroBayJSON(MACROBAY_DATA_DEFAULTS[key]);
             return;
         }
         try {
             data[key] = JSON.parse(raw);
         } catch (error) {
-            throw new Error("Saved " + key + " data is not valid JSON. FitCalc left it unchanged.");
+            throw new Error("Saved " + key + " data is not valid JSON. MACROBAY left it unchanged.");
         }
     });
-    return validateFitCalcData(data);
+    return validateMacroBayData(data);
 }
 
-function validateFitCalcData(data) {
-    if (!isFitCalcRecord(data)) throw new Error("Backup data must be a JSON object.");
+function validateMacroBayData(data) {
+    if (!isMacroBayRecord(data)) throw new Error("Backup data must be a JSON object.");
 
     const keys = Object.keys(data);
-    if (keys.length !== FITCALC_DATA_KEYS.length || FITCALC_DATA_KEYS.some(function (key) {
+    if (keys.length !== MACROBAY_DATA_KEYS.length || MACROBAY_DATA_KEYS.some(function (key) {
         return !Object.prototype.hasOwnProperty.call(data, key);
-    }) || keys.some(function (key) { return FITCALC_DATA_KEYS.indexOf(key) === -1; })) {
-        throw new Error("Backup is missing required FitCalc data or contains unsupported fields.");
+    }) || keys.some(function (key) { return MACROBAY_DATA_KEYS.indexOf(key) === -1; })) {
+        throw new Error("Backup is missing required MACROBAY data or contains unsupported fields.");
     }
 
-    FITCALC_DATA_KEYS.forEach(function (key) {
+    MACROBAY_DATA_KEYS.forEach(function (key) {
         const value = data[key];
         if (key === WORKOUT_TEMPLATES_KEY) {
             if (!Array.isArray(value)) throw new Error("Workout templates in this backup are invalid.");
             return;
         }
         if (key === FOOD_LIBRARY_KEY) {
-            if (!isFitCalcRecord(value) || ["customFoods", "favorites", "recents"].some(function (list) {
+            if (!isMacroBayRecord(value) || ["customFoods", "favorites", "recents"].some(function (list) {
                 return !Array.isArray(value[list]);
             })) throw new Error("The food library in this backup is invalid.");
             return;
         }
-        if (!isFitCalcRecord(value)) throw new Error("The " + key + " section in this backup is invalid.");
+        if (!isMacroBayRecord(value)) throw new Error("The " + key + " section in this backup is invalid.");
         if ([NUTRITION_KEY, PLANNER_KEY, HISTORY_KEY].indexOf(key) !== -1 &&
-            Object.keys(value).some(function (date) { return !isFitCalcRecord(value[date]); })) {
+            Object.keys(value).some(function (date) { return !isMacroBayRecord(value[date]); })) {
             throw new Error("A daily record in the " + key + " section is invalid.");
         }
     });
@@ -337,17 +337,17 @@ function validateFitCalcData(data) {
     return data;
 }
 
-function migrateFitCalcData(data, fromVersion) {
+function migrateMacroBayData(data, fromVersion) {
     let migrated = data;
     for (let version = fromVersion; version < APP_SCHEMA_VERSION; version += 1) {
-        const migration = FITCALC_SCHEMA_MIGRATIONS[version];
+        const migration = MACROBAY_SCHEMA_MIGRATIONS[version];
         if (typeof migration !== "function") {
-            throw new Error("This backup uses an unsupported FitCalc data version.");
+            throw new Error("This backup uses an unsupported MACROBAY data version.");
         }
         const result = migration(migrated);
         if (result !== undefined) migrated = result;
     }
-    return validateFitCalcData(migrated);
+    return validateMacroBayData(migrated);
 }
 
 function isStandaloneCalculatorPage() {
@@ -356,21 +356,21 @@ function isStandaloneCalculatorPage() {
         document.body.hasAttribute("data-calc");
 }
 
-function initializeFitCalcStorageSchema() {
+function initializeMacroBayStorageSchema() {
     if (isStandaloneCalculatorPage()) return false;
 
     const storedVersion = Number(readJSON(SCHEMA_VERSION_KEY, 0));
     if (!Number.isInteger(storedVersion) || storedVersion < 0) {
-        throw new Error("FitCalc data has an invalid schema version.");
+        throw new Error("MACROBAY data has an invalid schema version.");
     }
     if (storedVersion > APP_SCHEMA_VERSION) return false;
     if (storedVersion === APP_SCHEMA_VERSION) return true;
 
-    const foodLibraryWasMissing = storedVersion < 2 && localStorage.getItem(fitcalcStorageKey(FOOD_LIBRARY_KEY)) === null;
-    const data = readFitCalcData();
-    const migrated = migrateFitCalcData(data, storedVersion);
+    const foodLibraryWasMissing = storedVersion < 2 && localStorage.getItem(macrobayStorageKey(FOOD_LIBRARY_KEY)) === null;
+    const data = readMacroBayData();
+    const migrated = migrateMacroBayData(data, storedVersion);
     if (JSON.stringify(migrated) !== JSON.stringify(data)) {
-        writeFitCalcDataTransaction(migrated, APP_SCHEMA_VERSION);
+        writeMacroBayDataTransaction(migrated, APP_SCHEMA_VERSION);
     } else {
         if (foodLibraryWasMissing) writeJSON(FOOD_LIBRARY_KEY, migrated[FOOD_LIBRARY_KEY]);
         if (storedVersion !== APP_SCHEMA_VERSION) writeJSON(SCHEMA_VERSION_KEY, APP_SCHEMA_VERSION);
@@ -378,46 +378,46 @@ function initializeFitCalcStorageSchema() {
     return true;
 }
 
-function requireSupportedFitCalcSchema() {
-    if (!initializeFitCalcStorageSchema()) {
-        throw new Error("This FitCalc data was created by a newer app version and cannot be changed here.");
+function requireSupportedMacroBaySchema() {
+    if (!initializeMacroBayStorageSchema()) {
+        throw new Error("This MACROBAY data was created by a newer app version and cannot be changed here.");
     }
 }
 
-function exportFitCalcData() {
-    requireSupportedFitCalcSchema();
-    const data = validateFitCalcData(readFitCalcData());
+function exportMacroBayData() {
+    requireSupportedMacroBaySchema();
+    const data = validateMacroBayData(readMacroBayData());
     return {
-        format: FITCALC_BACKUP_FORMAT,
+        format: MACROBAY_BACKUP_FORMAT,
         schemaVersion: APP_SCHEMA_VERSION,
         exportedAt: new Date().toISOString(),
         data: data
     };
 }
 
-function validateFitCalcBackup(backup) {
-    if (!isFitCalcRecord(backup) || backup.format !== FITCALC_BACKUP_FORMAT) {
-        throw new Error("This file is not a FitCalc JSON backup.");
+function validateMacroBayBackup(backup) {
+    if (!isMacroBayRecord(backup) || backup.format !== MACROBAY_BACKUP_FORMAT) {
+        throw new Error("This file is not a MACROBAY JSON backup.");
     }
     if (!Number.isInteger(backup.schemaVersion) || backup.schemaVersion < 0) {
         throw new Error("This backup has an invalid data version.");
     }
     if (backup.schemaVersion > APP_SCHEMA_VERSION) {
-        throw new Error("This backup is from a newer FitCalc version. Update FitCalc before importing it.");
+        throw new Error("This backup is from a newer MACROBAY version. Update MACROBAY before importing it.");
     }
-    return migrateFitCalcData(backup.data, backup.schemaVersion);
+    return migrateMacroBayData(backup.data, backup.schemaVersion);
 }
 
-function snapshotFitCalcStorage(keys) {
+function snapshotMacroBayStorage(keys) {
     const snapshot = {};
     keys.forEach(function (key) {
-        const storageKey = fitcalcStorageKey(key);
+        const storageKey = macrobayStorageKey(key);
         snapshot[storageKey] = localStorage.getItem(storageKey);
     });
     return snapshot;
 }
 
-function restoreFitCalcStorage(snapshot) {
+function restoreMacroBayStorage(snapshot) {
     Object.keys(snapshot).forEach(function (key) {
         try {
             if (snapshot[key] === null) localStorage.removeItem(key);
@@ -426,46 +426,46 @@ function restoreFitCalcStorage(snapshot) {
     });
 }
 
-function writeFitCalcDataTransaction(data, schemaVersion) {
-    const keys = FITCALC_DATA_KEYS.concat([SCHEMA_VERSION_KEY]);
-    const previous = snapshotFitCalcStorage(keys);
+function writeMacroBayDataTransaction(data, schemaVersion) {
+    const keys = MACROBAY_DATA_KEYS.concat([SCHEMA_VERSION_KEY]);
+    const previous = snapshotMacroBayStorage(keys);
     try {
-        FITCALC_DATA_KEYS.forEach(function (key) { writeJSON(key, data[key]); });
+        MACROBAY_DATA_KEYS.forEach(function (key) { writeJSON(key, data[key]); });
         writeJSON(SCHEMA_VERSION_KEY, schemaVersion);
     } catch (error) {
-        restoreFitCalcStorage(previous);
+        restoreMacroBayStorage(previous);
         throw error;
     }
 }
 
-function importFitCalcData(backup) {
-    const data = validateFitCalcBackup(backup);
-    requireSupportedFitCalcSchema();
-    writeFitCalcDataTransaction(data, APP_SCHEMA_VERSION);
+function importMacroBayData(backup) {
+    const data = validateMacroBayBackup(backup);
+    requireSupportedMacroBaySchema();
+    writeMacroBayDataTransaction(data, APP_SCHEMA_VERSION);
     return true;
 }
 
-function resetFitCalcData() {
-    requireSupportedFitCalcSchema();
-    const previous = snapshotFitCalcStorage(FITCALC_RESETTABLE_KEYS);
+function resetMacroBayData() {
+    requireSupportedMacroBaySchema();
+    const previous = snapshotMacroBayStorage(MACROBAY_RESETTABLE_KEYS);
     try {
-        FITCALC_RESETTABLE_KEYS.forEach(function (key) {
-            localStorage.removeItem(fitcalcStorageKey(key));
+        MACROBAY_RESETTABLE_KEYS.forEach(function (key) {
+            localStorage.removeItem(macrobayStorageKey(key));
         });
     } catch (error) {
         if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
-            window.dispatchEvent(new CustomEvent("fitcalc:storage-error", { detail: { key: "FitCalc data" } }));
+            window.dispatchEvent(new CustomEvent("macrobay:storage-error", { detail: { key: "MACROBAY data" } }));
         }
-        restoreFitCalcStorage(previous);
+        restoreMacroBayStorage(previous);
         throw error;
     }
     return true;
 }
 
-function deleteFitCalcDay(dateKey) {
+function deleteMacroBayDay(dateKey) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dateKey || ""))) return false;
     const keys = [NUTRITION_KEY, PLANNER_KEY, HISTORY_KEY];
-    const previous = snapshotFitCalcStorage(keys);
+    const previous = snapshotMacroBayStorage(keys);
     try {
         keys.forEach(function (key) {
             const records = readJSON(key, {});
@@ -474,7 +474,7 @@ function deleteFitCalcDay(dateKey) {
             writeJSON(key, records);
         });
     } catch (error) {
-        restoreFitCalcStorage(previous);
+        restoreMacroBayStorage(previous);
         return false;
     }
     keys.forEach(function (key) { announceDataChange(dateKey, key); });
@@ -484,6 +484,6 @@ function deleteFitCalcDay(dateKey) {
 // App pages stamp legacy data as v1 without rewriting the user's existing
 // records. Standalone calculators remain read-only with respect to app data.
 if (!isStandaloneCalculatorPage()) {
-    try { initializeFitCalcStorageSchema(); }
+    try { initializeMacroBayStorageSchema(); }
     catch (error) { /* Storage errors are announced by writeJSON; keep the app usable. */ }
 }
