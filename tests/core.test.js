@@ -1337,7 +1337,7 @@ test("Home keeps Quick Tools while the searchable fourteen-row directory lives o
   assert.match(home, /href="planner\/index\.html">Plan a workout/);
   assert.match(calculators, /id="calculator-search-input"/);
   assert.match(calculators, /class="calculator-filter-chips"/);
-  const rows = Array.from(calculators.matchAll(/<a class="calculator-directory-row" href="([^"]+)" data-category="([^"]+)">([\s\S]*?)<\/a>/g));
+  const rows = Array.from(calculators.matchAll(/<a class="calculator-directory-row" href="([^"]+)" data-category="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g));
   assert.strictEqual(rows.length, 14);
   rows.forEach(([markup, href, category, content]) => {
     assert.ok(["body", "nutrition", "activity", "health"].includes(category), `${href} has a valid category`);
@@ -1371,7 +1371,7 @@ test("Home keeps Quick Tools while the searchable fourteen-row directory lives o
 
 test("Calculator directory search, category chips, and empty state cover all rows", () => {
   const html = fs.readFileSync(__dirname + "/../calculators/index.html", "utf8");
-  const rowMatches = Array.from(html.matchAll(/<a class="calculator-directory-row" href="([^"]+)" data-category="([^"]+)">([\s\S]*?)<\/a>/g));
+  const rowMatches = Array.from(html.matchAll(/<a class="calculator-directory-row" href="([^"]+)" data-category="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g));
   const rows = rowMatches.map(([, href, category, content]) => ({
     href,
     dataset: { category },
@@ -3966,14 +3966,36 @@ test("R8 feature icon accents are semantic in both themes while brand navigation
     [lightTokens, "--feature-steps-goal: #F2A66B"], [lightTokens, "--feature-walk: #4C9BE0"],
     [lightTokens, "--feature-mobility: #7E9A6A"]
   ].forEach(([tokens, expected]) => assert.ok(tokens.includes(expected), `missing ${expected}`));
-  assert.match(css, /\.calculator-row-icon\s*\{[^}]*color:\s*var\(--calculator-icon-accent\)[^}]*background:\s*color-mix\(in srgb,var\(--calculator-icon-accent\) 15%,var\(--surface\)\)/);
+  assert.match(css, /\.calculator-row-icon\s*\{[^}]*color:\s*var\(--calculator-icon-accent\)[^}]*border-color:\s*color-mix\(in srgb,var\(--calculator-icon-accent\) 25%,var\(--surface\)\)[^}]*background:\s*color-mix\(in srgb,var\(--calculator-icon-accent\) 14%,var\(--surface\)\)/);
   assert.match(css, /\.splash-feature-icon\s*\{[^}]*background:\s*color-mix\(in srgb,var\(--splash-feature-accent\) 15%,var\(--surface\)\)/);
   assert.match(css, /\.nutrition-page \.nutrition-progress-row \.nutrition-progress-fill\s*\{\s*background:\s*var\(--ui-nutrition-progress\)/);
   assert.match(css, /\.progress-chart\[aria-label\^="Weight trend"\]\s*\{\s*--chart-accent:\s*var\(--ui-chart-weight\)/);
   assert.match(css, /\.home-metric-card:has\(#terminal-protein\)\s*\{\s*--metric-accent:\s*var\(--feature-protein\)/);
-  assert.match(css, /\.calculator-directory-row\[href\$="\/protein\/index\.html"\] \.calculator-row-icon\s*\{\s*--calculator-icon-accent:\s*var\(--feature-protein\)/);
-  assert.match(css, /\.calculator-directory-row\[href\$="\/macro\/index\.html"\] \.calculator-row-icon\s*\{\s*--calculator-icon-accent:\s*var\(--feature-carbs\)/);
-  assert.match(css, /\.calculator-directory-row\[href\$="\/water\/index\.html"\] \.calculator-row-icon\s*\{\s*--calculator-icon-accent:\s*var\(--feature-water\)/);
+  const calculatorHtml = fs.readFileSync(__dirname + "/../calculators/index.html", "utf8");
+  const calculatorRows = Array.from(calculatorHtml.matchAll(/<a class="calculator-directory-row" href="[^"]+" data-category="([^"]+)" data-calc="([^"]+)">/g), ([, category, id]) => ({ category, id }));
+  assert.strictEqual(calculatorRows.length, 14);
+  const calculatorIds = ["bmi", "bmr", "tdee", "calorie", "macro", "protein", "bodyfat", "idealweight", "maxhr", "sleep", "water", "steps", "workout", "resttimer"];
+  assert.deepStrictEqual(calculatorRows.map((row) => row.id), calculatorIds);
+  calculatorRows.forEach((row, index) => {
+    assert.match(darkTokens, new RegExp(`--calc-${row.id}:\\s*#[0-9a-f]{6}`, "i"), `dark calculator color ${row.id}`);
+    assert.match(lightTokens, new RegExp(`--calc-${row.id}:\\s*#[0-9a-f]{6}`, "i"), `light calculator color ${row.id}`);
+    const darkColor = darkTokens.match(new RegExp(`--calc-${row.id}:\\s*(#[0-9a-f]{6})`, "i"))[1].toLowerCase();
+    const lightColor = lightTokens.match(new RegExp(`--calc-${row.id}:\\s*(#[0-9a-f]{6})`, "i"))[1].toLowerCase();
+    if (index > 0) {
+      const previousId = calculatorRows[index - 1].id;
+      assert.notStrictEqual(darkColor, darkTokens.match(new RegExp(`--calc-${previousId}:\\s*(#[0-9a-f]{6})`, "i"))[1].toLowerCase());
+      assert.notStrictEqual(lightColor, lightTokens.match(new RegExp(`--calc-${previousId}:\\s*(#[0-9a-f]{6})`, "i"))[1].toLowerCase());
+    }
+    calculatorRows.filter((candidate) => candidate.category === row.category && candidate.id !== row.id).forEach((candidate) => {
+      assert.notStrictEqual(darkColor, darkTokens.match(new RegExp(`--calc-${candidate.id}:\\s*(#[0-9a-f]{6})`, "i"))[1].toLowerCase());
+      assert.notStrictEqual(lightColor, lightTokens.match(new RegExp(`--calc-${candidate.id}:\\s*(#[0-9a-f]{6})`, "i"))[1].toLowerCase());
+    });
+  });
+  assert.match(css, /\.calculator-directory-row\[data-calc="protein"\] \.calculator-row-icon\s*\{\s*--calculator-icon-accent:\s*var\(--calc-protein\)/);
+  assert.match(css, /\.calculator-directory-row\[data-calc="maxhr"\] \.calculator-row-icon\s*\{\s*--calculator-icon-accent:\s*var\(--calc-maxhr\)/);
+  assert.match(css, /\.calculator-directory-row\[data-calc="water"\] \.calculator-row-icon\s*\{\s*--calculator-icon-accent:\s*var\(--calc-water\)/);
+  assert.match(css, /\.calculator-directory-row\[data-calc="steps"\] \.calculator-row-icon\s*\{\s*--calculator-icon-accent:\s*var\(--calc-steps\)/);
+  assert.match(css, /\.calculator-directory-row\[data-calc="sleep"\] \.calculator-row-icon\s*\{\s*--calculator-icon-accent:\s*var\(--calc-sleep\)/);
   assert.match(css, /\.nutrition-remaining-card \.nutrition-remaining\s*\{\s*display:\s*grid;\s*grid-template-columns:\s*repeat\(5,\s*minmax\(0,\s*1fr\)\);\s*gap:\s*8px/s);
   assert.match(css, /\.nutrition-remaining-card \.nutrition-remaining strong\s*\{[^}]*font-size:\s*17px;[^}]*white-space:\s*nowrap;/s);
   assert.match(css, /\.home-quick-tool\[href\$="protein\/index\.html"\] > span\s*\{[^}]*color:\s*var\(--feature-protein\)[^}]*background:\s*color-mix\(in srgb,var\(--feature-protein\) 15%,var\(--surface\)\)/);

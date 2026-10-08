@@ -100,6 +100,20 @@
   --feature-calculator-macro: #E8863F;
   --feature-calculator-bmr: #E8863F;
   --feature-calculator-tdee: #C98AA6;
+  --calc-bmi: #7DB9E5;
+  --calc-bmr: #E5A460;
+  --calc-tdee: #AE96E8;
+  --calc-calorie: #F08A80;
+  --calc-macro: #65C79C;
+  --calc-protein: #E39ABC;
+  --calc-bodyfat: #B7A0E8;
+  --calc-idealweight: #D1C274;
+  --calc-maxhr: #FA8585;
+  --calc-sleep: #9A9FEA;
+  --calc-water: #68B5D2;
+  --calc-steps: #EDA66C;
+  --calc-workout: #93C978;
+  --calc-resttimer: #C9A98E;
   --ui-chart-history: #91b5aa;
   --ui-chart-calories: #d29a82;
   --ui-chart-weight: #b4b68b;
@@ -167,6 +181,20 @@
   --feature-calculator-macro: var(--feature-calculators);
   --feature-calculator-bmr: var(--feature-calculators);
   --feature-calculator-tdee: var(--feature-calculators);
+  --calc-bmi: #386FA0;
+  --calc-bmr: #9A5A12;
+  --calc-tdee: #5841A1;
+  --calc-calorie: #B13F35;
+  --calc-macro: #267759;
+  --calc-protein: #923B64;
+  --calc-bodyfat: #63468C;
+  --calc-idealweight: #756311;
+  --calc-maxhr: #A93639;
+  --calc-sleep: #454A9C;
+  --calc-water: #197394;
+  --calc-steps: #A9580C;
+  --calc-workout: #456D31;
+  --calc-resttimer: #6F5141;
   --ui-chart-history: #3f7770;
   --ui-chart-calories: #a65f45;
   --ui-chart-weight: #68713e;
@@ -5581,29 +5609,24 @@ body.settings-screen { scroll-behavior: smooth; }
 }
 
 .calculator-screen-heading .section-kicker { color: var(--ui-feature-calculators); }
-.calculator-row-icon { --calculator-icon-accent: var(--feature-calculators); }
-.calculator-directory-row[href$="/protein/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-protein); }
-.calculator-directory-row[href$="/bmr/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-calculator-bmr); }
-.calculator-directory-row[href$="/macro/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-calculator-macro); }
-.calculator-directory-row[href$="/calories/index.html"][data-category="nutrition"] .calculator-row-icon { --calculator-icon-accent: var(--feature-calculator-calories); }
-.calculator-directory-row[href$="/calories/index.html"][data-category="activity"] .calculator-row-icon { --calculator-icon-accent: var(--feature-calculator-tdee); }
-.calculator-directory-row[href$="/bmi/index.html"] .calculator-row-icon,
-.calculator-directory-row[href$="/idealweight/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-weight); }
-.calculator-directory-row[href$="/bmr/index.html"] .calculator-row-icon,
-.calculator-directory-row[href$="/calories/index.html"][data-category="nutrition"] .calculator-row-icon { --calculator-icon-accent: var(--feature-calories); }
-.calculator-directory-row[href$="/calories/index.html"][data-category="activity"] .calculator-row-icon,
-.calculator-directory-row[href$="/exercisecalories/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-activity); }
-.calculator-directory-row[href$="/macro/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-carbs); }
-.calculator-directory-row[href$="/bodyfat/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-progress); }
-.calculator-directory-row[href$="/maxhr/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-protein); }
-.calculator-directory-row[href$="/sleep/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-history); }
-.calculator-directory-row[href$="/water/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-water); }
-.calculator-directory-row[href$="/steptocalories/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-steps); }
-.calculator-directory-row[href$="/resttimer/index.html"] .calculator-row-icon { --calculator-icon-accent: var(--feature-workout); }
+.calculator-directory-row[data-calc="bmi"] .calculator-row-icon { --calculator-icon-accent: var(--calc-bmi); }
+.calculator-directory-row[data-calc="bmr"] .calculator-row-icon { --calculator-icon-accent: var(--calc-bmr); }
+.calculator-directory-row[data-calc="tdee"] .calculator-row-icon { --calculator-icon-accent: var(--calc-tdee); }
+.calculator-directory-row[data-calc="calorie"] .calculator-row-icon { --calculator-icon-accent: var(--calc-calorie); }
+.calculator-directory-row[data-calc="macro"] .calculator-row-icon { --calculator-icon-accent: var(--calc-macro); }
+.calculator-directory-row[data-calc="protein"] .calculator-row-icon { --calculator-icon-accent: var(--calc-protein); }
+.calculator-directory-row[data-calc="bodyfat"] .calculator-row-icon { --calculator-icon-accent: var(--calc-bodyfat); }
+.calculator-directory-row[data-calc="idealweight"] .calculator-row-icon { --calculator-icon-accent: var(--calc-idealweight); }
+.calculator-directory-row[data-calc="maxhr"] .calculator-row-icon { --calculator-icon-accent: var(--calc-maxhr); }
+.calculator-directory-row[data-calc="sleep"] .calculator-row-icon { --calculator-icon-accent: var(--calc-sleep); }
+.calculator-directory-row[data-calc="water"] .calculator-row-icon { --calculator-icon-accent: var(--calc-water); }
+.calculator-directory-row[data-calc="steps"] .calculator-row-icon { --calculator-icon-accent: var(--calc-steps); }
+.calculator-directory-row[data-calc="workout"] .calculator-row-icon { --calculator-icon-accent: var(--calc-workout); }
+.calculator-directory-row[data-calc="resttimer"] .calculator-row-icon { --calculator-icon-accent: var(--calc-resttimer); }
 .calculator-row-icon {
   color: var(--calculator-icon-accent);
-  border-color: color-mix(in srgb,var(--calculator-icon-accent) 25%,var(--line));
-  background: color-mix(in srgb,var(--calculator-icon-accent) 15%,var(--surface));
+  border-color: color-mix(in srgb,var(--calculator-icon-accent) 25%,var(--surface));
+  background: color-mix(in srgb,var(--calculator-icon-accent) 14%,var(--surface));
 }
 .mobile-menu .mobile-track-link::before,
 .mobile-menu .mobile-calculators-link::before {
