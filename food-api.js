@@ -328,6 +328,7 @@ function searchBundledUsdaFoods(query) {
             fdcId: food.fdcId,
             dataset: food.dataset,
             category: food.category,
+            preparation: parseUsdaPreparation(food.name),
             portions: food.portions,
             unitGrams: conversions.unitGrams,
             units: conversions.units,
@@ -738,6 +739,18 @@ function foodSearchSummaryValue(value) {
         : String(Math.round(Number(value) * 10) / 10);
 }
 
+function parseUsdaPreparation(name) {
+    const states = /\b(raw|cooked|baked|dry|dried|roasted|grilled|broiled|boiled|steamed|fried|canned|frozen|smoked|poached|toasted|dehydrated|pickled)\b/i;
+    return String(name || "").split(/[,;]+/).map(function (part) { return part.trim(); })
+        .find(function (part) { return states.test(part); }) || "";
+}
+
+function getFoodPreparationLabel(food) {
+    if (!food) return "";
+    if (String(food.preparation || "").trim()) return String(food.preparation).trim();
+    return food.resultGroup === "usda-bundle" || food.dataset ? parseUsdaPreparation(food.name) : "";
+}
+
 function createFoodSearchResultRow(food) {
     const row = document.createElement("div");
     row.className = "integration-result food-search-result-row";
@@ -745,8 +758,19 @@ function createFoodSearchResultRow(food) {
     info.className = "food-search-result-copy";
     const title = document.createElement("strong");
     title.textContent = food.name;
+    const preparation = getFoodPreparationLabel(food);
     const details = document.createElement("small");
     details.className = "food-search-result-macros";
+    if (preparation) {
+        const state = document.createElement("span");
+        state.className = "food-search-preparation";
+        state.textContent = preparation;
+        details.appendChild(state);
+        const separator = document.createElement("span");
+        separator.className = "macro-separator";
+        separator.textContent = " · ";
+        details.appendChild(separator);
+    }
     const parts = [
         [foodSearchSummaryValue(food.calories) + " kcal", "macro-kcal"],
         [foodSearchSummaryValue(food.protein) + " P", "macro-protein"],

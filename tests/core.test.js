@@ -3224,6 +3224,31 @@ test("Food search groups local and packaged results, filters irrelevant external
   assert.strictEqual(app.document.getElementById("custom-food-name").value, "dragonfruitxyz");
 });
 
+test("merged food search renders preparation states for chicken, rice, beef, and egg", () => {
+  const app = loadFoodApiRetrySandbox();
+  const nutrition = loadNutritionSandbox();
+  const bundle = JSON.parse(fs.readFileSync(__dirname + "/../foods-usda.json", "utf8"));
+  app.sandbox.foodDatabase = vm.runInContext("foodDatabase", nutrition.sandbox);
+  app.sandbox.searchBuiltInFoodList = (query) => nutrition.sandbox.searchBuiltInFoodList(query);
+  app.sandbox.getFoodLibrary = () => ({ favorites: [], customFoods: [] });
+  app.sandbox.indianFoodDatabase = vm.runInContext("indianFoodDatabase", nutrition.sandbox);
+  app.sandbox.setUsdaFoodDatabase(bundle);
+  ["chicken", "rice", "beef", "egg"].forEach((query) => {
+    const local = app.sandbox.searchLocalFoodSources(query);
+    const results = app.sandbox.mergeUnifiedFoodSearchResults(query, local, app.sandbox.searchBundledUsdaFoods(query), [], []);
+    assert.ok(results.length, query + " should return merged results");
+    app.sandbox.renderFoodApiResults(results, query);
+    const root = app.document.getElementById("food-api-results");
+    const labels = [];
+    const visit = (node) => {
+      if (node.className === "food-search-preparation") labels.push(node.textContent);
+      (node.children || []).forEach(visit);
+    };
+    visit(root);
+    assert.ok(labels.length, query + " merged results should include a preparation label");
+  });
+});
+
 test("Food search keeps local results when Open Food Facts fails and shows only its muted note", async () => {
   const app = loadFoodApiRetrySandbox();
   app.sandbox.getFoodLibrary = () => ({ favorites: [], customFoods: [] });
