@@ -90,20 +90,36 @@ function normalizeFoodSearchResult(food, sourceOverride) {
 }
 
 function foodSearchDedupeKey(food) {
-    return normalizeFoodSearchQuery(food.name).replace(/[^a-z0-9]+/g, " ").trim();
+    const name = normalizeFoodSearchQuery(food.name).replace(/[^a-z0-9]+/g, " ").trim();
+    const isPackaged = food.resultGroup === "packaged" || food.source === "Open Food Facts" || Boolean(food.brand);
+    if (!isPackaged) return name;
+    const brand = normalizeFoodSearchQuery(food.brand || "").replace(/[^a-z0-9]+/g, " ").trim();
+    return name + "\u0000" + brand;
 }
 
 function mergeFoodSearchResults(sourceGroups) {
     const groups = Array.isArray(sourceGroups) ? sourceGroups : [];
-    const seen = new Set();
+    const seenNonPackaged = new Map();
+    const seenPackaged = new Set();
     const merged = [];
     groups.forEach(function (group) {
         (Array.isArray(group) ? group : [group]).forEach(function (candidate) {
             const normalized = normalizeFoodSearchResult(candidate);
             if (!normalized) return;
             const key = foodSearchDedupeKey(normalized);
-            if (seen.has(key)) return;
-            seen.add(key);
+            const isPackaged = normalized.resultGroup === "packaged" || normalized.source === "Open Food Facts" || Boolean(normalized.brand);
+            if (isPackaged) {
+                if (seenPackaged.has(key)) return;
+                const name = normalizeFoodSearchQuery(normalized.name).replace(/[^a-z0-9]+/g, " ").trim();
+                const nonPackaged = seenNonPackaged.get(name);
+                const brand = normalizeFoodSearchQuery(normalized.brand || "").replace(/[^a-z0-9]+/g, " ").trim();
+                const priorBrand = normalizeFoodSearchQuery(nonPackaged && nonPackaged.brand || "").replace(/[^a-z0-9]+/g, " ").trim();
+                if (nonPackaged && brand && brand === priorBrand) return;
+                seenPackaged.add(key);
+            } else {
+                if (seenNonPackaged.has(key)) return;
+                seenNonPackaged.set(key, normalized);
+            }
             merged.push(normalized);
         });
     });
