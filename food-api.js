@@ -235,9 +235,38 @@ function foodSearchCategoryRank(food, query) {
     return String(food && food.category || "").toLocaleLowerCase().includes(preferred) ? 0 : 1;
 }
 
+function foodMacrosMatchUsdaRecord(food, record) {
+    if (!food || !record) return false;
+    return [
+        ["calories", "kcal"],
+        ["protein", "protein"],
+        ["carbs", "carbs"],
+        ["fat", "fat"]
+    ].every(function (pair) {
+        const entryValue = Number(food[pair[0]]);
+        const usdaValue = Number(record[pair[1]]);
+        if (!Number.isFinite(entryValue) || !Number.isFinite(usdaValue)) return false;
+        return usdaValue === 0 ? entryValue === 0 : Math.abs(entryValue - usdaValue) <= Math.abs(usdaValue) * 0.01;
+    });
+}
+
+function applyBundledFoodSourceTags(foods) {
+    const recordsById = new Map((Array.isArray(foods) ? foods : []).map(function (record) {
+        return [Number(record.fdcId), record];
+    }));
+    const localFoods = [];
+    if (typeof foodDatabase !== "undefined" && Array.isArray(foodDatabase)) localFoods.push.apply(localFoods, foodDatabase);
+    if (typeof indianFoodDatabase !== "undefined" && Array.isArray(indianFoodDatabase)) localFoods.push.apply(localFoods, indianFoodDatabase);
+    localFoods.forEach(function (food) {
+        const record = recordsById.get(Number(food.fdcId));
+        food.sourceTag = foodMacrosMatchUsdaRecord(food, record) ? "USDA" : "Reference";
+    });
+}
+
 function setUsdaFoodDatabase(foods) {
     usdaFoodBundle = Array.isArray(foods) ? foods : [];
     if (!usdaFoodTokenIndex) usdaFoodTokenIndex = buildUsdaFoodTokenIndex(usdaFoodBundle);
+    applyBundledFoodSourceTags(usdaFoodBundle);
     return usdaFoodBundle;
 }
 
@@ -854,7 +883,8 @@ function beginFoodSearch(query, version, signal) {
     let pending = 0;
     const draw = function () {
         if (version !== foodSearchVersion) return;
-        const results = mergeUnifiedFoodSearchResults(query, localResults, onlineResults.bundle, onlineResults.off, onlineResults.usda);
+        const currentLocalResults = usdaFoodBundle ? searchLocalFoodSources(query) : localResults;
+        const results = mergeUnifiedFoodSearchResults(query, currentLocalResults, onlineResults.bundle, onlineResults.off, onlineResults.usda);
         renderFoodApiResults(results, query, {
             packagedUnavailable: unavailable.has("off")
         });

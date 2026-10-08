@@ -1,41 +1,41 @@
 const foodDatabase = [
     // Existing nutrient values are retained per 100 g. Preparation notes
     // narrow each generic food to the closest matching source record.
-    { name: "chicken breast", calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0, preparation: "cooked, roasted, skinless", servingGrams: 85, units: ["g", "serving"], defaultUnit: "serving" },
+    { name: "chicken breast", calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0, preparation: "cooked, roasted, skinless", servingGrams: 85, units: ["g", "serving"], defaultUnit: "serving", fdcId: 171477 },
     // USDA SR Legacy FDC 168878: 1 cup cooked rice is 158 g. Its katori
     // estimate scales that weight to the approximate 180 ml household measure.
-    { name: "white rice", aliases: ["cooked rice", "cooked white rice"], calories: 130, protein: 2.7, carbs: 28, fat: 0.3, fiber: 0.4, preparation: "cooked, long-grain", servingGrams: 158, unitGrams: { cup: 158, katori: 118.5 }, units: ["g", "katori", "cup", "serving"], approximateUnits: ["katori"], defaultUnit: "cup" },
+    { name: "white rice", aliases: ["cooked rice", "cooked white rice"], calories: 130, protein: 2.7, carbs: 28, fat: 0.3, fiber: 0.4, preparation: "cooked, long-grain", servingGrams: 158, unitGrams: { cup: 158, katori: 118.5 }, units: ["g", "katori", "cup", "serving"], approximateUnits: ["katori"], defaultUnit: "cup", fdcId: 168878 },
     { name: "brown rice", calories: 112, protein: 2.3, carbs: 24, fat: 0.8, fiber: 1.8, preparation: "cooked, medium-grain", servingGrams: 195, unitGrams: { cup: 195, katori: 146.25 }, units: ["g", "katori", "cup", "serving"], approximateUnits: ["katori"], defaultUnit: "cup" },
-    { name: "banana", calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6, preparation: "raw, edible portion", servingGrams: 118, unitGrams: { piece: 118 }, units: ["g", "piece"], defaultUnit: "piece" },
+    { name: "banana", calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6, preparation: "raw, edible portion", servingGrams: 118, unitGrams: { piece: 118 }, units: ["g", "piece"], defaultUnit: "piece", fdcId: 173944 },
     { name: "apple", calories: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4, preparation: "raw, with skin", servingGrams: 182, unitGrams: { piece: 182 }, units: ["g", "piece"], defaultUnit: "piece" },
     { name: "orange", calories: 47, protein: 0.9, carbs: 12, fat: 0.1, fiber: 2.4, preparation: "raw, edible portion", servingGrams: 131, unitGrams: { piece: 131 }, units: ["g", "piece"], defaultUnit: "piece" },
-    { name: "egg", calories: 143, protein: 12.6, carbs: 0.7, fat: 9.5, fiber: 0, preparation: "whole, raw, edible portion", servingGrams: 50, unitGrams: { piece: 50 }, units: ["g", "piece"], defaultUnit: "piece" },
+    { name: "egg", calories: 143, protein: 12.6, carbs: 0.7, fat: 9.5, fiber: 0, preparation: "whole, raw, edible portion", servingGrams: 50, unitGrams: { piece: 50 }, units: ["g", "piece"], defaultUnit: "piece", fdcId: 171287 },
     { name: "oats", calories: 389, protein: 16.9, carbs: 66, fat: 6.9, fiber: 10.6, preparation: "rolled oats, dry", servingGrams: 40, unitGrams: { cup: 81, tbsp: 5, tsp: 1.7 }, units: ["g", "cup", "tbsp", "tsp", "serving"], defaultUnit: "serving" },
     { name: "salmon", calories: 208, protein: 20, carbs: 0, fat: 13, fiber: 0, preparation: "raw, farmed Atlantic", servingGrams: 85, units: ["g", "serving"], defaultUnit: "serving" },
-    { name: "tuna", calories: 116, protein: 25.5, carbs: 0, fat: 0.8, fiber: 0, preparation: "light tuna, canned in water, drained", servingGrams: 85, unitGrams: { cup: 154 }, units: ["g", "cup", "serving"], defaultUnit: "serving" },
+    { name: "tuna", calories: 116, protein: 25.5, carbs: 0, fat: 0.8, fiber: 0, preparation: "light tuna, canned in water, drained", servingGrams: 85, unitGrams: { cup: 154 }, units: ["g", "cup", "serving"], defaultUnit: "serving", fdcId: 171986 },
     { name: "lean beef", calories: 250, protein: 26, carbs: 0, fat: 15, fiber: 0, preparation: "ground, 85% lean, cooked, broiled", servingGrams: 85, units: ["g", "serving"], defaultUnit: "serving" },
     { name: "tofu", calories: 76, protein: 8, carbs: 1.9, fat: 4.8, fiber: 0.3, preparation: "regular tofu, raw", servingGrams: 85, unitGrams: { cup: 126 }, units: ["g", "cup", "serving"], defaultUnit: "serving" },
     // USDA SR Legacy FDC 171265: 1 cup whole milk is 244 g.
-    { name: "milk", calories: 61, protein: 3.2, carbs: 4.8, fat: 3.3, fiber: 0, preparation: "whole milk, 3.25% milkfat", servingGrams: 244, unitGrams: { ml: 244 / 240, tsp: 244 / 48, tbsp: 244 / 16, cup: 244, glass: 244 * 250 / 240 }, units: ["g", "ml", "tsp", "tbsp", "cup", "glass"], defaultUnit: "cup" },
+    { name: "milk", calories: 61, protein: 3.2, carbs: 4.8, fat: 3.3, fiber: 0, preparation: "whole milk, 3.25% milkfat", servingGrams: 244, unitGrams: { ml: 244 / 240, tsp: 244 / 48, tbsp: 244 / 16, cup: 244, glass: 244 * 250 / 240 }, units: ["g", "ml", "tsp", "tbsp", "cup", "glass"], defaultUnit: "cup", fdcId: 172217 },
     { name: "greek yogurt", calories: 59, protein: 10, carbs: 3.6, fat: 0.4, fiber: 0, preparation: "plain, nonfat", servingGrams: 170, unitGrams: { cup: 245 }, units: ["g", "cup", "serving"], defaultUnit: "serving" },
-    { name: "cottage cheese", calories: 98, protein: 11, carbs: 3.4, fat: 4.3, fiber: 0, preparation: "4% milkfat", servingGrams: 113, unitGrams: { cup: 226 }, units: ["g", "cup", "serving"], defaultUnit: "serving" },
+    { name: "cottage cheese", calories: 98, protein: 11, carbs: 3.4, fat: 4.3, fiber: 0, preparation: "4% milkfat", servingGrams: 113, unitGrams: { cup: 226 }, units: ["g", "cup", "serving"], defaultUnit: "serving", fdcId: 172179 },
     { name: "cheddar cheese", calories: 403, protein: 25, carbs: 1.3, fat: 33, fiber: 0, preparation: "natural, full-fat", servingGrams: 28, unitGrams: { piece: 28, cup: 113, tbsp: 7, tsp: 2.3 }, units: ["g", "piece", "cup", "tbsp", "tsp", "serving"], defaultUnit: "piece" },
     // USDA SR Legacy FDC 172421; this is plain boiled lentils, not a dal recipe.
-    { name: "lentils", aliases: ["dal", "cooked dal"], calories: 116, protein: 9, carbs: 20, fat: 0.4, fiber: 7.9, preparation: "cooked, boiled", servingGrams: 198, unitGrams: { cup: 198, katori: 148.5 }, units: ["g", "katori", "cup", "serving"], approximateUnits: ["katori"], defaultUnit: "cup" },
+    { name: "lentils", aliases: ["dal", "cooked dal"], calories: 116, protein: 9, carbs: 20, fat: 0.4, fiber: 7.9, preparation: "cooked, boiled", servingGrams: 198, unitGrams: { cup: 198, katori: 148.5 }, units: ["g", "katori", "cup", "serving"], approximateUnits: ["katori"], defaultUnit: "cup", fdcId: 172421 },
     { name: "chickpeas", calories: 164, protein: 8.9, carbs: 27, fat: 2.6, fiber: 7.6, preparation: "cooked, boiled", servingGrams: 164, unitGrams: { cup: 164 }, units: ["g", "cup", "serving"], defaultUnit: "cup" },
     { name: "potato", calories: 87, protein: 1.9, carbs: 20, fat: 0.1, fiber: 1.8, preparation: "boiled, flesh and skin", servingGrams: 173, unitGrams: { piece: 173, cup: 150 }, units: ["g", "piece", "cup", "serving"], defaultUnit: "piece" },
     { name: "sweet potato", calories: 90, protein: 2, carbs: 21, fat: 0.2, fiber: 3.3, preparation: "baked, flesh", servingGrams: 130, unitGrams: { piece: 130, cup: 255 }, units: ["g", "piece", "cup", "serving"], defaultUnit: "piece" },
     { name: "broccoli", calories: 34, protein: 2.8, carbs: 7, fat: 0.4, fiber: 2.6, preparation: "raw, chopped", servingGrams: 91, unitGrams: { cup: 91 }, units: ["g", "cup", "serving"], defaultUnit: "cup" },
-    { name: "spinach", calories: 23, protein: 2.9, carbs: 3.6, fat: 0.4, fiber: 2.2, preparation: "raw leaves", servingGrams: 30, unitGrams: { cup: 30 }, units: ["g", "cup", "serving"], defaultUnit: "cup" },
-    { name: "avocado", calories: 160, protein: 2, carbs: 8.5, fat: 14.7, fiber: 6.7, preparation: "raw, edible portion", servingGrams: 50, unitGrams: { piece: 150, cup: 230 }, units: ["g", "piece", "cup", "serving"], defaultUnit: "serving" },
+    { name: "spinach", calories: 23, protein: 2.9, carbs: 3.6, fat: 0.4, fiber: 2.2, preparation: "raw leaves", servingGrams: 30, unitGrams: { cup: 30 }, units: ["g", "cup", "serving"], defaultUnit: "cup", fdcId: 168462 },
+    { name: "avocado", calories: 160, protein: 2, carbs: 8.5, fat: 14.7, fiber: 6.7, preparation: "raw, edible portion", servingGrams: 50, unitGrams: { piece: 150, cup: 230 }, units: ["g", "piece", "cup", "serving"], defaultUnit: "serving", fdcId: 171705 },
     { name: "almonds", calories: 579, protein: 21, carbs: 22, fat: 50, fiber: 12.5, preparation: "raw", servingGrams: 28, unitGrams: { piece: 1.2, cup: 143, tbsp: 9, tsp: 3 }, units: ["g", "piece", "cup", "tbsp", "tsp", "serving"], defaultUnit: "serving" },
     { name: "peanut butter", calories: 588, protein: 25, carbs: 20, fat: 50, fiber: 6, preparation: "smooth, regular", servingGrams: 32, unitGrams: { cup: 258, tbsp: 16, tsp: 5.3 }, units: ["g", "cup", "tbsp", "tsp", "serving"], defaultUnit: "serving" },
     // USDA SR Legacy FDC 171413: 1 tablespoon is 13.5 g (216 g per cup).
-    { name: "olive oil", calories: 884, protein: 0, carbs: 0, fat: 100, fiber: 0, preparation: "pure", servingGrams: 13.5, unitGrams: { ml: 0.9, tsp: 4.5, tbsp: 13.5, cup: 216, glass: 225 }, units: ["g", "ml", "tsp", "tbsp", "cup", "glass"], defaultUnit: "tbsp" },
+    { name: "olive oil", calories: 884, protein: 0, carbs: 0, fat: 100, fiber: 0, preparation: "pure", servingGrams: 13.5, unitGrams: { ml: 0.9, tsp: 4.5, tbsp: 13.5, cup: 216, glass: 225 }, units: ["g", "ml", "tsp", "tbsp", "cup", "glass"], defaultUnit: "tbsp", fdcId: 171413 },
     { name: "whole wheat bread", calories: 252, protein: 12.3, carbs: 43, fat: 3.5, fiber: 6, preparation: "commercial, whole wheat", servingGrams: 28, unitGrams: { slice: 28 }, units: ["g", "slice", "serving"], defaultUnit: "slice" },
     { name: "pasta", calories: 158, protein: 5.8, carbs: 31, fat: 0.9, fiber: 1.8, preparation: "enriched pasta, cooked", servingGrams: 140, unitGrams: { cup: 140 }, units: ["g", "cup", "serving"], defaultUnit: "cup" }
 ];
-foodDatabase.forEach(function (food) { food.sourceTag = "USDA"; });
+foodDatabase.forEach(function (food) { food.sourceTag = "Reference"; });
 
 // Standard kitchen measures use the volume conversions in the entry form.
 // Katori is an approximate 180 ml midpoint of the stated 150–200 ml range;
@@ -55,7 +55,7 @@ foodDatabase.forEach(function (food) {
     food.unitGrams = Object.assign({ oz: 28.35 }, food.unitGrams || {});
     if (!food.units.includes("oz")) food.units.splice(1, 0, "oz");
     if (!food.source) food.source = "USDA";
-    food.sourceTag = "USDA";
+    food.sourceTag = food.sourceTag || "Reference";
     if (!Array.isArray(food.aliases)) food.aliases = [];
     food.aliases = Array.from(new Set(food.aliases.concat(FOOD_SEARCH_ALIASES[food.name] || [])));
 });

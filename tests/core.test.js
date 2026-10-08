@@ -781,7 +781,10 @@ test("USDA search normalization uses FoodData Central nutrient IDs and kcal unit
 });
 
 test("offline Indian entries use verified USDA records with explicit portion weights", () => {
+  const usdaBundle = JSON.parse(fs.readFileSync(__dirname + "/../foods-usda.json", "utf8"));
+  ctx.setUsdaFoodDatabase(usdaBundle);
   const entries = vm.runInContext("indianFoodDatabase", ctx);
+  const builtIns = vm.runInContext("foodDatabase", ctx);
   const roti = entries.find((food) => food.fdcId === 171844);
   const curd = entries.find((food) => food.fdcId === 171284);
   assert.ok(roti && curd);
@@ -794,7 +797,19 @@ test("offline Indian entries use verified USDA records with explicit portion wei
   assert.deepStrictEqual(Array.from(curd.units), ["g", "oz", "ml", "tsp", "tbsp", "cup", "glass"]);
   assert.ok(entries.every((food) => ["USDA", "USDA FoodData Central"].includes(food.source)));
   assert.ok(entries.every((food) => Array.isArray(food.aliases)));
-  assert.ok(entries.filter((food) => [171844, 170393, 168409, 170000, 170419, 170457, 172436, 174256, 168893, 169910, 169926, 172430, 170162, 170554].includes(food.fdcId)).every((food) => food.sourceTag === "USDA"));
+  entries.concat(builtIns).forEach((food) => {
+    const record = usdaBundle.find((item) => Number(item.fdcId) === Number(food.fdcId));
+    const expectedTag = record && ctx.foodMacrosMatchUsdaRecord(food, record) ? "USDA" : "Reference";
+    assert.strictEqual(food.sourceTag, expectedTag, food.name + " source tag must follow its bundled record and macros");
+    if (food.sourceTag === "USDA") {
+      assert.ok(record, food.name + " USDA tag requires an FDC record");
+      assert.ok(ctx.foodMacrosMatchUsdaRecord(food, record), food.name + " USDA tag requires kcal/P/C/F within 1%");
+    }
+  });
+  const wheatFlour = entries.find((food) => food.name === "Wheat flour, whole-grain");
+  assert.strictEqual(wheatFlour.fdcId, 168893);
+  assert.strictEqual(wheatFlour.sourceTag, "Reference");
+  assert.strictEqual(builtIns.find((food) => food.name === "brown rice").sourceTag, "Reference");
   assert.strictEqual(curd.sourceTag, "Reference");
   assert.strictEqual(entries.find((food) => food.name === "Cheese, paneer").sourceTag, "Reference");
   entries.forEach((food) => food.units.forEach((unit) => {
@@ -3096,6 +3111,8 @@ test("Food search normalizes plurals and aliases, ranks local foods, and keeps q
   app.sandbox.searchBuiltInFoodList = (query) => nutrition.sandbox.searchBuiltInFoodList(query);
   app.sandbox.getFoodLibrary = () => ({ favorites: [], customFoods: [] });
   app.sandbox.indianFoodDatabase = vm.runInContext("indianFoodDatabase", nutrition.sandbox);
+  const usdaBundle = JSON.parse(fs.readFileSync(__dirname + "/../foods-usda.json", "utf8"));
+  app.sandbox.setUsdaFoodDatabase(usdaBundle);
   const cases = [
     ["carrot", "carrot"], ["carrots", "carrot"], ["cucumber", "cucumber"], ["kheera", "cucumber"],
     ["egg", "egg"], ["paneer", "paneer"], ["roti", "chapati"], ["banana", "banana"],
@@ -3124,7 +3141,8 @@ test("Food search normalizes plurals and aliases, ranks local foods, and keeps q
     const food = app.sandbox.searchLocalFoodSources(query)[0];
     assert.ok(food, query + " should be in the offline dataset");
     assert.strictEqual(food.fdcId, fdcId);
-    assert.strictEqual(food.sourceTag, "USDA");
+    const record = usdaBundle.find((item) => Number(item.fdcId) === Number(food.fdcId));
+    assert.strictEqual(food.sourceTag, record && app.sandbox.foodMacrosMatchUsdaRecord(food, record) ? "USDA" : "Reference");
     assert.ok(food.unitGrams && Object.keys(food.unitGrams).length, query + " should retain source-backed portion weights");
   });
 });
