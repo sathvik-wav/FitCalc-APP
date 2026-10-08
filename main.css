@@ -6131,9 +6131,19 @@ body.workout-session-open { overflow: hidden; }
   .mobile-tab[aria-label="Calculators"] > span:last-child {
     font-size: 11px;
     letter-spacing: 0;
+    flex: 0 0 auto;
+    min-width: 0;
+    width: max-content;
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  .mobile-tab[aria-label="Calculators"] {
     flex: 1 1 0;
     min-width: 0;
     padding: 0 2px;
+    font-size: 11px;
+    overflow: visible;
   }
 }
 @media (max-width: 340px) {

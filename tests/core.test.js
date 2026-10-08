@@ -4059,7 +4059,8 @@ test("feature colors meet icon and text contrast thresholds in dark and light th
 test("mobile Calculators tab uses neutral tracking and a bounded label box", () => {
   const css = fs.readFileSync(__dirname + "/../main.css", "utf8");
   assert.doesNotMatch(css, /letter-spacing:\s*-\s*(?:\d|\.)/);
-  assert.match(css, /\.mobile-tab\[aria-label="Calculators"\]\s*>\s*span:last-child\s*\{[^}]*font-size:\s*11px;[^}]*letter-spacing:\s*0;[^}]*flex:\s*1 1 0;[^}]*min-width:\s*0;[^}]*padding:\s*0 2px;/s);
+  assert.match(css, /\.mobile-tab\[aria-label="Calculators"\]\s*\{[^}]*flex:\s*1 1 0;[^}]*min-width:\s*0;[^}]*padding:\s*0 2px;[^}]*font-size:\s*11px;/s);
+  assert.match(css, /\.mobile-tab\[aria-label="Calculators"\]\s*>\s*span:last-child\s*\{[^}]*font-size:\s*11px;[^}]*letter-spacing:\s*0;[^}]*overflow:\s*visible;/s);
 });
 
 test("Capacitor native runtime skips service-worker registration while browser PWA keeps it", () => {
