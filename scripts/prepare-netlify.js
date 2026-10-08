@@ -6,7 +6,9 @@ const path = require("path");
 const projectRoot = path.resolve(__dirname, "..");
 const publishRoot = path.join(projectRoot, "netlify-dist");
 const excludedRootEntries = new Set([
-    ".git", ".netlify", "node_modules", "tests", "scripts", "dist", "netlify-dist", "android", "ios"
+    ".git", ".netlify", "node_modules", "tests", "scripts", "dist", "netlify-dist", "android", "ios",
+    "data-src", "MISSING_FOODS.md", "food.csv", "sr_legacy_food.csv", "foundation_food.csv",
+    "food_nutrient.csv", "nutrient.csv", "food_category.csv", "food_portion.csv", "measure_unit.csv"
 ]);
 
 function shouldSkip(relativePath, name) {

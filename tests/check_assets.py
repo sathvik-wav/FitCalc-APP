@@ -109,6 +109,21 @@ def is_directory_navigation(ref, owner):
 
 def main():
     errors = []
+    # Publish and Android output must contain only processed food data. Raw
+    # USDA downloads and their source directory are private build inputs.
+    packaging_trees = (
+        ROOT / "netlify-dist",
+        ROOT / "android/app/src/main/assets/public",
+    )
+    for tree in packaging_trees:
+        if not tree.exists():
+            continue
+        if (tree / "data-src").exists():
+            errors.append(f"{tree.relative_to(ROOT)} contains forbidden data-src/")
+        for raw_file in tree.rglob("*"):
+            if raw_file.is_file() and raw_file.suffix.lower() == ".csv":
+                errors.append(f"{raw_file.relative_to(ROOT)} contains forbidden raw CSV")
+
     # Ignore generated desktop/mobile output and installed packages; they are
     # not source pages and can contain third-party or tool-generated HTML.
     generated_dirs = {"node_modules", "dist", "android", "ios"}
