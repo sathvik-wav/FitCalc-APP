@@ -161,6 +161,7 @@ function loadPlannerSandbox(options = {}) {
     body: { hasAttribute() { return false; } },
     visibilityState: "visible",
     getElementById: element,
+    querySelector() { return null; },
     querySelectorAll() { return []; },
     addEventListener(type, handler) { listeners.document[type] = handler; },
     createElement() { return createRenderedNode(); }
@@ -185,6 +186,7 @@ function loadPlannerSandbox(options = {}) {
   });
   if (options.profile) sandbox.saveProfile(options.profile);
   vm.runInContext(fs.readFileSync(__dirname + "/../planner.js", "utf8"), sandbox);
+  if (options.includeDashboard) vm.runInContext(fs.readFileSync(__dirname + "/../dashboard.js", "utf8"), sandbox);
   return {
     sandbox, storage, elements, getElement: element, listeners, toasts, dispatchedEvents,
     setNow(value) { now = value; },
@@ -2079,6 +2081,37 @@ test("R5-1 first weigh-in without a complete profile succeeds and saves planner 
   assert.ok(app.toasts.some((toast) => toast.message === "Weight check-in saved."));
   assert.ok(!app.toasts.some((toast) => toast.type === "error"));
   assert.ok(app.dispatchedEvents.some((event) => event.detail && event.detail.key === "macrobay_profile"));
+});
+
+test("weight check-in accepts comma decimals and updates Home and Progress from the same save event", () => {
+  const app = loadPlannerSandbox({ profile: male, includeProgress: true, includeDashboard: true });
+  const input = app.getElement("planner-weight-input");
+  const button = app.getElement("save-weight");
+  assert.strictEqual(input.value, "");
+  input.value = "72,4";
+  app.sandbox.saveWeight();
+
+  const today = app.sandbox.getDateKey(new app.sandbox.Date());
+  assert.strictEqual(app.sandbox.getPlannerFor(today).weight, 72.4);
+  assert.strictEqual(app.sandbox.readJSON("macrobay_history", {})[today].weight, 72.4);
+  assert.strictEqual(app.getElement("home-weight-value").textContent, "72.4");
+  assert.strictEqual(app.getElement("planner-weight-value").textContent, "72.4");
+  assert.strictEqual(app.getElement("planner-weight-saved").hidden, false);
+  assert.strictEqual(input.value, "72.4");
+  assert.strictEqual(button.disabled, true);
+  assert.strictEqual(button.textContent, "Saved ✓");
+});
+
+test("weight check-in saves the selected day and hides today's target note for past dates", () => {
+  const app = loadPlannerSandbox({ search: "?date=2026-01-14", includeProgress: true });
+  assert.strictEqual(app.getElement("planner-weight-today-note").hidden, true);
+  app.getElement("planner-weight-input").value = "70.5";
+  app.sandbox.saveWeight();
+
+  assert.strictEqual(app.sandbox.getPlannerFor("2026-01-14").weight, 70.5);
+  assert.strictEqual(app.sandbox.getPlannerFor("2026-01-15").weight, null);
+  assert.strictEqual(app.sandbox.readJSON("macrobay_history", {})["2026-01-14"].weight, 70.5);
+  assert.strictEqual(app.sandbox.getProfile().weight, undefined);
 });
 
 test("R5-2 pound weight limits accept exactly the displayed bounds in Profile and Planner", () => {

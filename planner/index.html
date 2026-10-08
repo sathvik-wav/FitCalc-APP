@@ -47,13 +47,17 @@
     <section class="card planner-card planner-weight-card" aria-labelledby="weight-heading">
       <div class="planner-card-heading">
         <div><span class="page-kicker">Check-in</span><h2 id="weight-heading">Body weight</h2></div>
-        <strong class="planner-card-value"><span id="planner-weight-value">—</span><small id="planner-weight-unit">kg</small></strong>
+        <strong class="planner-card-value"><span id="planner-weight-value">—</span><small id="planner-weight-unit">kg</small><small class="weight-saved-label" id="planner-weight-saved" hidden>Saved</small></strong>
       </div>
-      <p>Optional daily weigh-in, saved with the selected date.</p>
-      <p>Check-in for <span id="planner-weight-date">this day</span>. Your logged value appears here.</p>
-      <div class="planner-input-row">
-        <div class="field"><label for="planner-weight-input" id="planner-weight-input-label">Weight in kg</label><input type="number" id="planner-weight-input" min="30" max="300" step="0.1" inputmode="decimal" placeholder="e.g. 72.5"></div>
-        <button type="button" class="primary-btn" id="save-weight">Save weight</button>
+      <p class="weight-checkin-date">Check-in for <span id="planner-weight-date">this day</span></p>
+      <div class="planner-weight-entry">
+        <div class="field">
+          <label for="planner-weight-input" id="planner-weight-input-label">Weight</label>
+          <div class="weight-input-shell"><input type="text" id="planner-weight-input" min="30" max="300" step="0.1" inputmode="decimal" placeholder="e.g. 68.5" aria-describedby="planner-weight-error planner-weight-today-note"><span class="weight-input-suffix" id="planner-weight-input-unit">kg</span></div>
+          <p class="weight-input-error" id="planner-weight-error" role="alert" hidden></p>
+          <p class="weight-today-note" id="planner-weight-today-note" hidden>Today's weight also updates your targets.</p>
+        </div>
+        <button type="button" class="primary-btn weight-save-button" id="save-weight">Save</button>
       </div>
     </section>
 

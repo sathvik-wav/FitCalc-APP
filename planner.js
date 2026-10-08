@@ -193,28 +193,65 @@ function updateWeightDisplay() {
     const input = document.getElementById("planner-weight-input");
     const unit = getMacroBayWeightUnit();
     const unitLabel = document.getElementById("planner-weight-unit");
+    const inputUnit = document.getElementById("planner-weight-input-unit");
     const inputLabel = document.getElementById("planner-weight-input-label");
-    if (value) value.textContent = planner.weight === null || planner.weight === undefined ? "—" : formatMacroBayWeight(planner.weight);
-    if (detailValue) detailValue.textContent = planner.weight === null || planner.weight === undefined ? "—" : formatMacroBayWeight(planner.weight);
+    const savedLabel = document.getElementById("planner-weight-saved");
+    const todayNote = document.getElementById("planner-weight-today-note");
+    const error = document.getElementById("planner-weight-error");
+    const hasWeight = planner.weight !== null && planner.weight !== undefined && Number.isFinite(Number(planner.weight));
+    if (value) value.textContent = hasWeight ? formatMacroBayWeight(planner.weight) : "—";
+    if (detailValue) detailValue.textContent = hasWeight ? formatMacroBayWeight(planner.weight) : "—";
+    if (savedLabel) savedLabel.hidden = !hasWeight;
     if (unitLabel) unitLabel.textContent = unit;
-    if (inputLabel) inputLabel.textContent = "Weight in " + unit;
+    if (inputUnit) inputUnit.textContent = unit;
+    if (inputLabel) inputLabel.textContent = "Weight";
     if (date) date.textContent = selectedDate.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    if (todayNote) todayNote.hidden = getDateKey(selectedDate) !== getDateKey(new Date());
     if (input) {
-        input.value = planner.weight === null || planner.weight === undefined ? "" : kilogramsToDisplayWeight(planner.weight).toFixed(1);
+        input.value = hasWeight ? kilogramsToDisplayWeight(planner.weight).toFixed(1) : "";
         input.min = unit === "lb" ? "66.1" : "30";
         input.max = unit === "lb" ? "661.4" : "300";
     }
+    if (error) { error.textContent = ""; error.hidden = true; }
+    updateWeightSaveButton(planner, input);
+}
+
+function parseWeightInput(value) {
+    const normalized = String(value === null || value === undefined ? "" : value).trim().replace(/,/g, ".");
+    if (!/^\d+(?:\.\d+)?$/.test(normalized)) return null;
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+}
+
+function updateWeightSaveButton(planner, input) {
+    const button = document.getElementById("save-weight");
+    if (!button || !input) return;
+    const current = planner || getPlanner();
+    const displayed = parseWeightInput(input.value);
+    const hasSavedValue = current.weight !== null && current.weight !== undefined && Number.isFinite(Number(current.weight));
+    const unchanged = hasSavedValue && displayed !== null &&
+        Math.abs(displayWeightToKilograms(displayed) - Number(current.weight)) < 0.005;
+    button.disabled = unchanged;
+}
+
+function setWeightInputError(message) {
+    const error = document.getElementById("planner-weight-error");
+    if (!error) return;
+    error.textContent = message || "";
+    error.hidden = !message;
 }
 
 function saveWeight() {
     const input = document.getElementById("planner-weight-input");
-    const displayWeight = Number(input && input.value);
+    const displayWeight = parseWeightInput(input && input.value);
     const unit = getMacroBayWeightUnit();
     const minimumWeight = unit === "lb" ? 66.1 : 30;
     const maximumWeight = unit === "lb" ? 661.4 : 300;
-    const weight = displayWeightToKilograms(displayWeight);
-    if (!Number.isFinite(displayWeight) || displayWeight < minimumWeight || displayWeight > maximumWeight) {
-        window.macrobayToast(unit === "lb" ? "Enter a weight from 66.1 to 661.4 lb." : "Enter a weight from 30 to 300 kg.", "error");
+    const weight = displayWeight === null ? null : displayWeightToKilograms(displayWeight);
+    if (displayWeight === null || displayWeight < minimumWeight || displayWeight > maximumWeight) {
+        const message = unit === "lb" ? "Enter a weight from 66.1 to 661.4 lb." : "Enter a weight from 30 to 300 kg.";
+        setWeightInputError(message);
+        window.macrobayToast(message, "error");
         return;
     }
     const planner = getPlanner();
@@ -240,15 +277,32 @@ function saveWeight() {
     }
 
     updateWeightDisplay();
+    setWeightInputError("");
     if (!profileTargetsSaved) {
         window.macrobayToast("Weight was logged, but profile targets could not be updated.", "error");
         return;
+    }
+    const button = document.getElementById("save-weight");
+    if (button) {
+        button.textContent = "Saved ✓";
+        button.disabled = true;
+        if (typeof setTimeout === "function") {
+            setTimeout(function () {
+                button.textContent = "Save";
+                updateWeightSaveButton(getPlanner(), input);
+            }, 1500);
+        }
     }
     window.macrobayToast("Weight check-in saved.");
 }
 
 const saveWeightButton = document.getElementById("save-weight");
 if (saveWeightButton) saveWeightButton.addEventListener("click", saveWeight);
+const weightInput = document.getElementById("planner-weight-input");
+if (weightInput) weightInput.addEventListener("input", function () {
+    setWeightInputError("");
+    updateWeightSaveButton(getPlanner(), weightInput);
+});
 
 
 const saveStepsButton =
