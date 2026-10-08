@@ -172,10 +172,10 @@
   --feature-carbs: #A94E0C;
   --feature-fat: #846300;
   --feature-fiber: #397747;
-  --feature-steps: #D9776A;
-  --feature-steps-goal: #F2A66B;
-  --feature-walk: #4C9BE0;
-  --feature-mobility: #7E9A6A;
+  --feature-steps: #B85C54;
+  --feature-steps-goal: #B66A33;
+  --feature-walk: #3787CB;
+  --feature-mobility: #617D49;
   --feature-profile: var(--accent-strong);
   --feature-calculator-calories: var(--feature-calculators);
   --feature-calculator-macro: var(--feature-calculators);
@@ -360,6 +360,13 @@ p {
   font-weight: 700;
   letter-spacing: 0px;
   font-size: 19px;
+}
+.brand-trademark {
+  display: inline-block;
+  margin-left: 1px;
+  font-size: .56em;
+  line-height: 0;
+  vertical-align: super;
 }
 .brand-mark {
   display: inline-grid;
@@ -6123,7 +6130,10 @@ body.workout-session-open { overflow: hidden; }
   }
   .mobile-tab[aria-label="Calculators"] > span:last-child {
     font-size: 11px;
-    letter-spacing: -.06em;
+    letter-spacing: 0;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 2px;
   }
 }
 @media (max-width: 340px) {

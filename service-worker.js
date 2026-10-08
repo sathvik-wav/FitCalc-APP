@@ -5,7 +5,7 @@ const CACHE_NAME = "macrobay-app-shell-v1.1.19";
 // https://search.openfoodfacts.org, and https://api.nal.usda.gov. This worker
 // leaves external food API requests uncached.
 const APP_SHELL = [
-    "./index.html", "./main.css", "./script.js", "./theme-init.js", "./calculators.js", "./constants.js", "./store.js",
+    "./index.html", "./main.css", "./script.js", "./theme-init.js", "./calculators.js", "./constants.js", "./store.js", "./manifest.webmanifest",
     "./calculator-directory.js", "./bmi-unit-toggle.js", "./settings.js",
     "./target.js", "./profile.js", "./foods-india.js", "./nutrition.js", "./food-api.js", "./planner.js",
     "./workout.js", "./exercise-api.js", "./progress.js", "./history.js",

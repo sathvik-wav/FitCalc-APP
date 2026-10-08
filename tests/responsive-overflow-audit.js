@@ -74,7 +74,14 @@ app.whenReady().then(async function () {
           const ellipsis = (style.textOverflow === "ellipsis" || style.webkitLineClamp !== "none") && (el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1);
           if (overflow || ellipsis) found.push({ selector: describe(el), overflow: overflow, ellipsis: ellipsis, text: (el.innerText || el.getAttribute("aria-label") || "").trim().replace(/\s+/g, " ").slice(0, 70), scrollWidth: el.scrollWidth, clientWidth: el.clientWidth });
         }
-        return { title: document.title, height: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight), viewport: innerWidth, issues: found };
+        const navLabels = Array.from(document.querySelectorAll(".bottom-nav .mobile-tab > span:last-child")).map(label => {
+          const range = document.createRange();
+          range.selectNodeContents(label);
+          const rect = range.getBoundingClientRect();
+          return { text: label.textContent.trim(), left: rect.left, right: rect.right };
+        }).filter(label => label.right > label.left).sort((a, b) => a.left - b.left);
+        const navLabelGaps = navLabels.slice(1).map((label, index) => ({ left: navLabels[index].text, right: label.text, gap: label.left - navLabels[index].right })).filter(pair => pair.gap < 2);
+        return { title: document.title, height: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight), viewport: innerWidth, issues: found, navLabelGaps: navLabelGaps };
       })()`);
       const fileName = safeName(page.replace(/\.html$/, "") || "home") + "-" + width + ".png";
       const screenshot = await win.webContents.capturePage();
@@ -82,6 +89,10 @@ app.whenReady().then(async function () {
       if (report.issues.length) {
         issues += report.issues.length;
         console.log("OVERFLOW " + page + " @ " + width + "px: " + JSON.stringify(report.issues));
+      }
+      if (page === "index.html" && report.navLabelGaps.length) {
+        issues += report.navLabelGaps.length;
+        console.log("NAV LABEL GAP @ " + width + "px: " + JSON.stringify(report.navLabelGaps));
       }
       if (page === "planner/index.html") {
         await win.webContents.executeJavaScript("document.getElementById('planner-view-workouts').click(); document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, document.getElementById('planner-workouts-card').getBoundingClientRect().top + window.scrollY);");

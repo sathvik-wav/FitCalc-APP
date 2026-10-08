@@ -1864,11 +1864,13 @@ test("Visible product branding uses MacroBay casing without forced uppercase", (
   pages.forEach((file) => {
     const html = fs.readFileSync(file, "utf8");
     assert.match(html, /<title>[^<]*MacroBay<\/title>/, file + " page title");
-    assert.match(html, /class="brand"[^>]*>[\s\S]*?MacroBay(?:<|\s)/, file + " header brand");
-    assert.doesNotMatch(html, /MacroBay™/, file + " has no trademark symbol in visible branding");
+    assert.match(html, /class="brand"[^>]*>[\s\S]*?MacroBay<span class="brand-trademark" aria-hidden="true">™<\/span>/, file + " header brand trademark");
+    assert.match(html, /class="footer-brand"[\s\S]*?MacroBay<span class="brand-trademark" aria-hidden="true">™<\/span>/, file + " footer brand trademark");
+    assert.doesNotMatch(html.match(/<title>([\s\S]*?)<\/title>/)[1], /™/, file + " title has no trademark symbol");
+    assert.doesNotMatch(html.match(/class="brand"[^>]*aria-label="([^"]+)"/)?.[1] || "", /™/, file + " aria label has no trademark symbol");
     assert.doesNotMatch(html, /\bMACROBAY\b|>\s*macrobay\s*</, file + " visible brand casing");
     const splash = html.match(/<div class="splash-brand"[^>]*>([\s\S]*?)<\/div>/);
-    if (splash) assert.match(splash[1], /MacroBay/, file + " splash brand");
+    if (splash) assert.match(splash[1], /MacroBay<span class="brand-trademark" aria-hidden="true">™<\/span>/, file + " splash brand trademark");
   });
   assert.match(fs.readFileSync(path.join(root, "settings/index.html"), "utf8"), /About MacroBay<\/h2>/);
   const css = fs.readFileSync(path.join(root, "main.css"), "utf8");
@@ -3937,6 +3939,10 @@ test("R7 theme tokens, page bootstraps, and service-worker shell cover both them
   });
   const serviceWorker = fs.readFileSync(__dirname + "/../service-worker.js", "utf8");
   assert.match(serviceWorker, /"\.\/theme-init\.js"/);
+  assert.match(serviceWorker, /"\.\/manifest\.webmanifest"/);
+  const manifest = JSON.parse(fs.readFileSync(__dirname + "/../manifest.webmanifest", "utf8"));
+  assert.strictEqual(manifest.background_color, "#141214");
+  assert.strictEqual(manifest.theme_color, "#664250");
 });
 
 test("R8 feature icon accents are semantic in both themes while brand navigation stays mauve", () => {
@@ -3961,10 +3967,10 @@ test("R8 feature icon accents are semantic in both themes while brand navigation
     [lightTokens, "--feature-nutrition: #7A8A5A"], [lightTokens, "--feature-activity: #C8553D"],
     [lightTokens, "--feature-progress: #9A5668"], [lightTokens, "--feature-calories: #D9573B"],
     [lightTokens, "--feature-protein: #B83A3A"], [lightTokens, "--feature-carbs: #A94E0C"],
-    [lightTokens, "--feature-fat: #846300"], [lightTokens, "--feature-fiber: #397747"], [lightTokens, "--feature-steps: #D9776A"],
+    [lightTokens, "--feature-fat: #846300"], [lightTokens, "--feature-fiber: #397747"],
     [lightTokens, "--feature-water: #3F8FCB"], [lightTokens, "--feature-workout: #A8566A"],
-    [lightTokens, "--feature-steps-goal: #F2A66B"], [lightTokens, "--feature-walk: #4C9BE0"],
-    [lightTokens, "--feature-mobility: #7E9A6A"]
+    [lightTokens, "--feature-steps: #B85C54"], [lightTokens, "--feature-steps-goal: #B66A33"],
+    [lightTokens, "--feature-walk: #3787CB"], [lightTokens, "--feature-mobility: #617D49"]
   ].forEach(([tokens, expected]) => assert.ok(tokens.includes(expected), `missing ${expected}`));
   assert.match(css, /\.calculator-row-icon\s*\{[^}]*color:\s*var\(--calculator-icon-accent\)[^}]*border-color:\s*color-mix\(in srgb,var\(--calculator-icon-accent\) 25%,var\(--surface\)\)[^}]*background:\s*color-mix\(in srgb,var\(--calculator-icon-accent\) 14%,var\(--surface\)\)/);
   assert.match(css, /\.splash-feature-icon\s*\{[^}]*background:\s*color-mix\(in srgb,var\(--splash-feature-accent\) 15%,var\(--surface\)\)/);
@@ -4012,6 +4018,48 @@ test("R8 feature icon accents are semantic in both themes while brand navigation
   assert.match(css, /\.primary-btn\s*\{[^}]*background:\s*linear-gradient\(112deg,var\(--accent\),var\(--accent-strong\)\)/);
   assert.match(css, /button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible/);
   assert.match(css, /button:disabled/);
+});
+
+test("feature colors meet icon and text contrast thresholds in dark and light themes", () => {
+  const css = fs.readFileSync(__dirname + "/../main.css", "utf8");
+  const themes = [
+    { name: "dark", background: "#141214", block: css.match(/:root\s*\{([\s\S]*?)\n\}/)[1] },
+    { name: "light", background: "#fffdfd", block: css.match(/:root\[data-theme="light"\]\s*\{([\s\S]*?)\n\}/)[1] }
+  ];
+  const textFeatures = ["--feature-protein", "--feature-carbs", "--feature-fat", "--feature-fiber"];
+  function luminance(hex) {
+    const channels = hex.slice(1).match(/../g).map((value) => parseInt(value, 16) / 255).map((value) =>
+      value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4));
+    return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+  }
+  function resolve(name, values, seen = new Set()) {
+    assert.ok(!seen.has(name), `cyclic feature token ${name}`);
+    seen.add(name);
+    const value = values[name];
+    assert.ok(value, `missing feature token ${name}`);
+    if (value.startsWith("var(")) return resolve(value.match(/var\((--[\w-]+)/)[1], values, seen);
+    assert.match(value, /^#[0-9a-f]{6}$/i, `${name} must resolve to a six-digit color`);
+    return value;
+  }
+  themes.forEach((theme) => {
+    const values = Object.fromEntries(Array.from(theme.block.matchAll(/(--[\w-]+):\s*([^;]+);/g), ([, name, value]) => [name, value.trim()]));
+    const featureNames = Object.keys(values).filter((name) => name.startsWith("--feature-"));
+    assert.ok(featureNames.length, `${theme.name} feature tokens exist`);
+    featureNames.forEach((name) => {
+      const color = resolve(name, values);
+      const a = luminance(color);
+      const b = luminance(theme.background);
+      const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      assert.ok(ratio >= 3, `${theme.name} ${name} contrast ${ratio.toFixed(2)}:1 is below 3:1`);
+      if (textFeatures.includes(name)) assert.ok(ratio >= 4.5, `${theme.name} ${name} text contrast ${ratio.toFixed(2)}:1 is below 4.5:1`);
+    });
+  });
+});
+
+test("mobile Calculators tab uses neutral tracking and a bounded label box", () => {
+  const css = fs.readFileSync(__dirname + "/../main.css", "utf8");
+  assert.doesNotMatch(css, /letter-spacing:\s*-\s*(?:\d|\.)/);
+  assert.match(css, /\.mobile-tab\[aria-label="Calculators"\]\s*>\s*span:last-child\s*\{[^}]*font-size:\s*11px;[^}]*letter-spacing:\s*0;[^}]*flex:\s*1 1 0;[^}]*min-width:\s*0;[^}]*padding:\s*0 2px;/s);
 });
 
 test("Capacitor native runtime skips service-worker registration while browser PWA keeps it", () => {
