@@ -77,43 +77,43 @@
   --bmi-overweight: #c6a36a;
   --bmi-obese: #b77878;
   --bmi-marker: #f5f4ee;
-  --feature-nutrition: #C9B64A;
-  --feature-activity: #E8863F;
-  --feature-progress: #D97FA8;
-  --feature-calculators: #6FB07A;
-  --feature-planner: #4F8FE0;
-  --feature-history: #C779A8;
-  --feature-water: #5AA0E6;
-  --feature-calories: #E26B4F;
-  --feature-workout: #c88e74;
-  --feature-weight: #b4b68b;
-  --feature-protein: #E0524F;
-  --feature-carbs: #E8863F;
-  --feature-fat: #E2C35D;
-  --feature-fiber: #6FB07A;
-  --feature-steps: #D98A99;
-  --feature-steps-goal: #E8863F;
+  --feature-nutrition: #EEDA68;
+  --feature-activity: #EEA068;
+  --feature-progress: #EE68A5;
+  --feature-calculators: #68EE7E;
+  --feature-planner: #68A3EE;
+  --feature-history: #EE68B9;
+  --feature-water: #68ABEE;
+  --feature-calories: #EE8168;
+  --feature-workout: #EE9168;
+  --feature-weight: #E8EE68;
+  --feature-protein: #EE6A68;
+  --feature-carbs: #EEA068;
+  --feature-fat: #EECF68;
+  --feature-fiber: #68EE7E;
+  --feature-steps: #EEAB68;
+  --feature-steps-goal: #EEA068;
   --feature-walk: var(--feature-planner);
   --feature-mobility: var(--feature-nutrition);
-  --feature-profile: #D88BB0;
-  --feature-calculator-calories: #6FB07A;
-  --feature-calculator-macro: #E8863F;
-  --feature-calculator-bmr: #E8863F;
-  --feature-calculator-tdee: #C98AA6;
-  --calc-bmi: #7DB9E5;
-  --calc-bmr: #E5A460;
-  --calc-tdee: #AE96E8;
-  --calc-calorie: #F08A80;
-  --calc-macro: #65C79C;
-  --calc-protein: #E39ABC;
-  --calc-bodyfat: #B7A0E8;
-  --calc-idealweight: #D1C274;
-  --calc-maxhr: #FA8585;
-  --calc-sleep: #9A9FEA;
-  --calc-water: #68B5D2;
-  --calc-steps: #EDA66C;
-  --calc-workout: #93C978;
-  --calc-resttimer: #C9A98E;
+  --feature-profile: #EE68A8;
+  --feature-calculator-calories: #68EE7E;
+  --feature-calculator-macro: #EEA068;
+  --feature-calculator-bmr: #EEA068;
+  --feature-calculator-tdee: #EE68A3;
+  --calc-bmi: #68B5EE;
+  --calc-bmr: #EEAC68;
+  --calc-tdee: #8F68EE;
+  --calc-calorie: #EE7468;
+  --calc-macro: #68EEB3;
+  --calc-protein: #EE68A6;
+  --calc-bodyfat: #9368EE;
+  --calc-idealweight: #EED868;
+  --calc-maxhr: #EE6868;
+  --calc-sleep: #6870EE;
+  --calc-water: #68C9EE;
+  --calc-steps: #EEA163;
+  --calc-workout: #94EE68;
+  --calc-resttimer: #EFAB71;
   --ui-chart-history: #91b5aa;
   --ui-chart-calories: #d29a82;
   --ui-chart-weight: #b4b68b;
@@ -158,43 +158,43 @@
   --home-quote-mountain-front: #bea6b0;
   --home-quote-line: #775662;
   --bmi-marker: #32242a;
-  --feature-nutrition: #7A8A5A;
-  --feature-activity: #C8553D;
-  --feature-progress: #9A5668;
-  --feature-calculators: #825e2b;
-  --feature-planner: #5c7289;
-  --feature-history: #3f7770;
-  --feature-water: #3F8FCB;
-  --feature-calories: #D9573B;
-  --feature-workout: #A8566A;
-  --feature-weight: #68713e;
-  --feature-protein: #B83A3A;
-  --feature-carbs: #A94E0C;
-  --feature-fat: #846300;
-  --feature-fiber: #397747;
-  --feature-steps: #B85C54;
-  --feature-steps-goal: #B66A33;
-  --feature-walk: #3787CB;
-  --feature-mobility: #617D49;
-  --feature-profile: var(--accent-strong);
+  --feature-nutrition: #699315;
+  --feature-activity: #E04929;
+  --feature-progress: #E02959;
+  --feature-calculators: #B7761A;
+  --feature-planner: #2983E0;
+  --feature-history: #159383;
+  --feature-water: #1F8ADB;
+  --feature-calories: #E04929;
+  --feature-workout: #E02956;
+  --feature-weight: #798F14;
+  --feature-protein: #E02929;
+  --feature-carbs: #B75C1A;
+  --feature-fat: #8F7014;
+  --feature-fiber: #13862D;
+  --feature-steps: #B7691A;
+  --feature-steps-goal: #D2691E;
+  --feature-walk: #248AE0;
+  --feature-mobility: #509315;
+  --feature-profile: #A31A58;
   --feature-calculator-calories: var(--feature-calculators);
   --feature-calculator-macro: var(--feature-calculators);
   --feature-calculator-bmr: var(--feature-calculators);
   --feature-calculator-tdee: var(--feature-calculators);
-  --calc-bmi: #386FA0;
-  --calc-bmr: #9A5A12;
-  --calc-tdee: #5841A1;
-  --calc-calorie: #B13F35;
-  --calc-macro: #267759;
-  --calc-protein: #923B64;
-  --calc-bodyfat: #63468C;
-  --calc-idealweight: #756311;
-  --calc-maxhr: #A93639;
-  --calc-sleep: #454A9C;
-  --calc-water: #197394;
-  --calc-steps: #A9580C;
-  --calc-workout: #456D31;
-  --calc-resttimer: #6F5141;
+  --calc-bmi: #298AE0;
+  --calc-bmr: #C0721B;
+  --calc-tdee: #5529E0;
+  --calc-calorie: #E03829;
+  --calc-macro: #169868;
+  --calc-protein: #E0297F;
+  --calc-bodyfat: #7529E0;
+  --calc-idealweight: #9C8416;
+  --calc-maxhr: #E0292E;
+  --calc-sleep: #2933E0;
+  --calc-water: #1B90BB;
+  --calc-steps: #B36419;
+  --calc-workout: #419816;
+  --calc-resttimer: #B7511A;
   --ui-chart-history: #3f7770;
   --ui-chart-calories: #a65f45;
   --ui-chart-weight: #68713e;
@@ -3455,6 +3455,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .mobile-tab svg {
     width: 19px;
     height: 19px;
+    stroke-width: 2;
   }
   .mobile-tab.active {
     color: var(--accent-strong);
@@ -5342,6 +5343,7 @@ body.home-screen .calculator-screen-heading p {
 .calculator-row-icon svg {
   width: 21px;
   height: 21px;
+  stroke-width: 2;
 }
 .calculator-row-copy {
   min-width: 0;
@@ -5576,9 +5578,10 @@ body.settings-screen { scroll-behavior: smooth; }
 .home-metric-card:has(#terminal-water) { --metric-accent: var(--feature-water); }
 .home-metric-icon {
   color: var(--metric-accent, var(--feature-progress));
-  border: 1px solid color-mix(in srgb,var(--metric-accent, var(--feature-progress)) 22%,var(--line));
-  background: color-mix(in srgb,var(--metric-accent, var(--feature-progress)) 15%,var(--surface));
+  border: 1px solid color-mix(in srgb,var(--metric-accent, var(--feature-progress)) 35%,var(--line));
+  background: color-mix(in srgb,var(--metric-accent, var(--feature-progress)) 20%,var(--surface));
 }
+.home-metric-icon svg { stroke-width: 2; }
 .home-metric-card .home-ring {
   background: conic-gradient(var(--metric-accent, var(--home-ring-active)) var(--ring-progress),var(--home-ring-track) 0);
 }
@@ -5632,7 +5635,15 @@ body.settings-screen { scroll-behavior: smooth; }
 .calculator-directory-row[data-calc="resttimer"] .calculator-row-icon { --calculator-icon-accent: var(--calc-resttimer); }
 .calculator-row-icon {
   color: var(--calculator-icon-accent);
-  border-color: color-mix(in srgb,var(--calculator-icon-accent) 25%,var(--surface));
+  border-color: color-mix(in srgb,var(--calculator-icon-accent) 35%,var(--surface));
+  background: color-mix(in srgb,var(--calculator-icon-accent) 20%,var(--surface));
+}
+:root[data-theme="light"] .home-metric-icon {
+  border-color: color-mix(in srgb,var(--metric-accent, var(--feature-progress)) 28%,var(--line));
+  background: color-mix(in srgb,var(--metric-accent, var(--feature-progress)) 14%,var(--surface));
+}
+:root[data-theme="light"] .calculator-row-icon {
+  border-color: color-mix(in srgb,var(--calculator-icon-accent) 28%,var(--surface));
   background: color-mix(in srgb,var(--calculator-icon-accent) 14%,var(--surface));
 }
 .mobile-menu .mobile-track-link::before,
@@ -5731,6 +5742,7 @@ body[data-calc="macro"] .result-bar-wrap:nth-child(3) .row b { color: var(--feat
 :root[data-theme="light"] .planner-steps-card #steps-progress { border: 1px solid var(--ink-soft); }
 .planner-stat:first-child strong { color: var(--ui-feature-activity); }
 .workout-toggle-icon { color: var(--feature-workout); }
+.workout-toggle-icon svg { stroke-width: 2; }
 
 .history-page-shell .page-heading .page-kicker { color: var(--ui-feature-history); }
 .history-consistency .page-kicker { color: var(--ui-feature-progress); }
@@ -5764,6 +5776,10 @@ body[data-calc="macro"] .result-bar-wrap:nth-child(3) .row b { color: var(--feat
 :root:not([data-theme="light"]) .mobile-tab:not(.active)[href$="/planner/index.html"] .mobile-tab-icon { color: var(--feature-activity); }
 :root:not([data-theme="light"]) .mobile-tab:not(.active)[href$="/history/index.html"] .mobile-tab-icon { color: var(--feature-progress); }
 :root:not([data-theme="light"]) .mobile-tab:not(.active)[href$="/profile/index.html"] .mobile-tab-icon { color: var(--feature-profile); }
+:root[data-theme="light"] .mobile-tab:not(.active)[href$="/calculators/index.html"] .mobile-tab-icon { color: var(--feature-calculators); }
+:root[data-theme="light"] .mobile-tab:not(.active)[href$="/planner/index.html"] .mobile-tab-icon { color: var(--feature-activity); }
+:root[data-theme="light"] .mobile-tab:not(.active)[href$="/history/index.html"] .mobile-tab-icon { color: var(--feature-progress); }
+:root[data-theme="light"] .mobile-tab:not(.active)[href$="/profile/index.html"] .mobile-tab-icon { color: var(--feature-profile); }
 
 :focus-visible {
   outline-color: var(--accent-strong);

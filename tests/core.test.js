@@ -4016,25 +4016,76 @@ test("R8 feature icon accents are semantic in both themes while brand navigation
     assert.match(darkTokens, new RegExp(`--feature-${feature}:\\s*#[0-9a-f]{6}`, "i"), `dark ${feature} token`);
     assert.match(lightTokens, new RegExp(`--feature-${feature}:\\s*#[0-9a-f]{6}`, "i"), `light ${feature} token`);
   });
-  [
-    [darkTokens, "--feature-nutrition: #C9B64A"], [darkTokens, "--feature-calculators: #6FB07A"],
-    [darkTokens, "--feature-activity: #E8863F"], [darkTokens, "--feature-progress: #D97FA8"],
-    [darkTokens, "--feature-profile: #D88BB0"], [darkTokens, "--feature-planner: #4F8FE0"],
-    [darkTokens, "--feature-history: #C779A8"], [darkTokens, "--feature-calculator-tdee: #C98AA6"],
-    [darkTokens, "--feature-calculator-calories: #6FB07A"], [darkTokens, "--feature-calculator-macro: #E8863F"],
-    [darkTokens, "--feature-calculator-bmr: #E8863F"], [darkTokens, "--feature-steps-goal: #E8863F"],
-    [darkTokens, "--feature-calories: #E26B4F"], [darkTokens, "--feature-protein: #E0524F"],
-    [darkTokens, "--feature-carbs: #E8863F"], [darkTokens, "--feature-fat: #E2C35D"], [darkTokens, "--feature-fiber: #6FB07A"],
-    [darkTokens, "--feature-steps: #D98A99"], [darkTokens, "--feature-water: #5AA0E6"],
-    [lightTokens, "--feature-nutrition: #7A8A5A"], [lightTokens, "--feature-activity: #C8553D"],
-    [lightTokens, "--feature-progress: #9A5668"], [lightTokens, "--feature-calories: #D9573B"],
-    [lightTokens, "--feature-protein: #B83A3A"], [lightTokens, "--feature-carbs: #A94E0C"],
-    [lightTokens, "--feature-fat: #846300"], [lightTokens, "--feature-fiber: #397747"],
-    [lightTokens, "--feature-water: #3F8FCB"], [lightTokens, "--feature-workout: #A8566A"],
-    [lightTokens, "--feature-steps: #B85C54"], [lightTokens, "--feature-steps-goal: #B66A33"],
-    [lightTokens, "--feature-walk: #3787CB"], [lightTokens, "--feature-mobility: #617D49"]
-  ].forEach(([tokens, expected]) => assert.ok(tokens.includes(expected), `missing ${expected}`));
-  assert.match(css, /\.calculator-row-icon\s*\{[^}]*color:\s*var\(--calculator-icon-accent\)[^}]*border-color:\s*color-mix\(in srgb,var\(--calculator-icon-accent\) 25%,var\(--surface\)\)[^}]*background:\s*color-mix\(in srgb,var\(--calculator-icon-accent\) 14%,var\(--surface\)\)/);
+  function rgb(hex) {
+    return hex.slice(1).match(/../g).map((channel) => parseInt(channel, 16) / 255);
+  }
+  function hsl(hex) {
+    const [red, green, blue] = rgb(hex);
+    const max = Math.max(red, green, blue);
+    const min = Math.min(red, green, blue);
+    const delta = max - min;
+    const lightness = (max + min) / 2;
+    let hue = 0;
+    if (delta) {
+      if (max === red) hue = 60 * (((green - blue) / delta) % 6);
+      else if (max === green) hue = 60 * ((blue - red) / delta + 2);
+      else hue = 60 * ((red - green) / delta + 4);
+    }
+    if (hue < 0) hue += 360;
+    const saturation = delta ? delta / (1 - Math.abs(2 * lightness - 1)) : 0;
+    return { hue, saturation: saturation * 100, lightness: lightness * 100 };
+  }
+  function luminance(hex) {
+    const channels = rgb(hex).map((channel) => channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4));
+    return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+  }
+  function contrast(a, b) {
+    const [high, low] = [luminance(a), luminance(b)].sort((left, right) => right - left);
+    return (high + 0.05) / (low + 0.05);
+  }
+  function mix(hex, background, amount) {
+    const foreground = rgb(hex);
+    const base = rgb(background);
+    return "#" + foreground.map((channel, index) => Math.round((channel * amount + base[index] * (1 - amount)) * 255).toString(16).padStart(2, "0")).join("");
+  }
+  function resolveThemeToken(name, values, seen = new Set()) {
+    assert.ok(!seen.has(name), `cyclic token ${name}`);
+    seen.add(name);
+    const value = values[name];
+    assert.ok(value, `missing token ${name}`);
+    if (value.startsWith("var(")) return resolveThemeToken(value.match(/var\((--[\w-]+)/)[1], values, seen);
+    assert.match(value, /^#[0-9a-f]{6}$/i, `${name} must resolve to a six-digit color`);
+    return value;
+  }
+  const themeBlocks = [darkTokens, lightTokens];
+  const paletteNames = themeBlocks.map((block) => Object.fromEntries(Array.from(block.matchAll(/(--[\w-]+):\s*([^;]+);/g), ([, name, value]) => [name, value.trim()])));
+  const accentNames = Object.keys(paletteNames[0]).filter((name) => /^--(?:feature|calc)-/.test(name));
+  accentNames.forEach((name) => {
+    const dark = hsl(resolveThemeToken(name, paletteNames[0]));
+    assert.ok(dark.saturation >= 70, `dark ${name} saturation ${dark.saturation.toFixed(1)}% is below 70%`);
+    assert.ok(dark.lightness >= 62 && dark.lightness <= 72, `dark ${name} lightness ${dark.lightness.toFixed(1)}% is outside 62–72%`);
+    const light = resolveThemeToken(name, paletteNames[1]);
+    const tilePercent = name.startsWith("--calc-") ? 14 : 15;
+    assert.ok(contrast(light, mix(light, "#fffdfd", tilePercent / 100)) >= 3, `light ${name} tile contrast is below 3:1`);
+  });
+  const hueFamilies = [
+    ["--feature-protein", (hue) => hue >= 330 || hue <= 20, "red"],
+    ["--calc-protein", (hue) => hue >= 330 || hue <= 20, "red"],
+    ["--feature-water", (hue) => hue >= 190 && hue <= 225, "blue"],
+    ["--calc-water", (hue) => hue >= 190 && hue <= 225, "blue"],
+    ["--feature-steps", (hue) => hue >= 15 && hue <= 45, "orange"],
+    ["--calc-steps", (hue) => hue >= 15 && hue <= 45, "orange"],
+    ["--calc-sleep", (hue) => hue >= 220 && hue <= 265, "indigo"]
+  ];
+  hueFamilies.forEach(([name, inFamily, family]) => {
+    [paletteNames[0], paletteNames[1]].forEach((values) => {
+      const hue = hsl(resolveThemeToken(name, values)).hue;
+      assert.ok(inFamily(hue), `${name} hue ${hue.toFixed(0)}° is outside the ${family} family`);
+    });
+  });
+  assert.match(css, /\.calculator-row-icon\s*\{[^}]*color:\s*var\(--calculator-icon-accent\)[^}]*border-color:\s*color-mix\(in srgb,var\(--calculator-icon-accent\) 35%,var\(--surface\)\)[^}]*background:\s*color-mix\(in srgb,var\(--calculator-icon-accent\) 20%,var\(--surface\)\)/);
+  assert.match(css, /:root\[data-theme="light"\] \.calculator-row-icon\s*\{[^}]*border-color:\s*color-mix\(in srgb,var\(--calculator-icon-accent\) 28%,var\(--surface\)\)[^}]*background:\s*color-mix\(in srgb,var\(--calculator-icon-accent\) 14%,var\(--surface\)\)/);
+  assert.match(css, /\.calculator-row-icon svg\s*\{[^}]*stroke-width:\s*2;/);
   assert.match(css, /\.splash-feature-icon\s*\{[^}]*background:\s*color-mix\(in srgb,var\(--splash-feature-accent\) 15%,var\(--surface\)\)/);
   assert.match(css, /\.nutrition-page \.nutrition-progress-row \.nutrition-progress-fill\s*\{\s*background:\s*var\(--ui-nutrition-progress\)/);
   assert.match(css, /\.progress-chart\[aria-label\^="Weight trend"\]\s*\{\s*--chart-accent:\s*var\(--ui-chart-weight\)/);
