@@ -8,6 +8,16 @@ let barcodeDetector = null;
 let foodSearchTimer = null;
 let foodSearchController = null;
 let foodSearchVersion = 0;
+let usdaFoodBundle = null;
+let usdaFoodBundlePromise = null;
+let usdaFoodTokenIndex = null;
+const USDA_BUNDLE_URL = (function () {
+    try {
+        return new URL("foods-usda.json", document.currentScript.src).href;
+    } catch (error) {
+        return "../foods-usda.json";
+    }
+})();
 
 function createFoodApiError(message, kind, status) {
     const error = new Error(message);
@@ -72,13 +82,15 @@ function normalizeFoodSearchResult(food, sourceOverride) {
         missingNutrients: Array.isArray(food.missingNutrients) ? food.missingNutrients.slice() : missingNutrients,
         aliases: Array.isArray(food.aliases) ? food.aliases.slice() : [],
         resultGroup: food.resultGroup || "",
-        fdcId: food.fdcId || food.fdcId === 0 ? food.fdcId : undefined
+        fdcId: food.fdcId || food.fdcId === 0 ? food.fdcId : undefined,
+        dataset: String(food.dataset || ""),
+        category: String(food.category || ""),
+        portions: Array.isArray(food.portions) ? food.portions.slice() : []
     };
 }
 
 function foodSearchDedupeKey(food) {
-    const normalize = function (value) { return String(value || "").trim().replace(/\s+/g, " ").toLocaleLowerCase(); };
-    return normalize(food.name) + "\u0000" + normalize(food.brand);
+    return normalizeFoodSearchQuery(food.name).replace(/[^a-z0-9]+/g, " ").trim();
 }
 
 function mergeFoodSearchResults(sourceGroups) {
@@ -123,21 +135,130 @@ function escapeFoodRegex(value) {
 }
 
 function foodSearchRank(food, query) {
-    const normalized = normalizeFoodSearchQuery(query);
-    const names = [food && food.name].concat(Array.isArray(food && food.aliases) ? food.aliases : []).map(normalizeFoodSearchQuery);
+    const normalized = normalizeFoodSearchQuery(query).replace(/[^a-z0-9]+/g, " ").trim();
+    const names = [food && food.name].concat(Array.isArray(food && food.aliases) ? food.aliases : [])
+        .map(function (name) { return normalizeFoodSearchQuery(name).replace(/[^a-z0-9]+/g, " ").trim(); });
     if (names.includes(normalized)) return 0;
-    if (names.some(function (name) { return name.startsWith(normalized); })) return 1;
+    if (names.some(function (name) { return name === normalized || name.startsWith(normalized + " "); })) return 1;
     const words = normalized.split(/\s+/).filter(Boolean);
-    if (names.some(function (name) { return words.every(function (word) { return new RegExp("(?:^|\\s)" + escapeFoodRegex(word) + "(?:$|\\s)").test(name); }); })) return 2;
-    return 3;
+    if (names.some(function (name) { return new RegExp("(?:^|\\s)" + normalized.split(/\s+/).map(escapeFoodRegex).join("\\s+") + "(?:$|\\s)").test(name); })) return 2;
+    if (names.some(function (name) { return words.every(function (word) { return new RegExp("(?:^|\\s)" + escapeFoodRegex(word) + "(?:$|\\s)").test(name); }); })) return 3;
+    return 4;
 }
 
 function foodSearchSourceRank(food) {
     if (food.resultGroup === "your" || food.source === "Favorite" || food.source === "Custom food") return 0;
-    if (food.resultGroup === "basic" && food.source === "USDA FoodData Central") return 1;
-    if (food.source === "MacroBay built-in") return 2;
+    if (food.resultGroup === "basic" || food.source === "MacroBay built-in") return 1;
+    if (food.resultGroup === "usda-bundle") return 2;
     if (food.source === "Open Food Facts" || food.source === "USDA FoodData Central") return 3;
     return 1;
+}
+
+function buildUsdaFoodTokenIndex(foods) {
+    const index = new Map();
+    (Array.isArray(foods) ? foods : []).forEach(function (food, foodIndex) {
+        const names = [food.name].concat(Array.isArray(food.aliases) ? food.aliases : []);
+        const indexedTokens = new Set();
+        names.forEach(function (name) {
+            normalizeFoodSearchQuery(name).split(/[^a-z0-9]+/).filter(Boolean).forEach(function (token) {
+                for (let length = 1; length <= token.length; length += 1) indexedTokens.add(token.slice(0, length));
+            });
+        });
+        indexedTokens.forEach(function (token) {
+            if (!index.has(token)) index.set(token, []);
+            index.get(token).push(foodIndex);
+        });
+    });
+    return index;
+}
+
+function foodSearchCategoryRank(food, query) {
+    const key = normalizeFoodSearchQuery(query).replace(/[^a-z0-9]+/g, " ").trim();
+    const preferred = {
+        beef: "beef products",
+        chicken: "poultry products",
+        turkey: "poultry products",
+        shrimp: "finfish and shellfish products",
+        salmon: "finfish and shellfish products",
+        coffee: "beverages",
+        bread: "baked products"
+    }[key];
+    if (!preferred) return 0;
+    return String(food && food.category || "").toLocaleLowerCase().includes(preferred) ? 0 : 1;
+}
+
+function setUsdaFoodDatabase(foods) {
+    usdaFoodBundle = Array.isArray(foods) ? foods : [];
+    if (!usdaFoodTokenIndex) usdaFoodTokenIndex = buildUsdaFoodTokenIndex(usdaFoodBundle);
+    return usdaFoodBundle;
+}
+
+function ensureUsdaFoodDatabase() {
+    if (usdaFoodBundle) return Promise.resolve(usdaFoodBundle);
+    if (usdaFoodBundlePromise) return usdaFoodBundlePromise;
+    if (typeof fetch !== "function") return Promise.reject(new Error("Bundled USDA foods are unavailable."));
+    usdaFoodBundlePromise = fetch(USDA_BUNDLE_URL, { credentials: "same-origin" }).then(function (response) {
+        if (!response || !response.ok) throw new Error("Could not load bundled USDA foods.");
+        return response.json();
+    }).then(function (foods) {
+        if (!Array.isArray(foods)) throw new Error("Bundled USDA foods have an invalid format.");
+        return setUsdaFoodDatabase(foods);
+    }).catch(function (error) {
+        usdaFoodBundlePromise = null;
+        throw error;
+    });
+    return usdaFoodBundlePromise;
+}
+
+function searchBundledUsdaFoods(query) {
+    const foods = usdaFoodBundle || [];
+    if (!foods.length || !usdaFoodTokenIndex) return [];
+    const tokens = normalizeFoodSearchQuery(query).split(/[^a-z0-9]+/).filter(Boolean);
+    if (!tokens.length) return [];
+    const lists = tokens.map(function (token) { return usdaFoodTokenIndex.get(token) || []; }).sort(function (a, b) { return a.length - b.length; });
+    if (lists.some(function (list) { return !list.length; })) return [];
+    const candidates = new Set(lists[0]);
+    for (let index = 1; index < lists.length && candidates.size; index += 1) {
+        const matching = new Set(lists[index]);
+        candidates.forEach(function (candidate) { if (!matching.has(candidate)) candidates.delete(candidate); });
+    }
+    const portionsToApi = function (portions) {
+        return (Array.isArray(portions) ? portions : []).map(function (portion) {
+            return { amount: 1, gramWeight: portion.grams, modifier: portion.label, portionDescription: portion.label, measureUnit: {} };
+        });
+    };
+    const rankedIndexes = Array.from(candidates).map(function (foodIndex) {
+        const food = foods[foodIndex];
+        return { foodIndex: foodIndex, rank: foodSearchRank(food, query), categoryRank: foodSearchCategoryRank(food, query), length: food.name.length, name: food.name };
+    }).sort(function (a, b) {
+        return a.rank - b.rank || a.categoryRank - b.categoryRank || a.length - b.length || a.name.localeCompare(b.name);
+    }).slice(0, 30).map(function (item) { return item.foodIndex; });
+    const result = rankedIndexes.map(function (foodIndex) {
+        const food = foods[foodIndex];
+        const conversions = getUsdaPortionConversions(portionsToApi(food.portions), food.name);
+        return normalizeFoodSearchResult({
+            name: food.name,
+            aliases: food.aliases,
+            calories: food.kcal,
+            protein: food.protein,
+            carbs: food.carbs,
+            fat: food.fat,
+            fiber: food.fiber,
+            source: "USDA FoodData Central",
+            sourceTag: "USDA",
+            resultGroup: "usda-bundle",
+            fdcId: food.fdcId,
+            dataset: food.dataset,
+            category: food.category,
+            portions: food.portions,
+            unitGrams: conversions.unitGrams,
+            units: conversions.units,
+            approximateUnits: conversions.approximateUnits
+        });
+    }).filter(Boolean);
+    return result.sort(function (a, b) {
+        return foodSearchRank(a, query) - foodSearchRank(b, query) || foodSearchCategoryRank(a, query) - foodSearchCategoryRank(b, query) || a.name.length - b.name.length || a.name.localeCompare(b.name);
+    });
 }
 
 function filterExternalFoodSearchResults(foods, query) {
@@ -615,8 +736,8 @@ function renderFoodApiResults(foods, query, options) {
     ];
     groups.forEach(function (group) {
         let groupFoods = foods.filter(function (food) {
-            const inferred = food.resultGroup || (food.source === "Open Food Facts" ? "packaged" :
-                (food.source === "Favorite" || food.source === "Custom food" ? "your" : "basic"));
+            const inferred = food.resultGroup === "usda-bundle" ? "basic" : (food.resultGroup || (food.source === "Open Food Facts" ? "packaged" :
+                (food.source === "Favorite" || food.source === "Custom food" ? "your" : "basic")));
             return inferred === group.key;
         });
         if (!groupFoods.length) return;
@@ -671,12 +792,12 @@ function getSavedUSDAKey() {
 
 function beginFoodSearch(query, version, signal) {
     const localResults = searchLocalFoodSources(query);
-    const onlineResults = { off: [], usda: [] };
+    const onlineResults = { bundle: searchBundledUsdaFoods(query), off: [], usda: [] };
     const unavailable = new Set();
     let pending = 0;
     const draw = function () {
         if (version !== foodSearchVersion) return;
-        const results = mergeFoodSearchResults([localResults, onlineResults.off, onlineResults.usda]).sort(function (a, b) {
+        const results = mergeFoodSearchResults([localResults, onlineResults.bundle, onlineResults.off, onlineResults.usda]).sort(function (a, b) {
             return foodSearchRank(a, query) - foodSearchRank(b, query) || foodSearchSourceRank(a) - foodSearchSourceRank(b);
         });
         renderFoodApiResults(results, query, {
@@ -691,6 +812,17 @@ function beginFoodSearch(query, version, signal) {
         setFoodApiStatus("Type at least two characters to search online sources.", "");
         return;
     }
+    pending += 1;
+    ensureUsdaFoodDatabase().then(function () {
+        if (version !== foodSearchVersion || (signal && signal.aborted)) return;
+        onlineResults.bundle = searchBundledUsdaFoods(query);
+    }).catch(function () {
+        // Offline results remain usable when a first-time bundle fetch fails.
+    }).finally(function () {
+        if (version !== foodSearchVersion || (signal && signal.aborted)) return;
+        pending -= 1;
+        draw();
+    });
     const sources = [{ key: "off", run: function () { return searchOpenFoodFacts(query, { signal: signal }); } }];
     const usdaKey = getSavedUSDAKey();
     if (usdaKey) sources.push({ key: "usda", run: function () { return searchUSDAFoods(query, usdaKey, { signal: signal }); } });

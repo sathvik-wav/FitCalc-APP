@@ -9,7 +9,7 @@ const APP_SHELL = [
     "./calculator-directory.js", "./bmi-unit-toggle.js", "./settings.js",
     "./target.js", "./profile.js", "./foods-india.js", "./nutrition.js", "./food-api.js", "./planner.js",
     "./workout.js", "./exercise-api.js", "./progress.js", "./history.js",
-    "./dashboard.js", "./adaptive.js", "./assets/icon.png", "./assets/fonts/Inter-Variable.ttf",
+    "./dashboard.js", "./adaptive.js", "./foods-usda.json", "./assets/icon.png", "./assets/fonts/Inter-Variable.ttf",
     "./profile/index.html", "./nutrition/index.html", "./planner/index.html", "./history/index.html", "./calculators/index.html", "./settings/index.html",
     "./bmi/index.html", "./bmr/index.html", "./bodyfat/index.html", "./calories/index.html",
     "./idealweight/index.html", "./macro/index.html", "./maxhr/index.html", "./protein/index.html",

@@ -677,10 +677,9 @@ test("unified food search normalizes, validates, deduplicates, and preserves sou
     [Object.assign({}, favorite, { source: "Favorite" }), { name: "No calories" }],
     [duplicate, otherBrand, { name: "Impossible", calories: 300, protein: 20, carbs: 50, fat: 40 }]
   ]);
-  assert.strictEqual(merged.length, 2);
+  assert.strictEqual(merged.length, 1, "foods with the same normalized name are deduplicated across brands");
   assert.strictEqual(merged[0].source, "Favorite");
   assert.strictEqual(merged[0].fiber, 10.6);
-  assert.strictEqual(merged[1].brand, "Mill B");
 
   app.sandbox.getFoodLibrary = function () {
     return { favorites: [{ name: "banana", calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6 }], customFoods: [] };
