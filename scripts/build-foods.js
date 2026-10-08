@@ -12,6 +12,7 @@ const sources = [
 ];
 const outputPath = path.join(root, "foods-usda.json");
 const excludedCategory = /baby foods|fast foods|meals, entrees, and side dishes|restaurant foods|branded food products database|quality control materials/i;
+const excludedDairyByproduct = /^whey,\s*(?:acid|sweet)\b/i;
 
 function parseCsvLine(line) {
   const fields = [];
@@ -150,11 +151,16 @@ async function buildDataset(source) {
   const droppedCategories = new Map();
   let eligibleRows = 0;
   let droppedBranded = 0;
+  let droppedDairyByproducts = 0;
   await readCsv(path.join(source.root, "food.csv"), (row) => {
     if (!genericIds.has(row.fdc_id)) return;
     const category = categories.get(row.food_category_id) || "Uncategorized";
     if (excludedCategory.test(category)) {
       droppedCategories.set(category, (droppedCategories.get(category) || 0) + 1);
+      return;
+    }
+    if (excludedDairyByproduct.test(row.description)) {
+      droppedDairyByproducts += 1;
       return;
     }
     if (looksBranded(row.description)) {
@@ -253,6 +259,7 @@ async function buildDataset(source) {
       eligibleCategoryRows: eligibleRows,
       skippedNoKcal,
       droppedBranded,
+      droppedDairyByproducts,
       nutrientRows,
       portionRows,
       keptCategories: Array.from(categoryCounts.entries()).sort((a, b) => a[0].localeCompare(b[0])),
@@ -328,6 +335,7 @@ async function build() {
     datasetCounts,
       skippedNoKcal: builds.reduce((total, buildResult) => total + buildResult.report.skippedNoKcal, 0),
     droppedBranded: builds.reduce((total, buildResult) => total + buildResult.report.droppedBranded, 0),
+    droppedDairyByproducts: builds.reduce((total, buildResult) => total + buildResult.report.droppedDairyByproducts, 0),
     categories: builds.map((buildResult) => ({ dataset: buildResult.report.dataset, kept: buildResult.report.keptCategories, dropped: buildResult.report.droppedCategories })),
     sanity,
     jsonBytes: Buffer.byteLength(json),

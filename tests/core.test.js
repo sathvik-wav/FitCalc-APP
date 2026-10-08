@@ -709,6 +709,24 @@ test("unified food search normalizes, validates, deduplicates, and preserves sou
   assert.deepStrictEqual(Array.from(ifct[0].aliases).sort(), ["dal soup", "masoor dal soup"]);
 });
 
+test("merged food search puts the legacy bread alias before USDA bread matches", () => {
+  const app = loadNutritionSandbox();
+  vm.runInContext(fs.readFileSync(__dirname + "/../food-api.js", "utf8"), app.sandbox);
+  const bundle = JSON.parse(fs.readFileSync(__dirname + "/../foods-usda.json", "utf8"));
+  app.sandbox.setUsdaFoodDatabase(bundle);
+  const local = app.sandbox.searchLocalFoodSources("bread");
+  const bundled = app.sandbox.searchBundledUsdaFoods("bread");
+  const merged = app.sandbox.mergeUnifiedFoodSearchResults("bread", local, bundled, [], []);
+  assert.deepStrictEqual(Array.from(merged.slice(0, 3), (food) => food.name), [
+    "whole wheat bread",
+    "Bread, white, commercially prepared (includes soft bread crumbs)",
+    "Bread, whole-wheat, commercially prepared"
+  ]);
+  assert.strictEqual(vm.runInContext("PREFERRED_FOODS.bread", app.sandbox), 174924);
+  assert.strictEqual(Object.keys(vm.runInContext("PREFERRED_FOODS", app.sandbox)).length, 25);
+  assert.ok(bundle.every((food) => !/^whey,\s*(?:acid|sweet)\b/i.test(food.name)));
+});
+
 test("USDA search normalization uses FoodData Central nutrient IDs and kcal units", () => {
   const app = loadFoodApiRetrySandbox();
   const normalized = app.sandbox.normalizeUSDAFood({

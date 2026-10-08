@@ -1,6 +1,8 @@
 # Indian foods missing from the USDA bundle
 
-These common Indian dishes have no matching generic entry in the bundled USDA FoodData Central records. No nutrient values are estimated here.
+These foods and dishes have no matching generic entry in the bundled USDA FoodData Central records. No nutrient values are estimated here.
+
+- Whey protein powder
 
 - Idli
 - Dosa

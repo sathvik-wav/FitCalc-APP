@@ -2,6 +2,33 @@
 const OPEN_FOOD_FACTS_API = "https://world.openfoodfacts.org";
 const OPEN_FOOD_FACTS_SEARCH_API = "https://search.openfoodfacts.org/search";
 const USDA_FOOD_DATA_API = "https://api.nal.usda.gov/fdc/v1/foods/search";
+const PREFERRED_FOODS = Object.freeze({
+    bread: 174924,
+    coffee: 171890,
+    tea: 173227,
+    beef: 2514743,
+    pork: 169190,
+    chicken: 2646170,
+    turkey: 2514747,
+    fish: 171956,
+    cheese: 328637,
+    rice: 168878,
+    flour: 789951,
+    sugar: 746784,
+    butter: 173410,
+    yogurt: 2259793,
+    juice: 2003597,
+    milk: 172217,
+    oil: 171413,
+    apple: 168202,
+    banana: 173944,
+    egg: 171287,
+    oats: 173904,
+    salmon: 175167,
+    tofu: 172448,
+    avocado: 171705,
+    potato: 170093
+});
 let barcodeStream = null;
 let barcodeFrame = null;
 let barcodeDetector = null;
@@ -155,6 +182,7 @@ function foodSearchRank(food, query) {
     const names = [food && food.name].concat(Array.isArray(food && food.aliases) ? food.aliases : [])
         .map(function (name) { return normalizeFoodSearchQuery(name).replace(/[^a-z0-9]+/g, " ").trim(); });
     if (names.includes(normalized)) return 0;
+    if (PREFERRED_FOODS[normalized] && Number(food && food.fdcId) === PREFERRED_FOODS[normalized]) return 1;
     if (names.some(function (name) { return name === normalized || name.startsWith(normalized + " "); })) return 1;
     const words = normalized.split(/\s+/).filter(Boolean);
     if (names.some(function (name) { return new RegExp("(?:^|\\s)" + normalized.split(/\s+/).map(escapeFoodRegex).join("\\s+") + "(?:$|\\s)").test(name); })) return 2;
@@ -190,6 +218,11 @@ function buildUsdaFoodTokenIndex(foods) {
 
 function foodSearchCategoryRank(food, query) {
     const key = normalizeFoodSearchQuery(query).replace(/[^a-z0-9]+/g, " ").trim();
+    if (key === "bread") {
+        const id = Number(food && food.fdcId);
+        if (id === 172688 || id === 174924) return 0;
+        return String(food && food.category || "").toLocaleLowerCase().includes("baked products") ? 1 : 2;
+    }
     const preferred = {
         beef: "beef products",
         chicken: "poultry products",
@@ -197,7 +230,6 @@ function foodSearchCategoryRank(food, query) {
         shrimp: "finfish and shellfish products",
         salmon: "finfish and shellfish products",
         coffee: "beverages",
-        bread: "baked products"
     }[key];
     if (!preferred) return 0;
     return String(food && food.category || "").toLocaleLowerCase().includes(preferred) ? 0 : 1;
@@ -243,11 +275,12 @@ function searchBundledUsdaFoods(query) {
             return { amount: 1, gramWeight: portion.grams, modifier: portion.label, portionDescription: portion.label, measureUnit: {} };
         });
     };
+    const preferredId = PREFERRED_FOODS[normalizeFoodSearchQuery(query).replace(/[^a-z0-9]+/g, " ").trim()];
     const rankedIndexes = Array.from(candidates).map(function (foodIndex) {
         const food = foods[foodIndex];
-        return { foodIndex: foodIndex, rank: foodSearchRank(food, query), categoryRank: foodSearchCategoryRank(food, query), length: food.name.length, name: food.name };
+        return { foodIndex: foodIndex, rank: foodSearchRank(food, query), preferredRank: preferredId && food.fdcId === preferredId ? 0 : 1, categoryRank: foodSearchCategoryRank(food, query), length: food.name.length, name: food.name };
     }).sort(function (a, b) {
-        return a.rank - b.rank || a.categoryRank - b.categoryRank || a.length - b.length || a.name.localeCompare(b.name);
+        return a.rank - b.rank || a.preferredRank - b.preferredRank || a.categoryRank - b.categoryRank || a.length - b.length || a.name.localeCompare(b.name);
     }).slice(0, 30).map(function (item) { return item.foodIndex; });
     const result = rankedIndexes.map(function (foodIndex) {
         const food = foods[foodIndex];
@@ -273,7 +306,15 @@ function searchBundledUsdaFoods(query) {
         });
     }).filter(Boolean);
     return result.sort(function (a, b) {
+        if (preferredId && a.fdcId === preferredId && b.fdcId !== preferredId) return -1;
+        if (preferredId && b.fdcId === preferredId && a.fdcId !== preferredId) return 1;
         return foodSearchRank(a, query) - foodSearchRank(b, query) || foodSearchCategoryRank(a, query) - foodSearchCategoryRank(b, query) || a.name.length - b.name.length || a.name.localeCompare(b.name);
+    });
+}
+
+function mergeUnifiedFoodSearchResults(query, localResults, bundleResults, openFoodFactsResults, usdaResults) {
+    return mergeFoodSearchResults([localResults, bundleResults, openFoodFactsResults, usdaResults]).sort(function (a, b) {
+        return foodSearchRank(a, query) - foodSearchRank(b, query) || foodSearchSourceRank(a) - foodSearchSourceRank(b);
     });
 }
 
@@ -813,9 +854,7 @@ function beginFoodSearch(query, version, signal) {
     let pending = 0;
     const draw = function () {
         if (version !== foodSearchVersion) return;
-        const results = mergeFoodSearchResults([localResults, onlineResults.bundle, onlineResults.off, onlineResults.usda]).sort(function (a, b) {
-            return foodSearchRank(a, query) - foodSearchRank(b, query) || foodSearchSourceRank(a) - foodSearchSourceRank(b);
-        });
+        const results = mergeUnifiedFoodSearchResults(query, localResults, onlineResults.bundle, onlineResults.off, onlineResults.usda);
         renderFoodApiResults(results, query, {
             packagedUnavailable: unavailable.has("off")
         });
