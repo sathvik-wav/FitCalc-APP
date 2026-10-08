@@ -201,8 +201,8 @@ def main():
         if not icon.is_file():
             errors.append(f"Linux application icon is missing: {icon.relative_to(ROOT)}")
     build_config = package.get("build", {})
-    if build_config.get("appId") != "com.vikx.macrobay" or build_config.get("productName") != "MACROBAY":
-        errors.append("Electron app identity must match the permanent MACROBAY identity")
+    if build_config.get("appId") != "com.vikx.macrobay" or build_config.get("productName") != "MacroBay":
+        errors.append("Electron app identity must match the permanent MacroBay identity")
     if not build_config.get("mac", {}).get("extendInfo", {}).get("NSCameraUsageDescription"):
         errors.append("macOS camera permission description is missing")
     if not build_config.get("win", {}).get("target") or not build_config.get("linux", {}).get("target"):
@@ -213,7 +213,7 @@ def main():
         errors.append("Linux build must use the standard-size icon set")
     if not build_config.get("linux", {}).get("maintainer") or not package.get("homepage"):
         errors.append("Linux package homepage and maintainer metadata are required")
-    if package.get("desktopName") != "MACROBAY" or not build_config.get("linux", {}).get("syncDesktopName"):
+    if package.get("desktopName") != "MacroBay" or not build_config.get("linux", {}).get("syncDesktopName"):
         errors.append("Linux desktop name must match the application id")
     expected_cache = f'const CACHE_NAME = "macrobay-app-shell-v{package["version"]}";'
     if expected_cache not in service_worker:

@@ -1,4 +1,4 @@
-// MACROBAY — calculator logic
+// MacroBay — calculator logic
 // Each page sets <body data-calc="slug">; this file wires up that page's form.
 
 (function () {

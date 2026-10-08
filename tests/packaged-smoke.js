@@ -10,18 +10,18 @@ const dist = path.join(root, "dist");
 
 function findExecutable() {
   if (process.platform === "linux") return path.join(dist, "linux-unpacked", "macrobay");
-  if (process.platform === "win32") return path.join(dist, "win-unpacked", "MACROBAY.exe");
+  if (process.platform === "win32") return path.join(dist, "win-unpacked", "MacroBay.exe");
   if (process.platform === "darwin") {
     const folder = fs.readdirSync(dist).find((name) => /^mac(?:-|$)/.test(name));
     if (!folder) return null;
-    return path.join(dist, folder, "MACROBAY.app", "Contents", "MacOS", "MACROBAY");
+    return path.join(dist, folder, "MacroBay.app", "Contents", "MacOS", "MacroBay");
   }
   return null;
 }
 
 const executable = findExecutable();
 if (!executable || !fs.existsSync(executable)) {
-  console.error("Packaged MACROBAY executable was not found for this platform.");
+  console.error("Packaged MacroBay executable was not found for this platform.");
   process.exit(1);
 }
 
@@ -63,7 +63,7 @@ startup.then(() => {
     process.exitCode = 1;
     return;
   }
-  console.log("PASS packaged MACROBAY remained running for 6 seconds.");
+  console.log("PASS packaged MacroBay remained running for 6 seconds.");
 }).catch((error) => {
   console.error(error.message);
   if (stderr) console.error(stderr);

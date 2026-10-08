@@ -1,6 +1,6 @@
 {
-  "name": "MACROBAY — Fitness, nutrition and training",
-  "short_name": "MACROBAY",
+  "name": "MacroBay — Fitness, nutrition and training",
+  "short_name": "MacroBay",
   "description": "Local-first fitness calculators and daily tracking.",
   "start_url": "./index.html",
   "scope": "./",

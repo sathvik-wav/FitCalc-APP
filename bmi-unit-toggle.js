@@ -33,7 +33,7 @@
     try {
       saveMacroBayPreferences({ units: next });
     } catch (error) {
-      if (window.macrobayToast) window.macrobayToast("MACROBAY could not save your unit preference.", "error");
+      if (window.macrobayToast) window.macrobayToast("MacroBay could not save your unit preference.", "error");
       return;
     }
 

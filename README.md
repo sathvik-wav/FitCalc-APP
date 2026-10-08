@@ -1,10 +1,10 @@
-# MACROBAY
+# MacroBay
 
 ## Food data sources
 
 The bundled offline food records use USDA FoodData Central SR Legacy reference values. Indian-name aliases include roti (FDC 171844), curd/dahi (plain whole-milk yogurt equivalent, FDC 171284), paneer (FDC 2705740), atta, toor dal (FDC 172436), gajar/carrot (FDC 170393), kheera/cucumber (FDC 168409), pyaz/onion (FDC 170000), matar/green peas (FDC 170419), papita/papaya (FDC 169926), moong (FDC 174256), and kaju/cashew (FDC 170162). The built-in list also includes cooked long-grain white rice (FDC 168878) and plain boiled lentils (FDC 172421); these are plain-food equivalents, not prepared recipes. USDA FoodData Central values are public domain/CC0, with source attribution requested. [USDA FoodData Central API guide](https://fdc.nal.usda.gov/api-guide/), [carrot record](https://fdc.nal.usda.gov/food-details/170393/nutrients), [cucumber record](https://fdc.nal.usda.gov/food-details/168409/nutrients), [onion record](https://fdc.nal.usda.gov/food-details/170000/nutrients), [green peas record](https://fdc.nal.usda.gov/food-details/170419/nutrients), [papaya record](https://fdc.nal.usda.gov/food-details/169926/nutrients), [mung beans record](https://fdc.nal.usda.gov/food-details/174256/nutrients), [cashews record](https://fdc.nal.usda.gov/food-details/170162/nutrients)
 
-IFCT 2017 is maintained by ICMR–National Institute of Nutrition. Its published reuse terms encourage use and dissemination with acknowledgement and permit personal reproduction, but prohibit storing or reproducing the data electronically to create a product without NIN's prior written permission. MACROBAY therefore does not bundle IFCT-derived values. [IFCT 2017, copyright and reuse terms](https://www.nin.res.in/ebooks/IFCT2017_16122024.pdf)
+IFCT 2017 is maintained by ICMR–National Institute of Nutrition. Its published reuse terms encourage use and dissemination with acknowledgement and permit personal reproduction, but prohibit storing or reproducing the data electronically to create a product without NIN's prior written permission. MacroBay therefore does not bundle IFCT-derived values. [IFCT 2017, copyright and reuse terms](https://www.nin.res.in/ebooks/IFCT2017_16122024.pdf)
 
 The offline Indian list does not include multi-ingredient dishes such as idli, dosa, sambar, upma, poha, and chicken curry: recipes and nutrient values vary, and no single exact USDA reference dish was selected. IFCT data are not included without the required permission. USDA record weights and nutrients are references, not a claim that every home recipe or portion is identical.
 
@@ -38,7 +38,7 @@ npm run mobile:open:android
 
 On macOS with Xcode installed, use the matching `mobile:add:ios`, `mobile:sync:ios`,
 `mobile:run:ios`, and `mobile:open:ios` scripts. Android and iOS platform projects
-are separate from Electron. MACROBAY keeps using its existing localStorage data
+are separate from Electron. MacroBay keeps using its existing localStorage data
 keys and JSON backup/import; browser, Electron, and installed-app storage are
 separate, so transfer data with a backup. The Android project declares camera
 permission for the existing barcode scanner. iOS needs
@@ -47,7 +47,7 @@ scanning. Barcode scanning still depends on WebView `BarcodeDetector` support;
 manual barcode entry remains available.
 
 On first launch after this rebrand, existing `fitcalc_*` localStorage values are
-copied byte-for-byte to their `macrobay_*` keys. Existing MACROBAY values take
+copied byte-for-byte to their `macrobay_*` keys. Existing MacroBay values take
 precedence, and the migration leaves the original values intact. The Electron
 build keeps its previous `fitcalc://` origin and `FitCalc` user-data directory
 so Chromium can access desktop data for that migration.
@@ -86,18 +86,18 @@ the cost of roughly 860 KB added to the app download.
 - Dashboard reads current nutrition, targets, and planner data. It does not persist a second copy.
 - Progress records are snapshots refreshed when nutrition or planner data changes. Opening History does not create an empty record for today. Legacy activity backfill writes history in one batch and remains retryable if storage rejects the write.
 - Standalone calculators do not write to app data.
-- Profile → Data & privacy exports and restores a versioned JSON backup, or resets MACROBAY-owned local data. Schema upgrades preserve the existing unversioned v1 records and use `store.js` migration hooks for future changes.
+- Profile → Data & privacy exports and restores a versioned JSON backup, or resets MacroBay-owned local data. Schema upgrades preserve the existing unversioned v1 records and use `store.js` migration hooks for future changes.
 
 ## Food and exercise lookups
 
 - Packaged food search and barcode lookup use the public Open Food Facts read API. No API key is needed. Nutrition values are community submitted, so verify labels for important decisions.
 - Camera barcode scanning uses `getUserMedia` and the browser's built-in `BarcodeDetector` when supported. Camera use requires a secure context and permission; manual barcode lookup remains available when camera or detection support is missing.
-- Exercise discovery uses wger's public read-only exercise information API. Terms of at least two letters first use the `name__search` filter on `/api/v2/exerciseinfo/`, with a limit of 20 results. The endpoint and parameters are based on wger's public API docs and should be re-checked before each release. If that request fails or returns no useful name matches, MACROBAY searches a local library fetched in parallel batches of up to four pages, capped at 20 pages (2,000 entries). Successfully fetched pages remain available when another page fails; the UI reports the partial count and offers Retry. A complete client-side search that finds nothing says so explicitly. Manual exercise names remain available. Results can be added to a planner workout; actual sets/reps/weight or duration are entered separately and remain MACROBAY-owned.
+- Exercise discovery uses wger's public read-only exercise information API. Terms of at least two letters first use the `name__search` filter on `/api/v2/exerciseinfo/`, with a limit of 20 results. The endpoint and parameters are based on wger's public API docs and should be re-checked before each release. If that request fails or returns no useful name matches, MacroBay searches a local library fetched in parallel batches of up to four pages, capped at 20 pages (2,000 entries). Successfully fetched pages remain available when another page fails; the UI reports the partial count and offers Retry. A complete client-side search that finds nothing says so explicitly. Manual exercise names remain available. Results can be added to a planner workout; actual sets/reps/weight or duration are entered separately and remain MacroBay-owned.
 - These integrations need internet access. The local food list, manually entered exercise names, and tracking features continue to work without them.
 
 ## Web install and offline use
 
-On an HTTPS web deployment, MACROBAY can be installed as a Progressive Web App. The service worker requests HTML, JavaScript, and CSS from the network first, then falls back to cached copies offline; fonts and icons remain cache-first. User records remain in that browser's local storage. The Electron build does not use the service worker.
+On an HTTPS web deployment, MacroBay can be installed as a Progressive Web App. The service worker requests HTML, JavaScript, and CSS from the network first, then falls back to cached copies offline; fonts and icons remain cache-first. User records remain in that browser's local storage. The Electron build does not use the service worker.
 
 Netlify builds run `node scripts/sync-service-worker-cache.js && node scripts/prepare-netlify.js` and publish `netlify-dist/`. This updates the service-worker cache name from `package.json` before staging the web app.
 The staging script copies the browser app and its required assets while excluding
@@ -110,7 +110,7 @@ camera media, and the Open Food Facts and wger API origins used by the app.
 
 Electron Builder is configured for macOS DMG, Windows NSIS, and Linux AppImage/DEB
 targets. macOS packages declare camera use for the optional barcode scanner. A
-Windows ICO and Linux PNG are generated from the MACROBAY app icon. Cross-platform
+Windows ICO and Linux PNG are generated from the MacroBay app icon. Cross-platform
 packaging still requires running the corresponding target on a supported build host;
 this repository does not include signing identities or notarization credentials.
 

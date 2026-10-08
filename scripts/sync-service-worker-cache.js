@@ -17,4 +17,4 @@ const nextWorker = worker.replace(cacheLine, `const CACHE_NAME = "macrobay-app-s
 if (nextWorker !== worker) {
   fs.writeFileSync(workerPath, nextWorker);
 }
-console.log(`Service worker cache set to MACROBAY ${packageInfo.version}.`);
+console.log(`Service worker cache set to MacroBay ${packageInfo.version}.`);

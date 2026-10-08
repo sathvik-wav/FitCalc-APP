@@ -293,6 +293,7 @@ p {
 }
 .page-kicker { color: var(--ink-soft); }
 .section-kicker { color: var(--accent-strong); }
+.section-kicker.brand-case { text-transform: none; }
 .section-heading {
   display: flex;
   align-items: end;
@@ -3243,7 +3244,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   border-radius: 8px;
   font-size: 16px;
 }
-.footer-brand strong,.footer-links a {
+.footer-links a {
   text-transform: capitalize;
 }
 .footer-links {
@@ -3756,7 +3757,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   }
 }
 @media (max-width: 768px) {
-/* Shared phone-width layout for the rest of MACROBAY */
+/* Shared phone-width layout for the rest of MacroBay */
 body:not(.home-screen) {
   width: min(100%,480px);
   min-height: 100vh;
@@ -6097,6 +6098,13 @@ body.workout-session-open { overflow: hidden; }
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .mobile-tab[aria-label="Calculators"] > span:last-child {
+    font-size: 11px;
+    letter-spacing: -.06em;
+  }
+}
+@media (max-width: 340px) {
+  .bottom-nav { width: min(calc(100% - 16px),420px); }
 }
 
 /* Home overview layout: keep the detail text intact at phone widths. */

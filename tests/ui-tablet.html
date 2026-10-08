@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>MACROBAY tablet layout audit</title>
+  <title>MacroBay tablet layout audit</title>
   <style>
     body { margin: 0; padding: 24px; color: #f2f5ff; background: #101624; font: 14px/1.5 system-ui, sans-serif; }
     h1 { margin: 0 0 8px; font-size: 24px; }
@@ -14,7 +14,7 @@
 <script>window.MACROBAY_TEST_MODE = true;</script>
 </head>
 <body>
-  <h1>MACROBAY tablet layout audit</h1>
+  <h1>MacroBay tablet layout audit</h1>
   <p>Core screens at a 900px tablet width, checking navigation, content, and horizontal overflow.</p>
   <pre id="results" role="status">Loading routes…</pre>
   <script>
@@ -58,7 +58,7 @@
         checks.push("\n" + (failures ? failures + " checks failed" : "All tablet checks passed"));
         document.getElementById("results").textContent = checks.join("\n");
         document.body.dataset.result = failures ? "fail" : "pass";
-        document.title = failures ? "FAIL MACROBAY tablet audit" : "PASS MACROBAY tablet audit";
+        document.title = failures ? "FAIL MacroBay tablet audit" : "PASS MacroBay tablet audit";
       });
     }());
   </script>

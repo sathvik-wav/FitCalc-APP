@@ -1,5 +1,5 @@
 /*
- * MACROBAY HISTORY
+ * MacroBay HISTORY
  *
  * Progress / History page UI
  */
@@ -934,13 +934,13 @@ function attachHistoryEvents() {
     (typeof document.querySelectorAll === "function" ? document.querySelectorAll("[data-delete-history-date]") : []).forEach(function (button) {
         button.addEventListener("click", function () {
             const date = button.dataset.deleteHistoryDate;
-            if (!date || (typeof window.confirm === "function" && !window.confirm("Delete all MACROBAY entries for " + date + "? This removes that day's food, water, planner activity, and history record."))) return;
+            if (!date || (typeof window.confirm === "function" && !window.confirm("Delete all MacroBay entries for " + date + "? This removes that day's food, water, planner activity, and history record."))) return;
             if (!deleteMacroBayDay(date)) {
                 if (typeof window.macrobayToast === "function") window.macrobayToast("That day could not be deleted. Check device storage and try again.", "error");
                 return;
             }
             renderHistory();
-            if (typeof window.macrobayToast === "function") window.macrobayToast("Day removed from MACROBAY history.");
+            if (typeof window.macrobayToast === "function") window.macrobayToast("Day removed from MacroBay history.");
         });
     });
 }

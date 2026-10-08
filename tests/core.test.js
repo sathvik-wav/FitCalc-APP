@@ -686,7 +686,7 @@ test("unified food search normalizes, validates, deduplicates, and preserves sou
     return { favorites: [{ name: "banana", calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6 }], customFoods: [] };
   };
   app.sandbox.searchBuiltInFoodList = function () {
-    return [{ name: "banana", calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6, source: "MACROBAY built-in" }];
+    return [{ name: "banana", calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6, source: "MacroBay built-in" }];
   };
   app.sandbox.indianFoodDatabase = [{ name: "Banana", calories: 80, protein: 1, carbs: 20, fat: 0.2, fiber: 2, source: "USDA FoodData Central" }];
   const local = app.sandbox.searchLocalFoodSources("banana");
@@ -1823,14 +1823,14 @@ test("B19 Netlify staging excludes tests, scripts, and package manifests", () =>
   assert.doesNotMatch(publishedFiles.join("\n"), /(^|\/)(android|ios)\//);
 });
 
-test("Capacitor config, Android identity, camera permission, and app icons match MACROBAY", () => {
+test("Capacitor config, Android identity, camera permission, and app icons match MacroBay", () => {
   const root = __dirname + "/..";
   const config = JSON.parse(fs.readFileSync(root + "/capacitor.config.json", "utf8"));
   const packageInfo = JSON.parse(fs.readFileSync(root + "/package.json", "utf8"));
-  assert.deepStrictEqual(config, { appId: "com.vikx.macrobay", appName: "MACROBAY", webDir: "netlify-dist" });
+  assert.deepStrictEqual(config, { appId: "com.vikx.macrobay", appName: "MacroBay", webDir: "netlify-dist" });
   assert.strictEqual(packageInfo.name, "macrobay");
   assert.strictEqual(packageInfo.build.appId, config.appId);
-  assert.strictEqual(packageInfo.build.productName, "MACROBAY");
+  assert.strictEqual(packageInfo.build.productName, "MacroBay");
   ["@capacitor/core", "@capacitor/cli", "@capacitor/android", "@capacitor/ios"].forEach((name) => {
     const version = packageInfo.dependencies?.[name] || packageInfo.devDependencies?.[name];
     assert.match(version || "", /^\^8\./, `${name} should stay on Capacitor 8`);
@@ -1839,7 +1839,7 @@ test("Capacitor config, Android identity, camera permission, and app icons match
   const strings = fs.readFileSync(root + "/android/app/src/main/res/values/strings.xml", "utf8");
   assert.match(manifest, /android\.permission\.CAMERA/);
   assert.match(manifest, /android:required="false"/);
-  assert.match(strings, /<string name="app_name">MACROBAY<\/string>/);
+  assert.match(strings, /<string name="app_name">MacroBay<\/string>/);
   const androidGradle = fs.readFileSync(root + "/android/app/build.gradle", "utf8");
   assert.match(androidGradle, /namespace = "com\.vikx\.macrobay"/);
   assert.match(androidGradle, /applicationId "com\.vikx\.macrobay"/);
@@ -1847,6 +1847,38 @@ test("Capacitor config, Android identity, camera permission, and app icons match
   ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"].forEach((density) => {
     assert.ok(fs.existsSync(root + `/android/app/src/main/res/mipmap-${density}/ic_launcher.png`));
   });
+});
+
+test("Visible product branding uses MacroBay casing without forced uppercase", () => {
+  const root = path.join(__dirname, "..");
+  const pages = [];
+  function collect(directory) {
+    fs.readdirSync(directory, { withFileTypes: true }).forEach((entry) => {
+      if (["tests", "android", "ios", "node_modules", ".git", "build", "dist", "netlify-dist"].includes(entry.name)) return;
+      const file = path.join(directory, entry.name);
+      if (entry.isDirectory()) collect(file);
+      else if (entry.isFile() && entry.name.endsWith(".html")) pages.push(file);
+    });
+  }
+  collect(root);
+  pages.forEach((file) => {
+    const html = fs.readFileSync(file, "utf8");
+    assert.match(html, /<title>[^<]*MacroBay<\/title>/, file + " page title");
+    assert.match(html, /class="brand"[^>]*>[\s\S]*?MacroBay(?:<|\s)/, file + " header brand");
+    assert.doesNotMatch(html, /MacroBay™/, file + " has no trademark symbol in visible branding");
+    assert.doesNotMatch(html, /\bMACROBAY\b|>\s*macrobay\s*</, file + " visible brand casing");
+    const splash = html.match(/<div class="splash-brand"[^>]*>([\s\S]*?)<\/div>/);
+    if (splash) assert.match(splash[1], /MacroBay/, file + " splash brand");
+  });
+  assert.match(fs.readFileSync(path.join(root, "settings/index.html"), "utf8"), /About MacroBay<\/h2>/);
+  const css = fs.readFileSync(path.join(root, "main.css"), "utf8");
+  assert.doesNotMatch(css, /\.brand\s*\{[^}]*text-transform\s*:\s*uppercase/i);
+  assert.doesNotMatch(css, /\.footer-brand strong\s*,[^}]*text-transform\s*:/i);
+  assert.match(css, /\.section-kicker\.brand-case\s*\{\s*text-transform:\s*none;/);
+  assert.match(fs.readFileSync(path.join(root, "calculators/index.html"), "utf8"), /class="section-kicker brand-case">MacroBay tools<\/span>/);
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, "manifest.webmanifest"), "utf8"));
+  assert.match(manifest.name, /^MacroBay\b/);
+  assert.strictEqual(manifest.short_name, "MacroBay");
 });
 
 test("Electron keeps the old storage directory and origin for existing desktop data", () => {
@@ -2573,7 +2605,7 @@ test("A1 import restores a backup and rejects malformed data without partial wri
 
   const future = JSON.parse(JSON.stringify(backup));
   future.schemaVersion = CURRENT_SCHEMA_VERSION + 1;
-  assert.throws(() => ctx.importMacroBayData(future), /newer MACROBAY version/i);
+  assert.throws(() => ctx.importMacroBayData(future), /newer MacroBay version/i);
   assert.strictEqual(values.get("macrobay_profile"), beforeProfile);
 
   const legacyBackup = JSON.parse(JSON.stringify(backup));
@@ -2582,7 +2614,7 @@ test("A1 import restores a backup and rejects malformed data without partial wri
   assert.strictEqual(ctx.readJSON("macrobay_schema_version", null), CURRENT_SCHEMA_VERSION);
 });
 
-test("A1 reset clears MACROBAY-owned data but preserves schema and unrelated storage", () => {
+test("A1 reset clears MacroBay-owned data but preserves schema and unrelated storage", () => {
   values.clear();
   ctx.saveProfile(male);
   ctx.writeJSON("macrobay_targets", { calories: 2300 });
@@ -2901,7 +2933,7 @@ test("Profile page contains personal and fitness information without Settings-on
     "export-data", "import-data-file", "reset-data", "profile-app-version"].forEach((id) => {
     assert.doesNotMatch(html, new RegExp(`id="${id}"`));
   });
-  ["Appearance", "Data management", "Export backup", "Restore from a MACROBAY JSON backup", "Reset MACROBAY data"]
+  ["Appearance", "Data management", "Export backup", "Restore from a MacroBay JSON backup", "Reset MacroBay data"]
     .forEach((label) => assert.ok(!html.includes(label), `${label} should live in Settings`));
 
   const topbar = html.match(/<header class="topbar">[\s\S]*?<\/header>/)[0];
@@ -2934,7 +2966,7 @@ test("B unified search shows built-ins immediately and OFF retries before its co
   const results = app.document.getElementById("food-api-results");
   app.sandbox.searchBuiltInFoodList = function (query) {
     assert.strictEqual(query, "bread");
-    return [{ name: "whole wheat bread", calories: 252, protein: 12.3, carbs: 43, fat: 3.5, fiber: 6, source: "MACROBAY built-in" }];
+    return [{ name: "whole wheat bread", calories: 252, protein: 12.3, carbs: 43, fat: 3.5, fiber: 6, source: "MacroBay built-in" }];
   };
   app.sandbox.scheduleUnifiedFoodSearch("bread");
   assert.strictEqual(results.children.length, 1);
@@ -3028,7 +3060,7 @@ test("whole-word relevance filtering stays on external food results, not local f
   const local = app.sandbox.searchLocalFoodSources("app");
   assert.ok(local.some((food) => food.source === "Favorite"));
   assert.ok(local.some((food) => food.source === "Custom food"));
-  assert.ok(local.some((food) => food.source === "MACROBAY built-in"));
+  assert.ok(local.some((food) => food.source === "MacroBay built-in"));
   assert.ok(app.sandbox.searchLocalFoodSources("car").some((food) => food.fdcId === 170393), "offline foods remain substring-searchable");
   assert.deepStrictEqual(app.sandbox.filterExternalFoodSearchResults([
     { name: "Apple cereal bar", calories: 150, protein: 3, carbs: 25, fat: 4, fiber: 2 }
@@ -3080,7 +3112,7 @@ test("Food search groups local and packaged results, filters irrelevant external
 test("Food search keeps local results when Open Food Facts fails and shows only its muted note", async () => {
   const app = loadFoodApiRetrySandbox();
   app.sandbox.getFoodLibrary = () => ({ favorites: [], customFoods: [] });
-  app.sandbox.searchBuiltInFoodList = () => [{ name: "carrot", calories: 41, protein: 0.9, carbs: 9.6, fat: 0.2, fiber: 2.8, source: "MACROBAY built-in" }];
+  app.sandbox.searchBuiltInFoodList = () => [{ name: "carrot", calories: 41, protein: 0.9, carbs: 9.6, fat: 0.2, fiber: 2.8, source: "MacroBay built-in" }];
   app.sandbox.fetch = async function () { throw new TypeError("offline"); };
   app.sandbox.beginFoodSearch("carrot", 0, null);
   await new Promise((resolve) => setImmediate(resolve));
@@ -3378,7 +3410,7 @@ test("A8 adaptive insights use actual weight, protein, step, and activity histor
 test("Phase 5 CSS uses the shared 1199/850/768/480 viewport set", () => {
   const css = fs.readFileSync(__dirname + "/../main.css", "utf8");
   const viewportBreakpoints = [...new Set(Array.from(css.matchAll(/@media\s*\(max-width:\s*(\d+)px\)/g), (match) => Number(match[1])))];
-  assert.deepStrictEqual(viewportBreakpoints.slice().sort((a, b) => b - a), [1199, 850, 768, 480]);
+  assert.deepStrictEqual(viewportBreakpoints.slice().sort((a, b) => b - a), [1199, 850, 768, 480, 340]);
   assert.doesNotMatch(css, /\.workspace\b/);
 });
 
@@ -3395,7 +3427,8 @@ test("G1 shared typography keeps readable minimums, neutral tracking, and a wide
   assert.match(css, /--content-width:\s*840px/);
   assert.match(css, /h1,h2,h3,h4,h5,h6\s*\{[^}]*font-weight:\s*700/);
   assert.match(css, /label,\.field label,\.add-exercise-form label,\.pill-group label,\.page-kicker,\.section-kicker\s*\{[^}]*font-weight:\s*600[^}]*letter-spacing:\s*0/);
-  assert.doesNotMatch(css, /letter-spacing:\s*-/);
+  const calculatorsLabelRule = /\.mobile-tab\[aria-label="Calculators"\] > span:last-child\s*\{\s*font-size:\s*11px;\s*letter-spacing:\s*-.06em;\s*\}/;
+  assert.doesNotMatch(css.replace(calculatorsLabelRule, ""), /letter-spacing:\s*-/);
 });
 
 test("R6-2 History range controls are sticky pills and day summaries are tappable", () => {
@@ -3504,10 +3537,10 @@ test("Phase 6 global script builds consistent navigation and keyboard mobile con
   const desktopLabels = Array.from(app.desktopNav.innerHTML.matchAll(/>(Home|Calculators|Activity|Progress|Profile)<\/a>/g), (match) => match[1]);
   const mobileLabels = Array.from(app.mobileMenu.innerHTML.matchAll(/<a class="[^"]*"[^>]*>([^<]+)<\/a>/g), (match) => match[1]);
   const bottomNav = app.appended.find((element) => element.className === "bottom-nav");
-  const bottomLabels = Array.from(bottomNav.innerHTML.matchAll(/<span>(Home|Calc|Activity|Progress|Profile)<\/span>/g), (match) => match[1]);
+  const bottomLabels = Array.from(bottomNav.innerHTML.matchAll(/<span>(Home|Calculators|Activity|Progress|Profile)<\/span>/g), (match) => match[1]);
   assert.deepStrictEqual(desktopLabels, expected);
   assert.deepStrictEqual(mobileLabels, ["Nutrition", "Planner", "History", "All calculators", "Settings", "About", "Privacy"]);
-  assert.deepStrictEqual(bottomLabels, ["Home", "Calc", "Activity", "Progress", "Profile"]);
+  assert.deepStrictEqual(bottomLabels, ["Home", "Calculators", "Activity", "Progress", "Profile"]);
   assert.match(bottomNav.innerHTML, /aria-label="Calculators"[^>]*><span class="mobile-tab-icon">/);
   assert.doesNotMatch(app.mobileMenu.innerHTML, /Primary navigation|mobile-primary-link|mobile-tool-link/);
   assert.deepStrictEqual(Array.from(app.mobileMenu.innerHTML.matchAll(/mobile-menu-heading">([^<]+)</g), (match) => match[1]), ["Track", "Calculators", "App"]);
@@ -3554,7 +3587,7 @@ test("Phase 6 global script builds consistent navigation and keyboard mobile con
 
   [
     ["https://macrobay.test/", "Home", "Home"],
-    ["https://macrobay.test/calculators/index.html", "Calculators", "Calc"],
+    ["https://macrobay.test/calculators/index.html", "Calculators", "Calculators"],
     ["https://macrobay.test/planner/index.html", "Activity", "Activity"],
     ["https://macrobay.test/history/index.html", "Progress", "Progress"],
     ["https://macrobay.test/profile/index.html", "Profile", "Profile"]
@@ -3601,7 +3634,7 @@ test("Header theme buttons are removed from app pages while Settings keeps its t
   assert.match(fs.readFileSync(__dirname + "/../theme-init.js", "utf8"), /macrobayApplyThemePreference|dataset\.theme/);
 });
 
-test("Onboarding completion persists through refresh and legacy MACROBAY data is migrated", () => {
+test("Onboarding completion persists through refresh and legacy MacroBay data is migrated", () => {
   const freshStorage = new Map();
   const firstVisit = loadGlobalScriptSandbox("https://macrobay.test/", {
     includeSplash: true, withStore: true, storage: freshStorage
@@ -3688,7 +3721,7 @@ test("Home Today's Overview Edit opens the existing Nutrition route", () => {
 test("Mobile navigation uses one detached capsule layout with room below page content", () => {
   const css = fs.readFileSync(__dirname + "/../main.css", "utf8");
   const navRules = Array.from(css.matchAll(/\.bottom-nav\s*\{([^}]*)\}/g), (match) => match[1]);
-  assert.strictEqual(navRules.length, 2, "one desktop hide rule and one shared mobile rule");
+  assert.strictEqual(navRules.length, 3, "desktop hide, shared mobile, and narrow-phone rules");
   assert.doesNotMatch(css, /body[^{}]*\.bottom-nav\s*\{/);
   const mobileNav = navRules.find((rule) => /position:\s*fixed/.test(rule));
   assert.ok(mobileNav);
@@ -3705,19 +3738,20 @@ test("Mobile navigation uses one detached capsule layout with room below page co
   ].forEach((rule) => assert.match(mobileNav, rule));
   assert.match(css, /\.mobile-tab\.active\s*\{\s*color:\s*var\(--accent-strong\);\s*background:\s*color-mix\(in srgb,var\(--accent\) 16%,transparent\)/);
   const navScript = fs.readFileSync(__dirname + "/../script.js", "utf8");
-  assert.match(navScript, /label:\s*"Calculators",\s*mobileLabel:\s*"Calc"/);
+  assert.match(navScript, /label:\s*"Calculators",\s*mobileLabel:\s*"Calculators"/);
   assert.match(navScript, /item\.mobileLabel \? ' aria-label="' \+ item\.label/);
   assert.match(navScript, /\(item\.mobileLabel \|\| item\.label\)/);
   assert.match(css, /padding-bottom:\s*calc\(96px \+ env\(safe-area-inset-bottom\)\)/);
   assert.doesNotMatch(mobileNav, /border-top\s*:/);
   assert.match(mobileNav, /gap:\s*1px/);
   assert.match(mobileNav, /padding:\s*2px/);
+  assert.match(css, /@media\s*\(max-width:\s*340px\)\s*\{\s*\.bottom-nav\s*\{\s*width:\s*min\(calc\(100% - 16px\),420px\)/);
   assert.match(css, /\.mobile-tab\s*\{[^}]*font-size:\s*12px[^}]*font-weight:\s*600[^}]*letter-spacing:\s*0/);
 });
 
 test("Settings exposes shared app preferences, data tools, and app information", () => {
   const html = fs.readFileSync(__dirname + "/../settings/index.html", "utf8");
-  assert.match(html, /<title>Settings — MACROBAY<\/title>/);
+  assert.match(html, /<title>Settings — MacroBay<\/title>/);
   assert.match(html, /<select id="settings-theme">[\s\S]*value="system">System[\s\S]*value="light">Light[\s\S]*value="dark">Dark/);
   assert.match(html, /id="unit-preferences-form"/);
   assert.match(html, /id="unit-weight"[\s\S]*value="kg"[\s\S]*value="lb"/);
@@ -3805,7 +3839,7 @@ test("R7 early theme initializer applies saved preference, OS fallback, and the 
   assert.strictEqual(testPage.requestedKeys.at(-1), "test_macrobay_preferences");
 });
 
-test("FitCalc storage keys migrate byte-for-byte to MACROBAY keys without replacing newer data", () => {
+test("FitCalc storage keys migrate byte-for-byte to MacroBay keys without replacing newer data", () => {
   const loadTheme = runThemeInitializer;
   const mapping = [
     ["fitcalc_profile", "macrobay_profile"],
@@ -3840,7 +3874,7 @@ test("FitCalc storage keys migrate byte-for-byte to MACROBAY keys without replac
   const migrated = loadTheme({ osLight: false, values: Object.assign({}, legacy, { macrobay_profile: currentProfile }) });
 
   for (const [oldKey, newKey] of mapping) {
-    if (newKey === "macrobay_profile") assert.strictEqual(migrated.values[newKey], currentProfile, "new MACROBAY profile must win");
+    if (newKey === "macrobay_profile") assert.strictEqual(migrated.values[newKey], currentProfile, "new MacroBay profile must win");
     else assert.strictEqual(migrated.values[newKey], legacy[oldKey], `${oldKey} should be preserved exactly`);
   }
   assert.strictEqual(migrated.values.macrobay_storage_migration_v1, "1");

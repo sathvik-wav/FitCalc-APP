@@ -287,7 +287,7 @@ function searchBuiltInFoodList(query) {
     return matches.sort(function (a, b) {
         return foodNameMatchRank(a, normalized) - foodNameMatchRank(b, normalized);
     }).slice(0, 12).map(function (food) {
-        return Object.assign({}, food, { source: "MACROBAY built-in", sourceTag: food.sourceTag || "USDA", resultGroup: "basic" });
+        return Object.assign({}, food, { source: "MacroBay built-in", sourceTag: food.sourceTag || "USDA", resultGroup: "basic" });
     });
 }
 
@@ -341,7 +341,7 @@ function foodDefinitionFromEntry(food) {
         approximateUnits: Array.isArray(food && food.approximateUnits) ? food.approximateUnits.slice() : (knownFood && knownFood.approximateUnits ? knownFood.approximateUnits.slice() : []),
         defaultUnit: food && food.defaultUnit || (knownFood && knownFood.defaultUnit) || "g",
         preparation: food && food.preparation || (knownFood && knownFood.preparation) || "",
-        source: food && food.source || "MACROBAY local list",
+        source: food && food.source || "MacroBay local list",
         barcode: food && food.barcode || ""
     };
 }
@@ -1202,7 +1202,7 @@ function calculateLoggedFood(foodData, amount, meal, amountUnit) {
         fat: scaled("fat"),
         fiber: scaled("fiber"),
         missingNutrients: Array.isArray(foodData.missingNutrients) ? foodData.missingNutrients.slice() : [],
-        source: foodData.source || "MACROBAY local list",
+        source: foodData.source || "MacroBay local list",
         barcode: foodData.barcode || ""
     };
 }

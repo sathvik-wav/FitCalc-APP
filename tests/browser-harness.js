@@ -182,7 +182,7 @@ app.whenReady().then(async function () {
       homeLoaded: !!document.querySelector(".dashboard-page")
     })`);
     if (destinationPage.protocol !== "http:" || destinationPage.pathname !== "/index.html" || !destinationPage.homeLoaded) {
-      throw new Error("HTTP home navigation did not load the MACROBAY dashboard from index.html");
+      throw new Error("HTTP home navigation did not load the MacroBay dashboard from index.html");
     }
     console.log("PASS calculator → home uses an explicit HTTP index.html URL");
   } catch (error) {
@@ -222,7 +222,7 @@ app.whenReady().then(async function () {
       homeLoaded: !!document.querySelector(".dashboard-page")
     })`);
     if (destinationPage.protocol !== "file:" || !destinationPage.pathname.endsWith("/index.html") || !destinationPage.homeLoaded) {
-      throw new Error("Explicit file:// home navigation did not load the MACROBAY dashboard");
+      throw new Error("Explicit file:// home navigation did not load the MacroBay dashboard");
     }
     console.log("PASS calculator → home uses an explicit index.html file URL");
   } catch (error) {

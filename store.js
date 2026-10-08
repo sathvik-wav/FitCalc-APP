@@ -123,7 +123,7 @@ function hasCompletedMacroBayOnboarding() {
     if (getMacroBayPreferences().onboardingComplete === true) return true;
     if (!hasExistingMacroBayUserData()) return false;
 
-    // Migrate users who already have MACROBAY data into the single persisted
+    // Migrate users who already have MacroBay data into the single persisted
     // completion state without touching their profile or other data records.
     try { saveMacroBayPreferences({ onboardingComplete: true }); }
     catch (error) { /* Existing user data still takes precedence if storage is read-only. */ }
@@ -264,7 +264,7 @@ const MACROBAY_DATA_DEFAULTS = {
     [FOOD_LIBRARY_KEY]: { customFoods: [], favorites: [], recents: [] }
 };
 
-// Version 0 is the unversioned localStorage layout already used by MACROBAY.
+// Version 0 is the unversioned localStorage layout already used by MacroBay.
 // It is structurally identical to v1, so the first migration only records the
 // version. Future migrations can transform this known-data object.
 const MACROBAY_SCHEMA_MIGRATIONS = {
@@ -297,7 +297,7 @@ function readMacroBayData() {
         try {
             data[key] = JSON.parse(raw);
         } catch (error) {
-            throw new Error("Saved " + key + " data is not valid JSON. MACROBAY left it unchanged.");
+            throw new Error("Saved " + key + " data is not valid JSON. MacroBay left it unchanged.");
         }
     });
     return validateMacroBayData(data);
@@ -310,7 +310,7 @@ function validateMacroBayData(data) {
     if (keys.length !== MACROBAY_DATA_KEYS.length || MACROBAY_DATA_KEYS.some(function (key) {
         return !Object.prototype.hasOwnProperty.call(data, key);
     }) || keys.some(function (key) { return MACROBAY_DATA_KEYS.indexOf(key) === -1; })) {
-        throw new Error("Backup is missing required MACROBAY data or contains unsupported fields.");
+        throw new Error("Backup is missing required MacroBay data or contains unsupported fields.");
     }
 
     MACROBAY_DATA_KEYS.forEach(function (key) {
@@ -342,7 +342,7 @@ function migrateMacroBayData(data, fromVersion) {
     for (let version = fromVersion; version < APP_SCHEMA_VERSION; version += 1) {
         const migration = MACROBAY_SCHEMA_MIGRATIONS[version];
         if (typeof migration !== "function") {
-            throw new Error("This backup uses an unsupported MACROBAY data version.");
+            throw new Error("This backup uses an unsupported MacroBay data version.");
         }
         const result = migration(migrated);
         if (result !== undefined) migrated = result;
@@ -361,7 +361,7 @@ function initializeMacroBayStorageSchema() {
 
     const storedVersion = Number(readJSON(SCHEMA_VERSION_KEY, 0));
     if (!Number.isInteger(storedVersion) || storedVersion < 0) {
-        throw new Error("MACROBAY data has an invalid schema version.");
+        throw new Error("MacroBay data has an invalid schema version.");
     }
     if (storedVersion > APP_SCHEMA_VERSION) return false;
     if (storedVersion === APP_SCHEMA_VERSION) return true;
@@ -380,7 +380,7 @@ function initializeMacroBayStorageSchema() {
 
 function requireSupportedMacroBaySchema() {
     if (!initializeMacroBayStorageSchema()) {
-        throw new Error("This MACROBAY data was created by a newer app version and cannot be changed here.");
+        throw new Error("This MacroBay data was created by a newer app version and cannot be changed here.");
     }
 }
 
@@ -397,13 +397,13 @@ function exportMacroBayData() {
 
 function validateMacroBayBackup(backup) {
     if (!isMacroBayRecord(backup) || backup.format !== MACROBAY_BACKUP_FORMAT) {
-        throw new Error("This file is not a MACROBAY JSON backup.");
+        throw new Error("This file is not a MacroBay JSON backup.");
     }
     if (!Number.isInteger(backup.schemaVersion) || backup.schemaVersion < 0) {
         throw new Error("This backup has an invalid data version.");
     }
     if (backup.schemaVersion > APP_SCHEMA_VERSION) {
-        throw new Error("This backup is from a newer MACROBAY version. Update MACROBAY before importing it.");
+        throw new Error("This backup is from a newer MacroBay version. Update MacroBay before importing it.");
     }
     return migrateMacroBayData(backup.data, backup.schemaVersion);
 }
@@ -454,7 +454,7 @@ function resetMacroBayData() {
         });
     } catch (error) {
         if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
-            window.dispatchEvent(new CustomEvent("macrobay:storage-error", { detail: { key: "MACROBAY data" } }));
+            window.dispatchEvent(new CustomEvent("macrobay:storage-error", { detail: { key: "MacroBay data" } }));
         }
         restoreMacroBayStorage(previous);
         throw error;

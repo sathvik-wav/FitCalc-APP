@@ -133,7 +133,7 @@ if (exportDataButton) {
             link.remove();
             window.setTimeout(function () { URL.revokeObjectURL(url); }, 0);
             setDataManagementStatus("Backup downloaded. Keep the JSON file somewhere safe.");
-            if (window.macrobayToast) window.macrobayToast("MACROBAY backup downloaded.");
+            if (window.macrobayToast) window.macrobayToast("MacroBay backup downloaded.");
         } catch (error) {
             setDataManagementStatus(error.message || "Could not create a backup.");
             if (window.macrobayToast) window.macrobayToast("Could not create the backup.", "error");
@@ -151,16 +151,16 @@ if (importDataInput) {
             validateMacroBayBackup(backup);
             const confirmed = window.macrobayDialog
                 ? await window.macrobayDialog.confirm(
-                    "Importing this backup replaces MACROBAY data saved on this device. Continue?",
+                    "Importing this backup replaces MacroBay data saved on this device. Continue?",
                     "Replace saved data",
                     "Import backup"
                 )
-                : window.confirm("Importing this backup replaces MACROBAY data saved on this device. Continue?");
+                : window.confirm("Importing this backup replaces MacroBay data saved on this device. Continue?");
             if (!confirmed) return;
             importMacroBayData(backup);
             updateAfterDataRestore();
             setDataManagementStatus("Backup restored successfully.");
-            if (window.macrobayToast) window.macrobayToast("MACROBAY backup restored.");
+            if (window.macrobayToast) window.macrobayToast("MacroBay backup restored.");
         } catch (error) {
             const message = error && error.message ? error.message : "Could not read this backup.";
             setDataManagementStatus(message);
@@ -177,18 +177,18 @@ if (resetDataButton) {
         const confirmed = window.macrobayDialog
             ? await window.macrobayDialog.confirm(
                 "This permanently removes your profile, targets, nutrition, planner, workouts, history, templates, and preferences from this device.",
-                "Reset MACROBAY data",
+                "Reset MacroBay data",
                 "Delete data"
             )
-            : window.confirm("Permanently delete all MACROBAY data saved on this device?");
+            : window.confirm("Permanently delete all MacroBay data saved on this device?");
         if (!confirmed) return;
         try {
             resetMacroBayData();
             updateAfterDataRestore();
-            setDataManagementStatus("MACROBAY data was removed from this device.");
-            if (window.macrobayToast) window.macrobayToast("MACROBAY data reset.");
+            setDataManagementStatus("MacroBay data was removed from this device.");
+            if (window.macrobayToast) window.macrobayToast("MacroBay data reset.");
         } catch (error) {
-            const message = error && error.message ? error.message : "Could not reset MACROBAY data.";
+            const message = error && error.message ? error.message : "Could not reset MacroBay data.";
             setDataManagementStatus(message);
             if (window.macrobayToast) window.macrobayToast(message, "error");
         }

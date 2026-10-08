@@ -29,7 +29,7 @@ function createWindow() {
         height: 800,
         minWidth: 900,
         minHeight: 600,
-        title: "MACROBAY",
+        title: "MacroBay",
         webPreferences: {
             contextIsolation: true
         }

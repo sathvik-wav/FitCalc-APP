@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><title>MACROBAY browser checks</title><script>window.MACROBAY_TEST_MODE = true;</script>
+<head><meta charset="utf-8"><title>MacroBay browser checks</title><script>window.MACROBAY_TEST_MODE = true;</script>
 </head>
 <body>
-<h1>MACROBAY browser checks</h1>
+<h1>MacroBay browser checks</h1>
 <pre id="results" role="status">Starting…</pre>
 <script src="../constants.js"></script>
 <script src="../store.js"></script>
@@ -87,7 +87,7 @@
     }
     lines.push("\n" + (failures ? failures + " checks failed" : "All checks passed"));
     document.getElementById("results").textContent = lines.join("\n");
-    document.title = failures ? "FAIL " + failures : "PASS MACROBAY browser checks";
+    document.title = failures ? "FAIL " + failures : "PASS MacroBay browser checks";
     document.body.dataset.result = failures ? "fail" : "pass";
 }());
 </script>

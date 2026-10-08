@@ -5,7 +5,7 @@
   var root = document.documentElement;
   var PRIMARY_NAV = [
     { path: "index.html", label: "Home", icon: "home" },
-    { path: "calculators/index.html", label: "Calculators", mobileLabel: "Calc", icon: "calculators" },
+    { path: "calculators/index.html", label: "Calculators", mobileLabel: "Calculators", icon: "calculators" },
     { path: "planner/index.html", label: "Activity", icon: "activity" },
     { path: "history/index.html", label: "Progress", icon: "progress" },
     { path: "profile/index.html", label: "Profile", icon: "profile" }
@@ -449,7 +449,7 @@
     form.method = "dialog";
     var title = document.createElement("h2");
     title.id = "macrobay-dialog-title";
-    title.textContent = settings.title || "MACROBAY";
+    title.textContent = settings.title || "MacroBay";
     form.appendChild(title);
     if (settings.message) {
       var message = document.createElement("p");
@@ -524,7 +524,7 @@
       notice.setAttribute("aria-live", "assertive");
       document.body.appendChild(notice);
     }
-    notice.textContent = "MACROBAY could not save this change. Check browser storage and try again.";
+    notice.textContent = "MacroBay could not save this change. Check browser storage and try again.";
     notice.hidden = false;
     window.clearTimeout(notice.hideTimer);
     notice.hideTimer = window.setTimeout(function () { notice.hidden = true; }, 6000);

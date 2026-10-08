@@ -1,9 +1,9 @@
 {
   "name": "macrobay",
   "version": "1.1.19",
-  "description": "MACROBAY - Fitness tools, Made simple",
+  "description": "MacroBay - Fitness tools, Made simple",
   "homepage": "https://github.com/sathvik-labs/cccccc",
-  "desktopName": "MACROBAY",
+  "desktopName": "MacroBay",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -32,14 +32,14 @@
   },
   "build": {
     "appId": "com.vikx.macrobay",
-    "productName": "MACROBAY",
+    "productName": "MacroBay",
     "icon": "build/icon.icns",
     "mac": {
       "target": [
         "dmg"
       ],
       "extendInfo": {
-        "NSCameraUsageDescription": "MACROBAY uses the camera only when you choose to scan a food barcode."
+        "NSCameraUsageDescription": "MacroBay uses the camera only when you choose to scan a food barcode."
       }
     },
     "win": {

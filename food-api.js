@@ -135,7 +135,7 @@ function foodSearchRank(food, query) {
 function foodSearchSourceRank(food) {
     if (food.resultGroup === "your" || food.source === "Favorite" || food.source === "Custom food") return 0;
     if (food.resultGroup === "basic" && food.source === "USDA FoodData Central") return 1;
-    if (food.source === "MACROBAY built-in") return 2;
+    if (food.source === "MacroBay built-in") return 2;
     if (food.source === "Open Food Facts" || food.source === "USDA FoodData Central") return 3;
     return 1;
 }
@@ -193,7 +193,7 @@ function searchLocalFoodSources(query) {
     let basicRecords = [];
     if (typeof foodDatabase !== "undefined" && Array.isArray(foodDatabase)) {
         basicRecords = basicRecords.concat(foodDatabase.map(function (food) {
-            return Object.assign({}, food, { source: "MACROBAY built-in" });
+            return Object.assign({}, food, { source: "MacroBay built-in" });
         }));
     } else if (typeof searchBuiltInFoodList === "function") {
         basicRecords = basicRecords.concat(searchBuiltInFoodList(query));

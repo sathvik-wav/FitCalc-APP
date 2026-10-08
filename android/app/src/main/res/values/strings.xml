@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">MACROBAY</string>
-    <string name="title_activity_main">MACROBAY</string>
+    <string name="app_name">MacroBay</string>
+    <string name="title_activity_main">MacroBay</string>
     <string name="package_name">com.vikx.macrobay</string>
     <string name="custom_url_scheme">com.vikx.macrobay</string>
 </resources>

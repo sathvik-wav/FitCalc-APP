@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>MACROBAY responsive UI audit</title>
+  <title>MacroBay responsive UI audit</title>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; padding: 24px; color: #f2f5ff; background: #0b1020; font: 14px/1.5 system-ui,sans-serif; }
@@ -17,7 +17,7 @@
 <script>window.MACROBAY_TEST_MODE = true;</script>
 </head>
 <body>
-  <h1>MACROBAY responsive UI audit</h1>
+  <h1>MacroBay responsive UI audit</h1>
   <p>All routes at 1440, 1280, 1024, 768, 430, 390, 375, and 320 CSS pixels; typography and layout are checked at 390, 768, and 1280 in light and dark themes.</p>
   <pre id="results" role="status" aria-live="polite">Loading responsive route matrix…</pre>
   <script>
@@ -47,7 +47,7 @@
         ["Settings", "../settings/index.html", "#settings-theme"]
       ];
       var expectedNav = "Home|Calculators|Activity|Progress|Profile";
-      var expectedMobileNav = "Home|Calc|Activity|Progress|Profile";
+      var expectedMobileNav = "Home|Calculators|Activity|Progress|Profile";
       var checks = [];
       var pending = routes.length * widths.length;
       var done = false;
@@ -61,7 +61,7 @@
         var failures = checks.filter(function (line) { return line.indexOf("FAIL ") === 0; }).length;
         output.textContent = (failures ? failures + " checks failed" : "All responsive UI checks passed") + " · " + checks.length + " assertions\n\n" + checks.join("\n");
         output.dataset.result = failures ? "fail" : "pass";
-        document.title = failures ? "FAIL MACROBAY responsive audit" : "PASS MACROBAY responsive audit";
+        document.title = failures ? "FAIL MacroBay responsive audit" : "PASS MacroBay responsive audit";
       }
       function inspect(route, width, frame) {
         var label = route[0] + " @ " + width;
@@ -152,10 +152,15 @@
             var navStyle = win.getComputedStyle(bottomNav);
             var pageShell = doc.querySelector(".page-shell, main.profile, .calc-page.shell, .history-page-shell");
             check(label + " mobile touch targets", doc.querySelector(".menu-toggle").getBoundingClientRect().height >= 40 && navBounds.height >= 60);
-            check(label + " floating pill stays inset", navBounds.left >= 13 && navBounds.right <= width - 13 && navBounds.bottom <= win.innerHeight - 9 && navBounds.width <= 421);
+            var navInset = width <= 340 ? 7 : 13;
+            check(label + " floating pill stays inset", navBounds.left >= navInset && navBounds.right <= width - navInset && navBounds.bottom <= win.innerHeight - 9 && navBounds.width <= 421);
             check(label + " floating pill shape", navStyle.position === "fixed" && parseFloat(navStyle.borderTopLeftRadius) >= 32 && navStyle.borderTopWidth === "1px" && navStyle.borderBottomWidth === "1px");
             check(label + " page shell clears floating navigation", !!pageShell && parseFloat(win.getComputedStyle(pageShell).paddingBottom) >= 86);
             check(label + " mobile navigation order", Array.prototype.map.call(bottomNav.querySelectorAll(".mobile-tab > span:last-child"), function (item) { return item.textContent.trim(); }).join("|") === expectedMobileNav);
+            if (width <= 430) {
+              var calculatorsLabel = bottomNav.querySelector('.mobile-tab[aria-label="Calculators"] > span:last-child');
+              check(label + " Calculators label fits without clipping", !!calculatorsLabel && calculatorsLabel.scrollWidth <= calculatorsLabel.clientWidth);
+            }
             if (route[0] === "Settings") {
               var settingsMenu = doc.getElementById("mobile-menu");
               check(label + " settings is selected in the complete menu", !!settingsMenu.querySelector('.mobile-app-link[aria-current="page"]'));
