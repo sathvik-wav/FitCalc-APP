@@ -13,7 +13,7 @@
     "mobile:prepare": "node scripts/sync-service-worker-cache.js && node scripts/prepare-netlify.js",
     "mobile:add:android": "npm run mobile:prepare && cap add android",
     "mobile:add:ios": "npm run mobile:prepare && cap add ios",
-    "mobile:sync:android": "npm run mobile:prepare && cap sync android",
+    "mobile:sync:android": "node scripts/clean-android-assets.js && npm run mobile:prepare && cap sync android",
     "mobile:sync:ios": "npm run mobile:prepare && cap sync ios",
     "mobile:open:android": "cap open android",
     "mobile:open:ios": "cap open ios",
