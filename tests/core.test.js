@@ -791,7 +791,10 @@ test("offline Indian entries use verified USDA records with explicit portion wei
   assert.strictEqual(curd.servingGrams, 245);
   assert.deepStrictEqual(Array.from(curd.units), ["g", "oz", "ml", "tsp", "tbsp", "cup", "glass"]);
   assert.ok(entries.every((food) => ["USDA", "USDA FoodData Central"].includes(food.source)));
-  assert.ok(entries.every((food) => food.sourceTag === "USDA" && Array.isArray(food.aliases)));
+  assert.ok(entries.every((food) => Array.isArray(food.aliases)));
+  assert.ok(entries.filter((food) => [171844, 170393, 168409, 170000, 170419, 170457, 172436, 174256, 168893, 169910, 169926, 172430, 170162, 170554].includes(food.fdcId)).every((food) => food.sourceTag === "USDA"));
+  assert.strictEqual(curd.sourceTag, "Reference");
+  assert.strictEqual(entries.find((food) => food.name === "Cheese, paneer").sourceTag, "Reference");
   entries.forEach((food) => food.units.forEach((unit) => {
     if (unit === "g" || unit === "serving") return;
     assert.ok(food.unitGrams[unit] > 0, food.name + " needs a gram weight for " + unit);

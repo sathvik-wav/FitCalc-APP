@@ -173,4 +173,12 @@ const indianFoodDatabase = [
         source: "USDA", barcode: "", fdcId: 170554
     }
 ];
-indianFoodDatabase.forEach(function (food) { food.sourceTag = "USDA"; });
+// These records have an FDC match in the bundled dataset by ID or normalized
+// name. Keep unmatched local reference entries labeled neutrally.
+const INDIAN_FOODS_WITH_USDA_MATCH = new Set([
+    171844, 170393, 168409, 170000, 170419, 170457, 172436,
+    174256, 168893, 169910, 169926, 172430, 170162, 170554
+]);
+indianFoodDatabase.forEach(function (food) {
+    food.sourceTag = INDIAN_FOODS_WITH_USDA_MATCH.has(Number(food.fdcId)) ? "USDA" : "Reference";
+});
