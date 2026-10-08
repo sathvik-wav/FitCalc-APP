@@ -2637,6 +2637,47 @@ test("A1 import restores a backup and rejects malformed data without partial wri
   assert.strictEqual(ctx.readJSON("macrobay_schema_version", null), CURRENT_SCHEMA_VERSION);
 });
 
+test("legacy FitCalc backups import prefixed and unprefixed data keys without loss", () => {
+  const legacyData = {
+    macrobay_profile: { name: "Legacy user", weight: 68 },
+    macrobay_targets: { calories: 1900, protein: 120 },
+    macrobay_nutrition: { "2026-10-01": { calories: 123, foods: [{ name: "Oats", amount: 55 }] } },
+    macrobay_planner: { "2026-10-01": { date: "2026-10-01", steps: 4321, workouts: [], tasks: [] } },
+    macrobay_history: { "2026-10-01": { weight: 68 } },
+    macrobay_workout_templates: [{ name: "Legacy workout" }],
+    macrobay_preferences: { theme: "light" },
+    macrobay_food_library: { customFoods: [{ name: "Legacy food" }], favorites: ["oats"], recents: ["rice"] }
+  };
+
+  ["fitcalc", "unprefixed"].forEach((keyStyle) => {
+    values.clear();
+    const data = {};
+    Object.keys(legacyData).forEach((key) => {
+      const suffix = key.replace(/^macrobay_/, "");
+      data[keyStyle === "fitcalc" ? "fitcalc_" + suffix : suffix] = legacyData[key];
+    });
+    const backup = { format: "fitcalc-backup", schemaVersion: CURRENT_SCHEMA_VERSION, data };
+    assert.strictEqual(ctx.importMacroBayData(backup), true);
+    assert.strictEqual(JSON.stringify(ctx.readMacroBayData()), JSON.stringify(legacyData));
+    Object.keys(legacyData).forEach((key) => assert.ok(values.has(key), key + " should be restored"));
+  });
+});
+
+test("random JSON is rejected as an import backup", () => {
+  values.clear();
+  assert.throws(() => ctx.importMacroBayData({ title: "random JSON", data: {} }), /not a MacroBay JSON backup/i);
+});
+
+test("legacy FitCalc backups from a newer schema are rejected", () => {
+  values.clear();
+  const backup = {
+    format: "fitcalc-backup",
+    schemaVersion: CURRENT_SCHEMA_VERSION + 1,
+    data: {}
+  };
+  assert.throws(() => ctx.importMacroBayData(backup), /newer MacroBay version/i);
+});
+
 test("A1 reset clears MacroBay-owned data but preserves schema and unrelated storage", () => {
   values.clear();
   ctx.saveProfile(male);

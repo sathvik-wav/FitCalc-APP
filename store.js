@@ -239,6 +239,7 @@ function announceDataChange(dateKey, key) {
  * Data backup and schema migrations
  */
 const MACROBAY_BACKUP_FORMAT = "macrobay-backup";
+const LEGACY_FITCALC_BACKUP_FORMAT = "fitcalc-backup";
 const MACROBAY_DATA_KEYS = [
     PROFILE_KEY,
     TARGETS_KEY,
@@ -396,7 +397,8 @@ function exportMacroBayData() {
 }
 
 function validateMacroBayBackup(backup) {
-    if (!isMacroBayRecord(backup) || backup.format !== MACROBAY_BACKUP_FORMAT) {
+    if (!isMacroBayRecord(backup) ||
+        [MACROBAY_BACKUP_FORMAT, LEGACY_FITCALC_BACKUP_FORMAT].indexOf(backup.format) === -1) {
         throw new Error("This file is not a MacroBay JSON backup.");
     }
     if (!Number.isInteger(backup.schemaVersion) || backup.schemaVersion < 0) {
@@ -405,7 +407,29 @@ function validateMacroBayBackup(backup) {
     if (backup.schemaVersion > APP_SCHEMA_VERSION) {
         throw new Error("This backup is from a newer MacroBay version. Update MacroBay before importing it.");
     }
-    return migrateMacroBayData(backup.data, backup.schemaVersion);
+    return migrateMacroBayData(normalizeMacroBayBackupKeys(backup.data), backup.schemaVersion);
+}
+
+function normalizeMacroBayBackupKeys(data) {
+    if (!isMacroBayRecord(data)) return data;
+    const aliases = {};
+    MACROBAY_DATA_KEYS.forEach(function (key) {
+        const unprefixed = key.replace(/^macrobay_/, "");
+        aliases[key] = key;
+        aliases["fitcalc_" + unprefixed] = key;
+        aliases[unprefixed] = key;
+    });
+
+    const normalized = {};
+    Object.keys(data).forEach(function (key) {
+        const canonicalKey = aliases[key] || key;
+        if (Object.prototype.hasOwnProperty.call(normalized, canonicalKey) &&
+            JSON.stringify(normalized[canonicalKey]) !== JSON.stringify(data[key])) {
+            throw new Error("This backup contains conflicting data keys for " + canonicalKey + ".");
+        }
+        normalized[canonicalKey] = data[key];
+    });
+    return normalized;
 }
 
 function snapshotMacroBayStorage(keys) {
